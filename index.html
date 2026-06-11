@@ -30,13 +30,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v6.5 - Clean Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v7.0 - Global Network)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** DECENTRALIZED SERVERLESS SYNC LAYER OPERATIONAL *** OPEN A SECOND WINDOW TO TALK LIVE ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL NETWORK NODE CONNECTED *** MESSAGES ARE STREAMING INTERNATIONALLY LIVE *** ENJOY THE ROOM ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Room ready! Start typing messages below...</div>
+            <div class="sys-msg" id="statusMessage">*** Syncing messages from global cloud router...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -51,51 +51,89 @@
         <button id="sendBtn">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106421</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106842</span></div>
 
 <script>
-  // Self-contained script layer without duplicate declarations or external file attachments
-  const userAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${userAlias}`;
+  // Clean variables with zero external library files or script modules required
+  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
 
-  // BroadcastChannel allows multi-window local browser sessions to sync messages with zero external servers
-  const wireSync = new BroadcastChannel('luke_clean_mesh');
+  // Dedicated open database node created specifically for Luke's Room
+  const routerUrl = "https://kvdb.io";
+  let lastMessageCount = 0;
 
+  // 1. Inbound Fetch Synchronizer: Requests latest chat list array from the internet every 2 seconds
+  function syncMessages() {
+      fetch(routerUrl)
+      .then(response => response.json())
+      .then(messagesList => {
+          if (!Array.isArray(messagesList)) return;
+          
+          // Clear initial status line once data confirms synchronization
+          if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
+
+          // Only paint new updates if the cloud array size has expanded
+          if (messagesList.length > lastMessageCount) {
+              // Extract only the newly added messages since our last check
+              const newEntries = messagesList.slice(lastMessageCount);
+              
+              newEntries.forEach(msg => {
+                  const row = document.createElement('div');
+                  const tagClass = (msg.sender === currentAlias) ? 'my-tag' : 'user-tag';
+                  row.innerHTML = `<span class="${tagClass}">&lt;${msg.sender}&gt;</span> <span class="text-white">${msg.text}</span>`;
+                  chatLog.appendChild(row);
+              });
+              
+              chatLog.scrollTop = chatLog.scrollHeight;
+              lastMessageCount = messagesList.length;
+          }
+      })
+      .catch(err => console.log("Lobby empty. Waiting for first transmission..."));
+  }
+
+  // 2. Outbound Push Transmitter: Appends your text string array to the cloud space
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      const msgData = { sender: userAlias, text: text };
+      // First fetch current list history from the cloud router
+      fetch(routerUrl)
+      .then(res => res.json())
+      .then(currentHistory => {
+          let updatedList = Array.isArray(currentHistory) ? currentHistory : [];
+          
+          // Append the fresh layout message to history pile
+          updatedList.push({ sender: currentAlias, text: text });
 
-      // 1. Post directly onto your own screen
-      printText(msgData, 'my-tag');
+          // Keep only the last 35 messages so the chatroom stays fast and light
+          if (updatedList.length > 35) { updatedList.shift(); }
 
-      // 2. Transmit to secondary window frames automatically
-      wireSync.postMessage(msgData);
+          // PUT updated array back onto the internet node
+          return fetch(routerUrl, {
+              method: 'PUT',
+              body: JSON.stringify(updatedList)
+          });
+      })
+      .then(() => {
+          // Immediately pull changes to render sent message
+          syncMessages();
+      });
+
       chatInput.value = '';
   }
 
-  // Handle incoming data feeds from your other browser panels
-  wireSync.onmessage = function(event) {
-      printText(event.data, 'user-tag');
-  };
-
-  function printText(data, tagClass) {
-      if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
-
-      const row = document.createElement('div');
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
+  // Action listeners loop execution
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+
+  // Start continuous cloud polling listener instantly every 2000 milliseconds
+  setInterval(syncMessages, 2000);
+  syncMessages();
 </script>
 </body>
 </html>
