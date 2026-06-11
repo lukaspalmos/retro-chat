@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Welcome to CyberZone 95 Chatroom ⚡</title>
+    <style>
+        /* 90s Retro Tiled Background Simulation */
+        body {
+            background-color: #008080; /* Classic Windows 95 Teal */
+            background-image: radial-gradient(#004040 20%, transparent 20%),
+                              radial-gradient(#004040 20%, transparent 20%);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+            color: #ffffff;
+            font-family: "Courier New", Courier, monospace;
+            padding: 20px;
+            cursor: crosshair;
+        }
+
+        /* Main Window Panel Container (Win95 Design) */
+        .window {
+            background: #c0c0c0;
+            width: 700px;
+            max-width: 100%;
+            margin: 0 auto;
+            border-top: 3px solid #fff;
+            border-left: 3px solid #fff;
+            border-right: 3px solid #808080;
+            border-bottom: 3px solid #808080;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+            padding: 4px;
+        }
+
+        /* Retro Title Bar */
+        .title-bar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+            padding: 4px 8px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title-controls button {
+            background: #c0c0c0;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            border-right: 1px solid #555;
+            border-bottom: 1px solid #555;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 5px;
+            cursor: pointer;
+        }
+
+        /* Banner Marquee and Stats Frame */
+        .header-marquee {
+            background: #000;
+            color: #00ff00;
+            padding: 5px;
+            margin: 8px 0;
+            border: 2px inset #fff;
+            font-size: 12px;
+        }
+
+        /* Main App Area: Split Screen */
+        .chat-area {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        /* Chat History Box (IRC Style) */
+        .chat-log {
+            flex: 3;
+            height: 300px;
+            background: #000000;
+            border: 3px inset #fff;
+            padding: 8px;
+            overflow-y: scroll;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        /* User List Sidebar */
+        .user-list {
+            flex: 1;
+            height: 300px;
+            background: #000000;
+            border: 3px inset #fff;
+            padding: 8px;
+            font-size: 13px;
+            color: #ffff00;
+        }
+
+        .user-list h3 {
+            font-size: 13px;
+            margin-bottom: 5px;
+            text-decoration: underline;
+            color: #00ffff;
+        }
+
+        /* Text Styles for User Logs */
+        .system-msg { color: #00ff00; font-style: italic; }
+        .user-tag { color: #ff00ff; font-weight: bold; }
+        .my-tag { color: #00ffff; font-weight: bold; }
+        .text-white { color: #ffffff; }
+
+        /* Controls Panel Form Row */
+        .control-row {
+            background: #c0c0c0;
+            border: 2px inset #fff;
+            padding: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-row label {
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Retro Form Inputs */
+        input[type="text"] {
+            background: #ffffff;
+            color: #000000;
+            border: 3px inset #fff;
+            padding: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+        }
+
+        #handleInput { width: 100px; }
+        #messageInput { flex: 1; }
+
+        /* Retro Beveled Push Buttons */
+        .retro-btn {
+            background: #c0c0c0;
+            color: #000;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #555;
+            border-bottom: 2px solid #555;
+            padding: 4px 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .retro-btn:active {
+            border-top: 2px solid #555;
+            border-left: 2px solid #555;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            padding: 5px 11px 3px 13px;
+        }
+
+        /* Decorative Animated GIF Placeholder Footer */
+        .footer-badges {
+            margin-top: 15px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .badge {
+            border: 2px solid #fff;
+            padding: 2px 5px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .ie-badge { background: #000080; color: #fff; }
+        .ns-badge { background: #ff0000; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="window">
+    <!-- Title Bar Frame -->
+    <div class="title-bar">
+        <span>🌐 CyberZone_95.exe - Local Chatroom</span>
+        <div class="title-controls">
+            <button class="win-btn">_</button>
+            <button class="win-btn">[]</button>
+            <button class="win-btn" onclick="alert('Connection Lost!')">X</button>
+        </div>
+    </div>
+
+    <!-- Scrolling Text Marquee Header -->
+    <div class="header-marquee">
+        <marquee scrollamount="3">+++ Welcome to CyberZone Room #4 +++ 14,204 users online worldwide +++ No flaming or trolling allowed! +++ Surf the web responsibly +++</marquee>
+    </div>
+
+    <!-- Main Screens Grid Split -->
+    <div class="chat-area">
+        <!-- Text Stream Window -->
+        <div class="chat-log" id="chatLog">
+            <div class="system-msg">*** Connected to node server 194.32.10.8 via 56k Modem...</div>
+            <div class="system-msg">*** Neo99 has entered the chat room.</div>
+            <div class="system-msg">*** Pixie_Dust has entered the chat room.</div>
+            <div><span class="user-tag">&lt;Neo99&gt;:</span> <span class="text-white">A/S/L anyone??</span></div>
+            <div><span class="user-tag">&lt;Pixie_Dust&gt;:</span> <span class="text-white">16/F/California, u?</span></div>
+        </div>
+
+        <!-- Room Lineup Roster -->
+        <div class="user-list">
+            <h3>Who's Online</h3>
+            <div id="usersBox">
+                • Neo99<br>
+                • Pixie_Dust<br>
+                • RetroWave<br>
+                • Sk8r_Boy99<br>
+                • <span id="currentHandleDisplay">Guest101</span> (You)
+            </div>
+        </div>
+    </div>
+
+    <!-- User Control Deck Input Deck -->
+    <div class="control-row">
+        <label for="handleInput">Handle:</label>
+        <input type="text" id="handleInput" value="Guest101" maxlength="10">
+
+        <label for="messageInput">Message:</label>
+        <input type="text" id="messageInput" placeholder="Type text here..." autocomplete="off">
+
+        <button class="retro-btn" id="sendBtn">Send</button>
+    </div>
+</div>
+
+<!-- Decorative Old Web Badges -->
+<div class="footer-badges">
+    <div class="badge ie-badge">Optimized for Internet Explorer 4.0</div>
+    <div class="badge ns-badge">Netscape Navigator Enhanced</div>
+    <div class="badge" style="background:#ff00ff; color:#000;">Made with Notepad</div>
+</div>
+
+<script>
+    <!-- Replace your entire old script section with this modern module script -->
+<script type="module">
+    // 1. Import official Firebase database modules
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
+
+    // 2. Paste YOUR unique Project Configuration here (found in Firebase Project Settings)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_://firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_://firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_://appspot.com",
+        messagingSenderId: "YOUR_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Database
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, 'chat_messages');
+
+    // UI elements
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Generate a random 90s guest handle for this session
+    const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+    document.querySelector('.user-list').innerHTML += `<div style="color: #00ffff;">• ${username}</div>`;
+
+    // 3. SEND message function: Pushes data instantly to the cloud
+    function sendMsg() {
+        const text = chatInput.value.trim();
+        if (text === '') return;
+
+        push(messagesRef, {
+            user: username,
+            message: text,
+            timestamp: Date.now()
+        });
+
+        chatInput.value = '';
+    }
+
+    // 4. RECEIVE message listener: Fires instantly for EVERY user when database changes
+    onChildAdded(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const userLine = document.createElement('div');
+        
+        // Style differently if it's your own message
+        const tagClass = (data.user === username) ? 'my-tag' : 'user-tag';
+        
+        userLine.innerHTML = `<span class="${tagClass}">&lt;${data.user}&gt;</span> <span class="text-white">${data.message}</span>`;
+        chatLog.appendChild(userLine);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    });
+
+    // Wire up events
+    sendBtn.addEventListener('click', sendMsg);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+</script>
+
