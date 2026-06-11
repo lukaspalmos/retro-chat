@@ -20,20 +20,21 @@
         .text-white { color: #ffffff; }
         .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
-        .input-bar button { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 0 15px; cursor: pointer; }
-        .input-bar button:active { border: 2px inset #ffffff; }
-        .visitor-counter { text-align: center; margin-top: 15px; font-size: 12px; color: #888; }
-        .counter-badge { background: #222; color: #ff0000; padding: 2px 6px; border: 1px solid #444; font-weight: bold; letter-spacing: 2px; }
+        
+        /* Retro Command Buttons */
+        .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
+        .btn-95:active { border: 2px inset #ffffff; }
+        .btn-wipe { background-color: #ffc0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-top: 15px; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v7.2 - Stable Engine)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v7.3 - Global Network)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE LOGIC BRIDGE ENGAGED *** ROOM WILL WIPE GLOBAL HISTORY UPON REFRESH ACTION ***</marquee>
+    <marquee scrollamount="4">*** LUKE'S GLOBAL LOBBY OPERATIONAL *** STABLE TRANSMISSION HUB ACTIVE *** NO FLOODING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Connecting to global data matrix...</div>
@@ -44,55 +45,69 @@
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div style="color: #00ff00; font-size: 11px;">Online ✔</div>
+            
+            <!-- Manual Reset Control Dashboard Link -->
+            <button id="wipeBtn" class="btn-wipe">WIPE LOBBY</button>
         </div>
     </div>
     <div class="input-bar">
         <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
-        <button id="sendBtn">SEND</button>
+        <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106842</span></div>
 
 <script>
-  // Randomized screen alias assignment
   const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
-  const statusMessage = document.getElementById('statusMessage');
+  const wipeBtn = document.getElementById('wipeBtn');
+  let statusMessage = document.getElementById('statusMessage');
 
-  // Unique channel URL generation parameters
+  // Dedicated data endpoint URL path route
   const routerUrl = "https://kvdb.io";
   let lastMessageCount = 0;
 
-  // 1. Inbound Connection Synchronization Logic Loop
+  // 1. Sync Loop: Continuously updates the chat logs screen from the web server
   function syncMessages() {
       fetch(routerUrl)
       .then(response => {
-          // If server file is fresh or deleted, route past standard parser to avoid crashes
-          if (!response.ok) { return []; }
+          if (!response.ok) return [];
           return response.json().catch(() => []);
       })
       .then(messagesList => {
-          const listValid = Array.isArray(messagesList) && messagesList.length > 0;
+          const statusText = document.getElementById('statusMessage');
           
-          if (!listValid) {
-              chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** Room is empty! Type a message and hit SEND to broadcast live.</div>`;
+          // Case A: Handhandle empty server states safely without execution breaks
+          if (!Array.isArray(messagesList) || messagesList.length === 0) {
+              if (!statusText) {
+                  chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** Room is empty! Type a message and hit SEND to broadcast live.</div>`;
+              } else if (statusText.textContent.includes("Connecting")) {
+                  statusText.textContent = "*** Room is empty! Type a message and hit SEND to broadcast live.";
+              }
               lastMessageCount = 0;
               return;
           }
           
-          if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
+          // Remove placeholders once entries start streaming in
+          if (statusText && !statusText.textContent.includes("empty")) { statusText.remove(); }
 
-          // Handle incoming network wipe triggers triggered by page refreshes
+          // Case B: Handle sudden manual wipe clearing inputs across remote windows
           if (messagesList.length < lastMessageCount) {
-              chatLog.innerHTML = '';
+              chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** Room is empty! Type a message and hit SEND to broadcast live.</div>`;
               lastMessageCount = 0;
+              return;
           }
 
+          // Case C: Render brand new inbound text segments into view panels
           if (messagesList.length > lastMessageCount) {
+              // Remove the empty room reminder text line right before appending real conversation entries
+              const emptyTextNotice = document.getElementById('statusMessage');
+              if (emptyTextNotice) emptyTextNotice.remove();
+
               const newEntries = messagesList.slice(lastMessageCount);
               
               newEntries.forEach(msg => {
@@ -106,12 +121,10 @@
               lastMessageCount = messagesList.length;
           }
       })
-      .catch(err => {
-          console.log("Database connection pending...");
-      });
+      .catch(err => console.log("Awaiting connection handshake stream..."));
   }
 
-  // 2. Outbound Network Package Dispatch Logic
+  // 2. Transmit: Packages input fields and pushes up to database stream
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
@@ -125,7 +138,8 @@
           let updatedList = Array.isArray(currentHistory) ? currentHistory : [];
           updatedList.push({ sender: currentAlias, text: text });
 
-          if (updatedList.length > 35) { updatedList.shift(); }
+          // Retain latest 40 entries maximum for optimal light browser scaling
+          if (updatedList.length > 40) { updatedList.shift(); }
 
           return fetch(routerUrl, {
               method: 'PUT',
@@ -133,23 +147,32 @@
           });
       })
       .then(() => {
+          // Fire instantaneous refresh sweep to print your post onto view frame
           syncMessages();
       })
-      .catch(err => console.error("Transmission failed:", err));
+      .catch(err => console.error("Data push drop fault error:", err));
 
       chatInput.value = '';
   }
 
-  // 3. Clear global cloud history array data whenever page destruction fires
-  window.addEventListener('beforeunload', () => {
-      navigator.sendBeacon(routerUrl, JSON.stringify([]));
-  });
+  // 3. Clear: Explicit button workflow method targeting server-level wiping operations
+  function wipeLobby() {
+      if (confirm("Are you sure you want to clear the entire chatroom history for everyone?")) {
+          fetch(routerUrl, {
+              method: 'PUT',
+              body: JSON.stringify([])
+          }).then(() => {
+              syncMessages();
+          });
+      }
+  }
 
-  // Action listeners bindings
+  // Bind execution nodes
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+  wipeBtn.addEventListener('click', wipeLobby);
 
-  // Stream sync timer loops (2000ms intervals)
+  // Initialize loop cadence cycle rates (2000ms polling checks)
   setInterval(syncMessages, 2000);
   syncMessages();
 </script>
