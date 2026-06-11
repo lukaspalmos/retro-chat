@@ -30,13 +30,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v4.0)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v4.1)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** RETRO CHATWAY NETWORK INITIALIZED *** TALK LIVE WITH ANYONE HERE ***</marquee>
+    <marquee scrollamount="4">*** RETRO CHATWAY NETWORK INITIALIZED *** UNPKG FALLBACK ROUTE ONLINE ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing bypass link to live cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -50,10 +50,10 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">103554</span></div>
 
+<!-- Switched to unpkg network to bypass aggressive firewall/extension domain blocks -->
 <script type="module">
-  // Load standard network components with full file paths
-  import { initializeApp } from "https://cloudflare.com";
-  import { getDatabase, ref, push, onChildAdded } from "https://cloudflare.com";
+  import { initializeApp } from "https://unpkg.com";
+  import { getDatabase, ref, push, onChildAdded } from "https://unpkg.com";
 
   const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${username}`;
@@ -110,7 +110,7 @@
 
       setTimeout(() => {
           if (document.getElementById('statusMessage')) {
-              statusMessage.innerHTML = "<span style='color: #ffff00;'>*** Connected to database node. Room is empty. Start typing to test...</span>";
+              statusMessage.innerHTML = "<span style='color: #ffff00;'>*** Connected to network. Room is empty. Start typing to test...</span>";
           }
       }, 3000);
 
