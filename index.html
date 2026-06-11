@@ -30,13 +30,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v3.1)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v3.2)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** CONNECTING TO LUKE'S CHATBOX ENGINE *** TALK LIVE WITH ANYONE HERE ***</marquee>
+    <marquee scrollamount="4">*** LUKE'S GLOBAL LOBBY ROOM SYSTEM ACTIVE *** POST MESSAGES FREELY ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Contacting Firebase Realtime Database clusters...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with Firebase cluster nodes...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -50,7 +50,7 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">102941</span></div>
 
-<!-- Firebase System Module Integration Scripts -->
+<!-- Standard Script Loader Compatibility Layer Injection -->
 <script type="module">
   import { initializeApp } from "https://gstatic.com";
   import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
@@ -66,7 +66,7 @@
   const firebaseConfig = {
     apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
     authDomain: "://firebaseapp.com",
-    databaseURL: "https://firebasedatabase.app",
+    databaseURL: "https://luke-s-chatbox-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "luke-s-chatbox",
     storageBucket: "luke-s-chatbox.firebasestorage.app",
     messagingSenderId: "492665344445",
@@ -74,46 +74,49 @@
     measurementId: "G-E6Z1F9RYMQ"
   };
 
-  // Connect to the systems
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const messagesRef = ref(db, 'global_lobby');
+  // Run Startup Instantiations
+  try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const messagesRef = ref(db, 'global_lobby');
 
-  // Send Message out to Firebase database node
-  function sendMsg() {
-      const text = chatInput.value.trim();
-      if (text === '') return;
+      // Outbound Form Push Logic
+      window.sendMsg = function() {
+          const text = chatInput.value.trim();
+          if (text === '') return;
 
-      push(messagesRef, {
-          sender: username,
-          text: text,
-          timestamp: Date.now()
-      }).then(() => {
-          console.log("Message sent successfully!");
-      }).catch(err => {
-          alert("Firebase database error: " + err.message);
+          push(messagesRef, {
+              sender: username,
+              text: text,
+              timestamp: Date.now()
+          }).catch(err => {
+              alert("Write Blocked: Ensure your Realtime Database Rules are published as true.");
+          });
+
+          chatInput.value = '';
+      }
+
+      // Sync Database listener updates
+      onChildAdded(messagesRef, (snapshot) => {
+          if (statusMessage) { statusMessage.remove(); }
+
+          const data = snapshot.val();
+          const messageRow = document.createElement('div');
+          const tagClass = (data.sender === username) ? 'my-tag' : 'user-tag';
+          
+          messageRow.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(messageRow);
+          chatLog.scrollTop = chatLog.scrollHeight;
       });
 
-      chatInput.value = '';
+      // Bind actions directly to DOM listeners
+      sendBtn.addEventListener('click', window.sendMsg);
+      chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
+
+  } catch(globalError) {
+      statusMessage.textContent = "CRITICAL INITIALIZATION INTERRUPT: " + globalError.message;
+      statusMessage.style.color = "#FF0000";
   }
-
-  // Stream inbound entries straight into chat wall
-  onChildAdded(messagesRef, (snapshot) => {
-      // Remove loading status message line as soon as the first message or data sync lands
-      if (statusMessage) { statusMessage.remove(); }
-
-      const data = snapshot.val();
-      const messageRow = document.createElement('div');
-      const tagClass = (data.sender === username) ? 'my-tag' : 'user-tag';
-      
-      messageRow.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(messageRow);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  });
-
-  // Action Triggers
-  sendBtn.addEventListener('click', sendMsg);
-  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
 </body>
 </html>
