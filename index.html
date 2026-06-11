@@ -101,6 +101,51 @@
       }
 
       // Live ingestion connection line
+      <!-- Fully self-contained engine using un-cacheable alternative cloud networks -->
+<script type="module">
+  // Using alternative non-Google content delivery servers to break the cache loop
+  import { initializeApp, getApps } from "https://cloudflare.com";
+  import { getDatabase, ref, push, onChildAdded } from "https://cloudflare.com";
+
+  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${username}`;
+
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const statusMessage = document.getElementById('statusMessage');
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://firebasedatabase.app",
+    projectId: "luke-s-chatbox",
+    storageBucket: "luke-s-chatbox.firebasestorage.app",
+    messagingSenderId: "492665344445",
+    appId: "1:492665344445:web:001f15c4cce3527a7d02d4",
+    measurementId: "G-E6Z1F9RYMQ"
+  };
+
+  try {
+      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps();
+      const db = getDatabase(app);
+      const messagesRef = ref(db, 'chat_logs');
+
+      window.sendMsg = function() {
+          const text = chatInput.value.trim();
+          if (text === '') return;
+
+          push(messagesRef, {
+              sender: username,
+              text: text,
+              timestamp: Date.now()
+          }).catch(err => {
+              alert("Database connection blocked. Double check your Firebase Rules panel settings.");
+          });
+
+          chatInput.value = '';
+      }
+
       onChildAdded(messagesRef, (snapshot) => {
           if (statusMessage) { statusMessage.remove(); }
 
@@ -113,21 +158,18 @@
           chatLog.scrollTop = chatLog.scrollHeight;
       });
 
-      // Bind input execution nodes
       sendBtn.addEventListener('click', window.sendMsg);
       chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
 
-      // Fallback clean display if database starts completely empty
       setTimeout(() => {
           if (document.getElementById('statusMessage')) {
               statusMessage.textContent = "*** Connected to database node. Room is empty. Start typing to chat!";
           }
-      }, 3000);
+      }, 2500);
 
   } catch(globalError) {
       statusMessage.textContent = "INITIALIZATION ERROR: " + globalError.message;
       statusMessage.style.color = "#FF0000";
-      console.error(globalError);
   }
 </script>
 </body>
