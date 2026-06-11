@@ -30,13 +30,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v7.1 - Clear on Refresh)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v7.2 - Stable Engine)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL NETWORK ACTIVE *** REFRESHING THE PAGE WILL ERASE GLOBAL DISCUSSION HISTORY FOR EVERYONE ***</marquee>
+    <marquee scrollamount="4">*** SECURE LOGIC BRIDGE ENGAGED *** ROOM WILL WIPE GLOBAL HISTORY UPON REFRESH ACTION ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Syncing messages from global cloud router...</div>
+            <div class="sys-msg" id="statusMessage">*** Connecting to global data matrix...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -54,6 +54,7 @@
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106842</span></div>
 
 <script>
+  // Randomized screen alias assignment
   const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
@@ -62,23 +63,30 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
 
+  // Unique channel URL generation parameters
   const routerUrl = "https://kvdb.io";
   let lastMessageCount = 0;
 
+  // 1. Inbound Connection Synchronization Logic Loop
   function syncMessages() {
       fetch(routerUrl)
-      .then(response => response.json())
+      .then(response => {
+          // If server file is fresh or deleted, route past standard parser to avoid crashes
+          if (!response.ok) { return []; }
+          return response.json().catch(() => []);
+      })
       .then(messagesList => {
-          // If the server was cleared, wipe local screen state and reset counters
-          if (!Array.isArray(messagesList) || messagesList.length === 0) {
-              chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** History was cleared. Room is empty!</div>`;
+          const listValid = Array.isArray(messagesList) && messagesList.length > 0;
+          
+          if (!listValid) {
+              chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** Room is empty! Type a message and hit SEND to broadcast live.</div>`;
               lastMessageCount = 0;
               return;
           }
           
           if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
 
-          // If the network history is shorter than our local count, someone cleared it
+          // Handle incoming network wipe triggers triggered by page refreshes
           if (messagesList.length < lastMessageCount) {
               chatLog.innerHTML = '';
               lastMessageCount = 0;
@@ -99,20 +107,20 @@
           }
       })
       .catch(err => {
-          // Fallback view state if database returns an empty payload item
-          if (!chatLog.querySelector('#statusMessage')) {
-              chatLog.innerHTML = `<div class="sys-msg" id="statusMessage">*** Room empty. Waiting for first transmission...</div>`;
-          }
-          lastMessageCount = 0;
+          console.log("Database connection pending...");
       });
   }
 
+  // 2. Outbound Network Package Dispatch Logic
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
       fetch(routerUrl)
-      .then(res => res.json())
+      .then(res => {
+          if (!res.ok) return [];
+          return res.json().catch(() => []);
+      })
       .then(currentHistory => {
           let updatedList = Array.isArray(currentHistory) ? currentHistory : [];
           updatedList.push({ sender: currentAlias, text: text });
@@ -126,20 +134,22 @@
       })
       .then(() => {
           syncMessages();
-      });
+      })
+      .catch(err => console.error("Transmission failed:", err));
 
       chatInput.value = '';
   }
 
-  // NEW FEATURE: Clears out server data history whenever a browser window closes or reloads
+  // 3. Clear global cloud history array data whenever page destruction fires
   window.addEventListener('beforeunload', () => {
-      // SendBeacon pushes a fast network request that guarantees delivery even during page destruction
       navigator.sendBeacon(routerUrl, JSON.stringify([]));
   });
 
+  // Action listeners bindings
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 
+  // Stream sync timer loops (2000ms intervals)
   setInterval(syncMessages, 2000);
   syncMessages();
 </script>
