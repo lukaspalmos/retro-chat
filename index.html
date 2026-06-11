@@ -30,13 +30,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v3.5)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v4.0)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** LUKE'S LIVE CHAT SYSTEM ONLINE *** DISCUSS FREELY ***</marquee>
+    <marquee scrollamount="4">*** RETRO CHATWAY NETWORK INITIALIZED *** TALK LIVE WITH ANYONE HERE ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with Firebase cluster nodes...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -48,11 +48,11 @@
         <button id="sendBtn">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">102941</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">103554</span></div>
 
-<!-- Clean, Full Engine Block using Alternative cdnjs Delivery Nodes -->
 <script type="module">
-  import { initializeApp, getApps } from "https://cloudflare.com";
+  // Load standard network components with full file paths
+  import { initializeApp } from "https://cloudflare.com";
   import { getDatabase, ref, push, onChildAdded } from "https://cloudflare.com";
 
   const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -63,20 +63,16 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
 
-  // Your correct Southeast Asian Firebase endpoint setup configurations
   const firebaseConfig = {
     apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
-    authDomain: "luke-s-chatbox.firebaseapp.com",
-    databaseURL: "https://luke-s-chatbox-default-rtdb.asia-southeast1.firebasedatabase.app",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://firebasedatabase.app",
     projectId: "luke-s-chatbox",
-    storageBucket: "luke-s-chatbox.firebasestorage.app",
-    messagingSenderId: "492665344445",
-    appId: "1:492665344445:web:001f15c4cce3527a7d02d4",
-    measurementId: "G-E6Z1F9RYMQ"
+    storageBucket: "luke-s-chatbox.firebasestorage.app"
   };
 
   try {
-      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+      const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
       const messagesRef = ref(db, 'chat_logs');
 
@@ -88,12 +84,14 @@
               sender: username,
               text: text,
               timestamp: Date.now()
+          }).then(() => {
+              console.log("Transmission sent!");
           }).catch(err => {
-              alert("Database connection blocked! Confirm rules are true inside Firebase.");
+              alert("Write Blocked: Go to your Firebase console -> Realtime Database -> Rules tab, change '.read' and '.write' to true, and click the blue PUBLISH button.");
           });
 
           chatInput.value = '';
-      }
+      };
 
       onChildAdded(messagesRef, (snapshot) => {
           if (statusMessage) { statusMessage.remove(); }
@@ -112,12 +110,12 @@
 
       setTimeout(() => {
           if (document.getElementById('statusMessage')) {
-              statusMessage.textContent = "*** Connected to database node. Room is empty. Start typing to chat!";
+              statusMessage.innerHTML = "<span style='color: #ffff00;'>*** Connected to database node. Room is empty. Start typing to test...</span>";
           }
-      }, 2500);
+      }, 3000);
 
-  } catch(globalError) {
-      statusMessage.textContent = "INITIALIZATION ERROR: " + globalError.message;
+  } catch(error) {
+      statusMessage.textContent = "SYSTEM CANCELLATION: " + error.message;
       statusMessage.style.color = "#FF0000";
   }
 </script>
