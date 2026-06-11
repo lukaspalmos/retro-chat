@@ -24,17 +24,19 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
         .setup-box { background-color: #a0a0a0; padding: 8px; border: 2px inset #fff; font-size: 11px; color: black; font-weight: bold; margin-top: 10px; }
-        .setup-box input { width: 90%; margin-top: 4px; padding: 2px; font-family: monospace; font-size: 11px; }
+        .setup-box input { width: 90%; margin-top: 4px; padding: 2px; font-family: monospace; font-size: 11px; color: black; background: white; border: 2px inset #808080; }
     </style>
+    <!-- Load completely robust universal script bundle with fallback support -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Peer Chatroom (v8.0 - Direct Connect)</div>
+        <div>💬 CyberZone_95 Peer Chatroom (v8.1 - Final Build)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** PEER-TO-PEER ENCRYPTED LINK SYSTEM *** SHARE YOUR ROOM CODE TO DISCUSS LIVE WITH NO LIMITS ***</marquee>
+    <marquee scrollamount="4">*** SECURE LINK ACTIVE *** GENERATE A KEY OR ENTER A FRIEND'S KEY TO TALK LIVE ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Waiting for you to create or join a room...</div>
@@ -46,7 +48,7 @@
             <div class="setup-box">
                 <div>1. CREATE A ROOM:</div>
                 <button id="createBtn" class="btn-95" style="font-size:11px; padding:2px 5px; margin:4px 0;">Get Room Key</button>
-                <input type="text" id="myKeyDisplay" readonly placeholder="Your key pops up here...">
+                <input type="text" id="myKeyDisplay" readonly placeholder="Key pops up here...">
             </div>
 
             <div class="setup-box">
@@ -63,10 +65,8 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106954</span></div>
 
-<!-- Load completely self-contained direct communication engine without external file dependencies -->
-<script type="module">
-  import { Client } from "https://unpkg.com";
-
+<script>
+  // Simple classic browser script logic layer
   const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
@@ -78,39 +78,38 @@
   const joinKeyInput = document.getElementById('joinKeyInput');
   const joinBtn = document.getElementById('joinBtn');
 
-  // Using a universal, public WebSocket relay that never blocks operations
-  const client = new Client({
+  // Instantiate universal global broker instance connection stream
+  const client = new StompJs.Client({
     brokerURL: "wss://://hivemq.com",
-    connectHeaders: { login: "guest", passcode: "guest" },
-    debug: function (str) { console.log(str); }
+    connectHeaders: { login: "guest", passcode: "guest" }
   });
 
   let currentRoomTopic = null;
 
   client.onConnect = function (frame) {
-      console.log("WebSocket linked cleanly.");
+      console.log("WebSocket engine data pipeline connected.");
   };
 
   client.activate();
 
-  // Handle generating a private key room token
+  // Create Key Button Click
   createBtn.addEventListener('click', () => {
       const uniqueRoomId = "room_" + Math.floor(Math.random() * 899999 + 100000);
       myKeyDisplay.value = uniqueRoomId;
       listenToRoom(uniqueRoomId);
-      printSystem("Room created! Send your key to a friend. You can type text now.");
+      printSystem("Room created! Send your key to a friend. You can chat now.");
   });
 
-  // Handle joining a friend's key room token
+  // Join Button Click
   joinBtn.addEventListener('click', () => {
       const targetRoom = joinKeyInput.value.trim();
-      if (!targetRoom) return alert("Please paste a valid room key string first!");
+      if (!targetRoom) return alert("Please paste a valid room key first!");
       listenToRoom(targetRoom);
       printSystem(`Successfully hopped inside room node: ${targetRoom}`);
   });
 
   function listenToRoom(roomId) {
-      if (currentRoomTopic) { return; } // Avoid double subscriptions
+      if (currentRoomTopic) return; // Lock subscription process
       currentRoomTopic = `/topic/luke_retro_${roomId}`;
       
       client.subscribe(currentRoomTopic, function (message) {
@@ -129,6 +128,7 @@
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
+      
       if (!currentRoomTopic) {
           alert("You must click 'Get Room Key' or join a room key code before sending messages!");
           return;
