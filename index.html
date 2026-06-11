@@ -24,139 +24,221 @@
         .input-bar button:active { border: 2px inset #ffffff; }
         .visitor-counter { text-align: center; margin-top: 15px; font-size: 12px; color: #888; }
         .counter-badge { background: #222; color: #ff0000; padding: 2px 6px; border: 1px solid #444; font-weight: bold; letter-spacing: 2px; }
-        .connect-box { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: bold; }
-        .connect-box input { padding: 3px; font-family: monospace; border: 2px inset #fff; }
     </style>
-    <!-- Load PeerJS Live Stream Script Framework Engine -->
-    <script src="https://unpkg.com"></script>
+    <!-- Light-weight, high-delivery messaging engine script asset -->
+    <script src="https://scaledrone.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Peer-to-Peer Chatroom (v5.0)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v6.0)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** PEER-TO-PEER DIRECT CONNECTION LAYER ESTABLISHED *** SEND YOUR ROOM ID TO A FRIEND TO LINK UP ***</marquee>
-    
+    <marquee scrollamount="4">*** LUKE'S LIVE CHAT ENGINE ONLINE *** MESSAGES ROUTING LIVE FOR ALL VISITORS *** NO FLOODING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Starting direct peer-to-peer data engine...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing live room connection tunnel...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 10px;"></div>
-            <div style="color: #ffff00; font-size: 11px;">YOUR ID:</div>
-            <div id="myPeerId" style="color: white; font-size: 11px; word-break: break-all; background: #222; padding: 3px; border: 1px inset #808080;">...</div>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold;"></div>
+            <br>
+            <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
+            <div id="serverStatus" style="color: white; font-size: 11px;">Connecting...</div>
         </div>
     </div>
-
-    <!-- Quick link management taskbar tool -->
-    <div class="connect-box">
-        <span>CONNECT TO FRIEND'S ID:</span>
-        <input type="text" id="peerIdInput" placeholder="Paste ID here...">
-        <button id="connectBtn" style="padding: 2px 10px; font-family: monospace; font-weight: bold; background: #c0c0c0; border: 2px outset #fff;">CONNECT</button>
-    </div>
-
     <div class="input-bar">
         <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
         <button id="sendBtn">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">104229</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106421</span></div>
 
 <script>
-    const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-    document.getElementById('myUsername').textContent = `• ${username}`;
+  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${username}`;
 
-    const chatLog = document.getElementById('chatLog');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const statusMessage = document.getElementById('statusMessage');
-    const myPeerIdDisplay = document.getElementById('myPeerId');
-    const peerIdInput = document.getElementById('peerIdInput');
-    const connectBtn = document.getElementById('connectBtn');
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const statusMessage = document.getElementById('statusMessage');
+  const serverStatus = document.getElementById('serverStatus');
 
-    let peer = new Peer();
-    let conn = null;
+  // Open testing sandbox channel ID mapping key
+  const drone = new Scaledrone('askYg7u6u9P7gEsh');
+  const roomName = 'observable-luke-lobby';
+  let room;
 
-    // 1. Fire when your unique live channel token populates
-    peer.on('open', (id) => {
-        statusMessage.innerHTML = "*** Online! Copy 'YOUR ID' from the sidebar and share it with your friend, or enter theirs below!";
-        myPeerIdDisplay.textContent = id;
-    });
+  // 1. Fire up tracking upon successful system authorization handshake
+  drone.on('open', error => {
+    if (error) {
+        statusMessage.textContent = "CONNECTION BLOCKED: " + error.message;
+        return console.error(error);
+    }
+    serverStatus.textContent = "Online ✔";
+    serverStatus.style.color = "#00ff00";
+    statusMessage.textContent = "*** Connected successfully! Welcome to the lobby. Start typing to chat!";
+    
+    // Join the shared room node
+    room = drone.subscribe(roomName);
+  });
 
-    // 2. Catch incoming connection requests from outside users
-    peer.on('connection', (incomingConn) => {
-        conn = incomingConn;
-        setupChatConnection();
-        appendSystemMessage(`*** User <${conn.peer.substring(0,6)}> established an active hook connection node!`);
-    });
+  // 2. Transmit text payload packets onto the web mesh grid
+  function sendMsg() {
+      const text = chatInput.value.trim();
+      if (text === '' || !room) return;
 
-    // 3. Initiate connection manually to another person's lobby ID
-    connectBtn.addEventListener('click', () => {
-        const targetId = peerIdInput.value.trim();
-        if(!targetId) return alert("Please enter a valid peer ID token string first!");
+      drone.publish({
+          room: roomName,
+          message: {
+              sender: username,
+              text: text
+          }
+      });
+      chatInput.value = '';
+  }
+
+  // 3. Listen for incoming message packet entries arriving from anywhere in the world
+  drone.on('open', () => {
+    room.on('data', (message) => {
+        // Drop the static placeholder loading text line upon first paint
+        if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
+
+        const messageRow = document.createElement('div');
+        const tagClass = (message.sender === username) ? 'my-tag' : 'user-tag';
         
-        appendSystemMessage("*** Injecting connection signal package...");
-        conn = peer.connect(targetId);
-        setupChatConnection();
+        messageRow.innerHTML = `<span class="${tagClass}">&lt;${message.sender}&gt;</span> <span class="text-white">${message.text}</span>`;
+        chatLog.appendChild(messageRow);
+        chatLog.scrollTop = chatLog.scrollHeight;
     });
+  });
 
-    function setupChatConnection() {
-        conn.on('open', () => {
-            appendSystemMessage("*** Link operational! Messages are streaming directly over real-time WebSockets.");
-        });
+  // Event handler trigger points
+  sendBtn.addEventListener('click', sendMsg);
+  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
+    <style>
+        body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
+        .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
+        .title-bar { background: linear-gradient(90deg, #000080, #0080fe); color: white; padding: 4px 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .title-controls span { background-color: #c0c0c0; color: black; border: 2px outset #fff; padding: 0 5px; font-size: 11px; cursor: pointer; margin-left: 2px; }
+        marquee { background-color: #ff00ff; color: #ffffff; font-weight: bold; padding: 3px; font-size: 12px; border-bottom: 2px inset #fff; }
+        .workspace { display: flex; background-color: #c0c0c0; padding: 10px; gap: 10px; }
+        .chat-log { flex: 3; height: 300px; background-color: #000; color: #00ff00; border: 3px inset #808080; padding: 8px; overflow-y: scroll; font-size: 13px; line-height: 1.4; }
+        .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
+        .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
+        .sys-msg { color: #ffff00; }
+        .user-tag { color: #ff00ff; font-weight: bold; }
+        .my-tag { color: #00ffff; font-weight: bold; }
+        .text-white { color: #ffffff; }
+        .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
+        .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
+        .input-bar button { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 0 15px; cursor: pointer; }
+        .input-bar button:active { border: 2px inset #ffffff; }
+        .visitor-counter { text-align: center; margin-top: 15px; font-size: 12px; color: #888; }
+        .counter-badge { background: #222; color: #ff0000; padding: 2px 6px; border: 1px solid #444; font-weight: bold; letter-spacing: 2px; }
+    </style>
+    <!-- Light-weight, high-delivery messaging engine script asset -->
+    <script src="https://scaledrone.com"></script>
+</head>
+<body>
 
-        conn.on('data', (data) => {
-            appendChatMessage(data.sender, data.text, 'user-tag');
-        });
+<div class="chat-window">
+    <div class="title-bar">
+        <div>💬 CyberZone_95 Live Chatroom (v6.0)</div>
+        <div class="title-controls"><span>_</span><span>X</span></div>
+    </div>
+    <marquee scrollamount="4">*** LUKE'S LIVE CHAT ENGINE ONLINE *** MESSAGES ROUTING LIVE FOR ALL VISITORS *** NO FLOODING ***</marquee>
+    <div class="workspace">
+        <div class="chat-log" id="chatLog">
+            <div class="sys-msg" id="statusMessage">*** Establishing live room connection tunnel...</div>
+        </div>
+        <div class="user-list">
+            <h4>YOUR PROFILE</h4>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold;"></div>
+            <br>
+            <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
+            <div id="serverStatus" style="color: white; font-size: 11px;">Connecting...</div>
+        </div>
+    </div>
+    <div class="input-bar">
+        <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
+        <button id="sendBtn">SEND</button>
+    </div>
+</div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106421</span></div>
 
-        conn.on('close', () => {
-            appendSystemMessage("*** Connection terminated by foreign terminal cluster node.");
-            conn = null;
-        });
+<script>
+  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${username}`;
+
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const statusMessage = document.getElementById('statusMessage');
+  const serverStatus = document.getElementById('serverStatus');
+
+  // Open testing sandbox channel ID mapping key
+  const drone = new Scaledrone('askYg7u6u9P7gEsh');
+  const roomName = 'observable-luke-lobby';
+  let room;
+
+  // 1. Fire up tracking upon successful system authorization handshake
+  drone.on('open', error => {
+    if (error) {
+        statusMessage.textContent = "CONNECTION BLOCKED: " + error.message;
+        return console.error(error);
     }
+    serverStatus.textContent = "Online ✔";
+    serverStatus.style.color = "#00ff00";
+    statusMessage.textContent = "*** Connected successfully! Welcome to the lobby. Start typing to chat!";
+    
+    // Join the shared room node
+    room = drone.subscribe(roomName);
+  });
 
-    // 4. Outbound message handling routing sequence
-    function sendMsg() {
-        const text = chatInput.value.trim();
-        if (text === '') return;
+  // 2. Transmit text payload packets onto the web mesh grid
+  function sendMsg() {
+      const text = chatInput.value.trim();
+      if (text === '' || !room) return;
 
-        appendChatMessage(username, text, 'my-tag');
+      drone.publish({
+          room: roomName,
+          message: {
+              sender: username,
+              text: text
+          }
+      });
+      chatInput.value = '';
+  }
 
-        // Forward message to the connected friend if linked
-        if (conn && conn.open) {
-            conn.send({
-                sender: username,
-                text: text
-            });
-        } else {
-            appendSystemMessage("<System Alert>: Message shown locally, but you aren't connected to a friend yet! Send them your ID to chat.");
-        }
+  // 3. Listen for incoming message packet entries arriving from anywhere in the world
+  drone.on('open', () => {
+    room.on('data', (message) => {
+        // Drop the static placeholder loading text line upon first paint
+        if (statusMessage && chatLog.contains(statusMessage)) { statusMessage.remove(); }
 
-        chatInput.value = '';
-    }
-
-    function appendSystemMessage(msg) {
-        if (statusMessage) { statusMessage.remove(); }
-        const row = document.createElement('div');
-        row.className = 'sys-msg';
-        row.textContent = msg;
-        chatLog.appendChild(row);
+        const messageRow = document.createElement('div');
+        const tagClass = (message.sender === username) ? 'my-tag' : 'user-tag';
+        
+        messageRow.innerHTML = `<span class="${tagClass}">&lt;${message.sender}&gt;</span> <span class="text-white">${message.text}</span>`;
+        chatLog.appendChild(messageRow);
         chatLog.scrollTop = chatLog.scrollHeight;
-    }
+    });
+  });
 
-    function appendChatMessage(sender, text, tagClass) {
-        if (statusMessage) { statusMessage.remove(); }
-        const row = document.createElement('div');
-        row.innerHTML = `<span class="${tagClass}">&lt;${sender}&gt;</span> <span class="text-white">${text}</span>`;
-        chatLog.appendChild(row);
-        chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    sendBtn.addEventListener('click', sendMsg);
-    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+  // Event handler trigger points
+  sendBtn.addEventListener('click', sendMsg);
+  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
 </body>
 </html>
