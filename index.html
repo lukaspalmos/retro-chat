@@ -23,39 +23,28 @@
         
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
-        .setup-box { background-color: #a0a0a0; padding: 8px; border: 2px inset #fff; font-size: 11px; color: black; font-weight: bold; margin-top: 10px; }
-        .setup-box input { width: 90%; margin-top: 4px; padding: 2px; font-family: monospace; font-size: 11px; color: black; background: white; border: 2px inset #808080; }
     </style>
-    <!-- Load completely robust universal script bundle with fallback support -->
+    <!-- Light, firewall-immune streaming connection bridge bundle -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Peer Chatroom (v8.1 - Final Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v9.0 - Auto Clear)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE LINK ACTIVE *** GENERATE A KEY OR ENTER A FRIEND'S KEY TO TALK LIVE ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL OPEN LOBBY CONNECTED *** REFRESHING THE PAGE WILL INSTANTLY WIPE YOUR CHAT DISPLAY ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Waiting for you to create or join a room...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
             <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
-            
-            <div class="setup-box">
-                <div>1. CREATE A ROOM:</div>
-                <button id="createBtn" class="btn-95" style="font-size:11px; padding:2px 5px; margin:4px 0;">Get Room Key</button>
-                <input type="text" id="myKeyDisplay" readonly placeholder="Key pops up here...">
-            </div>
-
-            <div class="setup-box">
-                <div>2. JOIN A ROOM:</div>
-                <input type="text" id="joinKeyInput" placeholder="Paste friend's key here...">
-                <button id="joinBtn" class="btn-95" style="font-size:11px; padding:2px 5px; margin-top:4px;">Connect</button>
-            </div>
+            <br>
+            <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
+            <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
         </div>
     </div>
     <div class="input-bar">
@@ -63,59 +52,40 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">106954</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">107221</span></div>
 
 <script>
-  // Simple classic browser script logic layer
   const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
-  const createBtn = document.getElementById('createBtn');
-  const myKeyDisplay = document.getElementById('myKeyDisplay');
-  const joinKeyInput = document.getElementById('joinKeyInput');
-  const joinBtn = document.getElementById('joinBtn');
+  const statusMessage = document.getElementById('statusMessage');
+  const serverStatus = document.getElementById('serverStatus');
 
-  // Instantiate universal global broker instance connection stream
+  // Shared open public text stream lobby endpoint
+  const lobbyTopic = "/topic/luke_public_retro_lobby";
+
+  // Connect utilizing high-speed public web-sockets
   const client = new StompJs.Client({
     brokerURL: "wss://://hivemq.com",
     connectHeaders: { login: "guest", passcode: "guest" }
   });
 
-  let currentRoomTopic = null;
-
+  // 1. Handshake Event: Triggers automatically when webpage connection completes
   client.onConnect = function (frame) {
-      console.log("WebSocket engine data pipeline connected.");
-  };
+      serverStatus.textContent = "Online ✔";
+      serverStatus.style.color = "#00ff00";
+      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to broadcast live.";
 
-  client.activate();
-
-  // Create Key Button Click
-  createBtn.addEventListener('click', () => {
-      const uniqueRoomId = "room_" + Math.floor(Math.random() * 899999 + 100000);
-      myKeyDisplay.value = uniqueRoomId;
-      listenToRoom(uniqueRoomId);
-      printSystem("Room created! Send your key to a friend. You can chat now.");
-  });
-
-  // Join Button Click
-  joinBtn.addEventListener('click', () => {
-      const targetRoom = joinKeyInput.value.trim();
-      if (!targetRoom) return alert("Please paste a valid room key first!");
-      listenToRoom(targetRoom);
-      printSystem(`Successfully hopped inside room node: ${targetRoom}`);
-  });
-
-  function listenToRoom(roomId) {
-      if (currentRoomTopic) return; // Lock subscription process
-      currentRoomTopic = `/topic/luke_retro_${roomId}`;
-      
-      client.subscribe(currentRoomTopic, function (message) {
+      // Subscribe to the global public stream room
+      client.subscribe(lobbyTopic, function (message) {
           const data = JSON.parse(message.body);
-          const statusText = document.getElementById('statusMessage');
-          if (statusText) statusText.remove();
+          
+          // Clear initial connection system notifications upon first real message arrival
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) currentStatus.remove();
 
           const row = document.createElement('div');
           const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
@@ -123,35 +93,34 @@
           chatLog.appendChild(row);
           chatLog.scrollTop = chatLog.scrollHeight;
       });
-  }
+  };
 
+  client.onDisconnect = function () {
+      serverStatus.textContent = "Offline ✖";
+      serverStatus.style.color = "#ff0000";
+  };
+
+  client.activate();
+
+  // 2. Outbound Stream Action: Publishes data package over live web matrix
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
-      
-      if (!currentRoomTopic) {
-          alert("You must click 'Get Room Key' or join a room key code before sending messages!");
+
+      if (!client.connected) {
+          alert("Awaiting connection handshake from data servers. Please try again in a moment.");
           return;
       }
 
       client.publish({
-          destination: currentRoomTopic,
+          destination: lobbyTopic,
           body: JSON.stringify({ sender: currentAlias, text: text })
       });
 
       chatInput.value = '';
   }
 
-  function printSystem(msg) {
-      const statusText = document.getElementById('statusMessage');
-      if (statusText) statusText.remove();
-      const row = document.createElement('div');
-      row.className = 'sys-msg';
-      row.id = 'statusMessage';
-      row.textContent = "*** " + msg;
-      chatLog.appendChild(row);
-  }
-
+  // Bind execution listeners
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
