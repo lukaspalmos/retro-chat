@@ -30,7 +30,7 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v3.4)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v3.5)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
     <marquee scrollamount="4">*** LUKE'S LIVE CHAT SYSTEM ONLINE *** DISCUSS FREELY ***</marquee>
@@ -50,60 +50,8 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">102941</span></div>
 
-<!-- Using Stable CDN Modules -->
+<!-- Clean, Full Engine Block using Alternative cdnjs Delivery Nodes -->
 <script type="module">
-  import { initializeApp, getApps } from "https://gstatic.com";
-  import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
-
-  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${username}`;
-
-  const chatLog = document.getElementById('chatLog');
-  const chatInput = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const statusMessage = document.getElementById('statusMessage');
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
-    authDomain: "luke-s-chatbox.firebaseapp.com",
-    databaseURL: "https://firebasedatabase.app",
-    projectId: "luke-s-chatbox",
-    storageBucket: "luke-s-chatbox.firebasestorage.app",
-    messagingSenderId: "492665344445",
-    appId: "1:492665344445:web:001f15c4cce3527a7d02d4",
-    measurementId: "G-E6Z1F9RYMQ"
-  };
-
-  try {
-      // Prevent duplicate client generation crashes
-      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-      const db = getDatabase(app);
-      const messagesRef = ref(db, 'chat_logs'); // Shift target location root path
-
-      // Print status locally
-      console.log("Firebase App Initialized successfully.");
-
-      window.sendMsg = function() {
-          const text = chatInput.value.trim();
-          if (text === '') return;
-
-          push(messagesRef, {
-              sender: username,
-              text: text,
-              timestamp: Date.now()
-          }).then(() => {
-              console.log("Message sent!");
-          }).catch(err => {
-              alert("Firebase Write Blocked! Go to Realtime Database > Rules tab, set '.read' and '.write' to true, and click PUBLISH.");
-          });
-
-          chatInput.value = '';
-      }
-
-      // Live ingestion connection line
-      <!-- Fully self-contained engine using un-cacheable alternative cloud networks -->
-<script type="module">
-  // Using alternative non-Google content delivery servers to break the cache loop
   import { initializeApp, getApps } from "https://cloudflare.com";
   import { getDatabase, ref, push, onChildAdded } from "https://cloudflare.com";
 
@@ -115,10 +63,11 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
 
+  // Your correct Southeast Asian Firebase endpoint setup configurations
   const firebaseConfig = {
     apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
-    authDomain: "://firebaseapp.com",
-    databaseURL: "https://firebasedatabase.app",
+    authDomain: "luke-s-chatbox.firebaseapp.com",
+    databaseURL: "https://luke-s-chatbox-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "luke-s-chatbox",
     storageBucket: "luke-s-chatbox.firebasestorage.app",
     messagingSenderId: "492665344445",
@@ -127,7 +76,7 @@
   };
 
   try {
-      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps();
+      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
       const db = getDatabase(app);
       const messagesRef = ref(db, 'chat_logs');
 
@@ -140,7 +89,7 @@
               text: text,
               timestamp: Date.now()
           }).catch(err => {
-              alert("Database connection blocked. Double check your Firebase Rules panel settings.");
+              alert("Database connection blocked! Confirm rules are true inside Firebase.");
           });
 
           chatInput.value = '';
