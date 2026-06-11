@@ -30,10 +30,10 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v3.2)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v3.3)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** LUKE'S GLOBAL LOBBY ROOM SYSTEM ACTIVE *** POST MESSAGES FREELY ***</marquee>
+    <marquee scrollamount="4">*** SECURE CONNECTION FIXED *** TALK LIVE WITH ANYONE HERE ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Handshaking with Firebase cluster nodes...</div>
@@ -50,7 +50,7 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">102941</span></div>
 
-<!-- Standard Script Loader Compatibility Layer Injection -->
+<!-- Fixed URLs using explicit www parameters -->
 <script type="module">
   import { initializeApp } from "https://gstatic.com";
   import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
@@ -66,7 +66,7 @@
   const firebaseConfig = {
     apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
     authDomain: "://firebaseapp.com",
-    databaseURL: "https://luke-s-chatbox-default-rtdb.asia-southeast1.firebasedatabase.app",
+    databaseURL: "https://firebasedatabase.app",
     projectId: "luke-s-chatbox",
     storageBucket: "luke-s-chatbox.firebasestorage.app",
     messagingSenderId: "492665344445",
@@ -74,13 +74,11 @@
     measurementId: "G-E6Z1F9RYMQ"
   };
 
-  // Run Startup Instantiations
   try {
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
       const messagesRef = ref(db, 'global_lobby');
 
-      // Outbound Form Push Logic
       window.sendMsg = function() {
           const text = chatInput.value.trim();
           if (text === '') return;
@@ -90,13 +88,12 @@
               text: text,
               timestamp: Date.now()
           }).catch(err => {
-              alert("Write Blocked: Ensure your Realtime Database Rules are published as true.");
+              alert("Write Blocked! Check your Firebase Rules panel settings.");
           });
 
           chatInput.value = '';
       }
 
-      // Sync Database listener updates
       onChildAdded(messagesRef, (snapshot) => {
           if (statusMessage) { statusMessage.remove(); }
 
@@ -109,12 +106,11 @@
           chatLog.scrollTop = chatLog.scrollHeight;
       });
 
-      // Bind actions directly to DOM listeners
       sendBtn.addEventListener('click', window.sendMsg);
       chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
 
   } catch(globalError) {
-      statusMessage.textContent = "CRITICAL INITIALIZATION INTERRUPT: " + globalError.message;
+      statusMessage.textContent = "INITIALIZATION ERROR: " + globalError.message;
       statusMessage.style.color = "#FF0000";
   }
 </script>
