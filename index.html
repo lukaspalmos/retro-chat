@@ -24,100 +24,139 @@
         .input-bar button:active { border: 2px inset #ffffff; }
         .visitor-counter { text-align: center; margin-top: 15px; font-size: 12px; color: #888; }
         .counter-badge { background: #222; color: #ff0000; padding: 2px 6px; border: 1px solid #444; font-weight: bold; letter-spacing: 2px; }
+        .connect-box { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: bold; }
+        .connect-box input { padding: 3px; font-family: monospace; border: 2px inset #fff; }
     </style>
+    <!-- Load PeerJS Live Stream Script Framework Engine -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v4.1)</div>
+        <div>💬 CyberZone_95 Peer-to-Peer Chatroom (v5.0)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** RETRO CHATWAY NETWORK INITIALIZED *** UNPKG FALLBACK ROUTE ONLINE ***</marquee>
+    <marquee scrollamount="4">*** PEER-TO-PEER DIRECT CONNECTION LAYER ESTABLISHED *** SEND YOUR ROOM ID TO A FRIEND TO LINK UP ***</marquee>
+    
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing bypass link to live cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Starting direct peer-to-peer data engine...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold;"></div>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 10px;"></div>
+            <div style="color: #ffff00; font-size: 11px;">YOUR ID:</div>
+            <div id="myPeerId" style="color: white; font-size: 11px; word-break: break-all; background: #222; padding: 3px; border: 1px inset #808080;">...</div>
         </div>
     </div>
+
+    <!-- Quick link management taskbar tool -->
+    <div class="connect-box">
+        <span>CONNECT TO FRIEND'S ID:</span>
+        <input type="text" id="peerIdInput" placeholder="Paste ID here...">
+        <button id="connectBtn" style="padding: 2px 10px; font-family: monospace; font-weight: bold; background: #c0c0c0; border: 2px outset #fff;">CONNECT</button>
+    </div>
+
     <div class="input-bar">
         <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
         <button id="sendBtn">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">103554</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">104229</span></div>
 
-<!-- Switched to unpkg network to bypass aggressive firewall/extension domain blocks -->
-<script type="module">
-  import { initializeApp } from "https://unpkg.com";
-  import { getDatabase, ref, push, onChildAdded } from "https://unpkg.com";
+<script>
+    const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+    document.getElementById('myUsername').textContent = `• ${username}`;
 
-  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${username}`;
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const myPeerIdDisplay = document.getElementById('myPeerId');
+    const peerIdInput = document.getElementById('peerIdInput');
+    const connectBtn = document.getElementById('connectBtn');
 
-  const chatLog = document.getElementById('chatLog');
-  const chatInput = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const statusMessage = document.getElementById('statusMessage');
+    let peer = new Peer();
+    let conn = null;
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
-    authDomain: "://firebaseapp.com",
-    databaseURL: "https://firebasedatabase.app",
-    projectId: "luke-s-chatbox",
-    storageBucket: "luke-s-chatbox.firebasestorage.app"
-  };
+    // 1. Fire when your unique live channel token populates
+    peer.on('open', (id) => {
+        statusMessage.innerHTML = "*** Online! Copy 'YOUR ID' from the sidebar and share it with your friend, or enter theirs below!";
+        myPeerIdDisplay.textContent = id;
+    });
 
-  try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      const messagesRef = ref(db, 'chat_logs');
+    // 2. Catch incoming connection requests from outside users
+    peer.on('connection', (incomingConn) => {
+        conn = incomingConn;
+        setupChatConnection();
+        appendSystemMessage(`*** User <${conn.peer.substring(0,6)}> established an active hook connection node!`);
+    });
 
-      window.sendMsg = function() {
-          const text = chatInput.value.trim();
-          if (text === '') return;
+    // 3. Initiate connection manually to another person's lobby ID
+    connectBtn.addEventListener('click', () => {
+        const targetId = peerIdInput.value.trim();
+        if(!targetId) return alert("Please enter a valid peer ID token string first!");
+        
+        appendSystemMessage("*** Injecting connection signal package...");
+        conn = peer.connect(targetId);
+        setupChatConnection();
+    });
 
-          push(messagesRef, {
-              sender: username,
-              text: text,
-              timestamp: Date.now()
-          }).then(() => {
-              console.log("Transmission sent!");
-          }).catch(err => {
-              alert("Write Blocked: Go to your Firebase console -> Realtime Database -> Rules tab, change '.read' and '.write' to true, and click the blue PUBLISH button.");
-          });
+    function setupChatConnection() {
+        conn.on('open', () => {
+            appendSystemMessage("*** Link operational! Messages are streaming directly over real-time WebSockets.");
+        });
 
-          chatInput.value = '';
-      };
+        conn.on('data', (data) => {
+            appendChatMessage(data.sender, data.text, 'user-tag');
+        });
 
-      onChildAdded(messagesRef, (snapshot) => {
-          if (statusMessage) { statusMessage.remove(); }
+        conn.on('close', () => {
+            appendSystemMessage("*** Connection terminated by foreign terminal cluster node.");
+            conn = null;
+        });
+    }
 
-          const data = snapshot.val();
-          const messageRow = document.createElement('div');
-          const tagClass = (data.sender === username) ? 'my-tag' : 'user-tag';
-          
-          messageRow.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-          chatLog.appendChild(messageRow);
-          chatLog.scrollTop = chatLog.scrollHeight;
-      });
+    // 4. Outbound message handling routing sequence
+    function sendMsg() {
+        const text = chatInput.value.trim();
+        if (text === '') return;
 
-      sendBtn.addEventListener('click', window.sendMsg);
-      chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
+        appendChatMessage(username, text, 'my-tag');
 
-      setTimeout(() => {
-          if (document.getElementById('statusMessage')) {
-              statusMessage.innerHTML = "<span style='color: #ffff00;'>*** Connected to network. Room is empty. Start typing to test...</span>";
-          }
-      }, 3000);
+        // Forward message to the connected friend if linked
+        if (conn && conn.open) {
+            conn.send({
+                sender: username,
+                text: text
+            });
+        } else {
+            appendSystemMessage("<System Alert>: Message shown locally, but you aren't connected to a friend yet! Send them your ID to chat.");
+        }
 
-  } catch(error) {
-      statusMessage.textContent = "SYSTEM CANCELLATION: " + error.message;
-      statusMessage.style.color = "#FF0000";
-  }
+        chatInput.value = '';
+    }
+
+    function appendSystemMessage(msg) {
+        if (statusMessage) { statusMessage.remove(); }
+        const row = document.createElement('div');
+        row.className = 'sys-msg';
+        row.textContent = msg;
+        chatLog.appendChild(row);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function appendChatMessage(sender, text, tagClass) {
+        if (statusMessage) { statusMessage.remove(); }
+        const row = document.createElement('div');
+        row.innerHTML = `<span class="${tagClass}">&lt;${sender}&gt;</span> <span class="text-white">${text}</span>`;
+        chatLog.appendChild(row);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    sendBtn.addEventListener('click', sendMsg);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
 </body>
 </html>
