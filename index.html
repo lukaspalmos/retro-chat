@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
+    <style>
+        body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
+        .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
+        .title-bar { background: linear-gradient(90deg, #000080, #0080fe); color: white; padding: 4px 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .title-controls span { background-color: #c0c0c0; color: black; border: 2px outset #fff; padding: 0 5px; font-size: 11px; cursor: pointer; margin-left: 2px; }
+        marquee { background-color: #ff00ff; color: #ffffff; font-weight: bold; padding: 3px; font-size: 12px; border-bottom: 2px inset #fff; }
+        .workspace { display: flex; background-color: #c0c0c0; padding: 10px; gap: 10px; }
+        .chat-log { flex: 3; height: 300px; background-color: #000; color: #00ff00; border: 3px inset #808080; padding: 8px; overflow-y: scroll; font-size: 13px; line-height: 1.4; }
+        .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
+        .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
+        .sys-msg { color: #ffff00; }
+        .user-tag { color: #ff00ff; font-weight: bold; }
+        .my-tag { color: #00ffff; font-weight: bold; }
+        .text-white { color: #ffffff; }
+        .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
+        .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
+        .input-bar button { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 0 15px; cursor: pointer; }
+        .input-bar button:active { border: 2px inset #ffffff; }
+        .visitor-counter { text-align: center; margin-top: 15px; font-size: 12px; color: #888; }
+        .counter-badge { background: #222; color: #ff0000; padding: 2px 6px; border: 1px solid #444; font-weight: bold; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="chat-window">
+    <div class="title-bar">
+        <div>💬 CyberZone_95 Live Chatroom (v3.4)</div>
+        <div class="title-controls"><span>_</span><span>X</span></div>
+    </div>
+    <marquee scrollamount="4">*** LUKE'S LIVE CHAT SYSTEM ONLINE *** DISCUSS FREELY ***</marquee>
+    <div class="workspace">
+        <div class="chat-log" id="chatLog">
+            <div class="sys-msg" id="statusMessage">*** Handshaking with Firebase cluster nodes...</div>
+        </div>
+        <div class="user-list">
+            <h4>YOUR PROFILE</h4>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold;"></div>
+        </div>
+    </div>
+    <div class="input-bar">
+        <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
+        <button id="sendBtn">SEND</button>
+    </div>
+</div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">102941</span></div>
+
+<!-- Using Stable CDN Modules -->
+<script type="module">
+  import { initializeApp, getApps } from "https://gstatic.com";
+  import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
+
+  const username = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${username}`;
+
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const statusMessage = document.getElementById('statusMessage');
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
+    authDomain: "luke-s-chatbox.firebaseapp.com",
+    databaseURL: "https://firebasedatabase.app",
+    projectId: "luke-s-chatbox",
+    storageBucket: "luke-s-chatbox.firebasestorage.app",
+    messagingSenderId: "492665344445",
+    appId: "1:492665344445:web:001f15c4cce3527a7d02d4",
+    measurementId: "G-E6Z1F9RYMQ"
+  };
+
+  try {
+      // Prevent duplicate client generation crashes
+      let app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+      const db = getDatabase(app);
+      const messagesRef = ref(db, 'chat_logs'); // Shift target location root path
+
+      // Print status locally
+      console.log("Firebase App Initialized successfully.");
+
+      window.sendMsg = function() {
+          const text = chatInput.value.trim();
+          if (text === '') return;
+
+          push(messagesRef, {
+              sender: username,
+              text: text,
+              timestamp: Date.now()
+          }).then(() => {
+              console.log("Message sent!");
+          }).catch(err => {
+              alert("Firebase Write Blocked! Go to Realtime Database > Rules tab, set '.read' and '.write' to true, and click PUBLISH.");
+          });
+
+          chatInput.value = '';
+      }
+
+      // Live ingestion connection line
+      onChildAdded(messagesRef, (snapshot) => {
+          if (statusMessage) { statusMessage.remove(); }
+
+          const data = snapshot.val();
+          const messageRow = document.createElement('div');
+          const tagClass = (data.sender === username) ? 'my-tag' : 'user-tag';
+          
+          messageRow.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(messageRow);
+          chatLog.scrollTop = chatLog.scrollHeight;
+      });
+
+      // Bind input execution nodes
+      sendBtn.addEventListener('click', window.sendMsg);
+      chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
+
+      // Fallback clean display if database starts completely empty
+      setTimeout(() => {
+          if (document.getElementById('statusMessage')) {
+              statusMessage.textContent = "*** Connected to database node. Room is empty. Start typing to chat!";
+          }
+      }, 3000);
+
+  } catch(globalError) {
+      statusMessage.textContent = "INITIALIZATION ERROR: " + globalError.message;
+      statusMessage.style.color = "#FF0000";
+      console.error(globalError);
+  }
+</script>
+</body>
+</html>
