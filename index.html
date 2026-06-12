@@ -62,7 +62,12 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
+  const aimSound = new Audio('aim-message.mp3');
 
+  function playAimSound() {
+    aimSound.currentTime = 0;
+    aimSound.play().catch(() => {});
+  }
   const lobbyTopic = "luke_retro_global_open_lobby";
 
   // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
@@ -77,8 +82,12 @@
       client.subscribe(lobbyTopic);
   });
 
-  client.on('message', (topic, payload) => {
-      const data = JSON.parse(payload.toString());
+client.on('message', (topic, payload) => {
+    const data = JSON.parse(payload.toString());
+
+    if (data.sender !== currentAlias) {
+        playAimSound();
+    }
       
       // Clear placeholder texts upon first real arrival
       const currentStatus = document.getElementById('statusMessage');
