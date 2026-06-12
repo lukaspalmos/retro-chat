@@ -63,7 +63,6 @@ body {
 .msg { color:#fff; }
 .sys { color:yellow; }
 
-/* reply box */
 #replyBox {
     display:none;
     background:#111;
@@ -72,6 +71,10 @@ body {
     margin:5px 10px;
     border-left:4px solid yellow;
     font-size:12px;
+}
+
+button {
+    cursor:pointer;
 }
 </style>
 
@@ -95,10 +98,13 @@ body {
 <div id="replyBox"></div>
 
 <div class="input-bar">
-<input id="chatInput" placeholder="Type message...">
+<input id="chatInput" placeholder="Type message... (@mentions supported)">
 <button id="sendBtn">Send</button>
+<button id="imgBtn">Image</button>
 <button id="clearBtn">Clear</button>
 </div>
+
+<input type="file" id="imgUpload" accept="image/*" hidden>
 
 </div>
 
@@ -112,6 +118,8 @@ const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const clearBtn = document.getElementById("clearBtn");
+const imgBtn = document.getElementById("imgBtn");
+const imgUpload = document.getElementById("imgUpload");
 const replyBox = document.getElementById("replyBox");
 const userListBox = document.getElementById("userListBox");
 
@@ -123,10 +131,10 @@ const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 const users = {};
 let replyTarget = null;
 
-// ================= SOUND (REPLY FIX) =================
+// ================= SOUND =================
 const replySound = new Audio("aim-notif.mp3");
 
-// ================= SYSTEM MESSAGE (SAFE) =================
+// ================= SYSTEM =================
 function sys(text){
 const d = document.createElement("div");
 d.className = "sys";
@@ -148,6 +156,16 @@ userListBox.appendChild(d);
 });
 }
 
+// ================= MENTION HIGHLIGHT (FIXED) =================
+function highlightMentions(text){
+const escaped = currentAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const regex = new RegExp("@" + escaped, "g");
+
+return text.replace(regex,
+`<span style="color:yellow;font-weight:bold;">@${currentAlias}</span>`
+);
+}
+
 // ================= CONNECT =================
 client.on("connect",()=>{
 client.subscribe(topic);
@@ -158,11 +176,10 @@ sender:currentAlias
 }));
 });
 
-// ================= MESSAGE HANDLER (CLEAN SPLIT) =================
+// ================= MESSAGE =================
 client.on("message",(t,p)=>{
 const d = JSON.parse(p.toString());
 
-// JOIN (system only)
 if(d.type === "join"){
 users[d.sender] = Date.now();
 sys(d.sender + " joined");
@@ -170,41 +187,49 @@ updateUsers();
 return;
 }
 
-// CHAT MESSAGE ONLY
 if(d.text !== undefined){
 
 users[d.sender] = Date.now();
 updateUsers();
 
-const row = document.createElement("div");
+let text = d.text;
 
-// 🔁 reply highlight FIXED
-let replyHTML = "";
-
-if(d.reply){
-replyHTML =
-`<div style="
-color:yellow;
-font-size:11px;
-border-left:4px solid yellow;
-padding-left:6px;
-margin-bottom:4px;
-background:#111;">
-↳ replying to <b>${d.reply.user}</b>: ${d.reply.text}
-</div>`;
-
-// 🔔 reply sound FIXED
+// 💛 FIX: mention detection + highlight + sound
+const isMention = text.includes("@"+currentAlias);
+if(isMention && d.sender !== currentAlias){
 replySound.currentTime = 0;
 replySound.play().catch(()=>{});
 }
 
-// message row
+// APPLY HIGHLIGHT
+text = highlightMentions(text);
+
+// reply block
+let replyHTML = "";
+if(d.reply){
+replyHTML =
+`<div style="color:yellow;font-size:11px;border-left:4px solid yellow;padding-left:6px;margin-bottom:4px;background:#111;">
+↳ replying to <b>${d.reply.user}</b>: ${d.reply.text}
+</div>`;
+
+replySound.currentTime = 0;
+replySound.play().catch(()=>{});
+}
+
+// image support (FIXED BACK IN)
+const imgRegex = /(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
+if(imgRegex.test(text)){
+text = `<img src="${text}" style="max-width:200px;border:2px solid #0f0;">`;
+}
+
+const row = document.createElement("div");
+
 row.innerHTML =
 replyHTML +
 `<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
 &lt;${d.sender}&gt;</b>
  <span style="color:#0f0"> [${d.timestamp}] </span>
- <span style="color:#fff">${d.text}</span>
+ <span style="color:#fff">${text}</span>
 
  <button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
  style="margin-left:10px;font-size:10px;">Reply</button>`;
@@ -214,7 +239,7 @@ chatLog.scrollTop = chatLog.scrollHeight;
 }
 });
 
-// ================= REPLY SYSTEM =================
+// ================= REPLY =================
 window.setReply = function(user,text){
 replyTarget = { user, text };
 
@@ -227,14 +252,6 @@ replyBox.innerHTML =
 function send(){
 let text = chatInput.value.trim();
 if(!text) return;
-
-// 🚫 CLEAR FIX (NO LONGER CONFLICTS WITH IMAGES OR MESSAGES)
-if(text === "/clear"){
-chatLog.innerHTML = "";
-sys("chat cleared");
-chatInput.value = "";
-return;
-}
 
 const payload = {
 sender: currentAlias,
@@ -252,11 +269,38 @@ replyBox.style.display = "none";
 }
 
 client.publish(topic, JSON.stringify(payload));
-
 chatInput.value = "";
 }
 
-// ================= EVENTS (FIXED PROPERLY) =================
+// ================= IMAGE UPLOAD =================
+imgBtn.onclick = ()=> imgUpload.click();
+
+imgUpload.onchange = async (e)=>{
+const file = e.target.files[0];
+if(!file) return;
+
+const form = new FormData();
+form.append("file", file);
+form.append("upload_preset", "chat_upload"); // your preset
+
+const res = await fetch("https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",{
+method:"POST",
+body:form
+});
+
+const data = await res.json();
+
+client.publish(topic, JSON.stringify({
+sender:currentAlias,
+text:data.secure_url,
+timestamp:new Date().toLocaleTimeString([],{
+hour:"numeric",
+minute:"2-digit"
+})
+}));
+};
+
+// ================= EVENTS =================
 sendBtn.onclick = send;
 
 chatInput.addEventListener("keydown",(e)=>{
