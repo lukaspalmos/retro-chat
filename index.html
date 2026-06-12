@@ -2,86 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CyberZone_95 Live Chatroom</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    background:#000;
-    color:#00ff00;
-    font-family:"Courier New", monospace;
-    margin:0;
-    padding:15px;
-}
-
-.chat-window {
-    max-width:800px;
-    margin:auto;
-    border:3px outset #888;
-    background:#c0c0c0;
-}
-
-.title-bar {
-    background:linear-gradient(90deg,#000080,#0080ff);
-    color:#fff;
-    padding:6px;
-    font-weight:bold;
-    display:flex;
-    justify-content:space-between;
-}
-
-.workspace {
-    display:flex;
-    gap:10px;
-    padding:10px;
-    background:#c0c0c0;
-}
-
-.chat-log {
-    flex:3;
-    height:320px;
-    background:#000;
-    border:3px inset #888;
-    overflow-y:auto;
-    padding:8px;
-}
-
-.user-list {
-    flex:1;
-    background:#000;
-    border:3px inset #888;
-    color:#00ffff;
-    padding:8px;
-    overflow-y:auto;
-}
-
-.input-bar {
-    display:flex;
-    padding:10px;
-    background:#c0c0c0;
-}
-
-.input-bar input {
-    flex:1;
-    padding:6px;
-}
-
-.sys-msg { color:yellow; }
-.user-tag { color:#ff00ff; font-weight:bold; }
-.my-tag { color:#00ffff; font-weight:bold; }
-.text-white { color:white; }
-
-.update-log {
-    font-size:11px;
-    color:#00ff00;
-    background:#000;
-    border:2px inset #888;
-    padding:6px;
-    margin-top:8px;
-    height:120px;
-    overflow-y:auto;
-    line-height:1.3;
-}
+body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:15px; }
+.chat-window { max-width:800px; margin:auto; background:#c0c0c0; border:3px outset #888; }
+.title-bar { background:linear-gradient(90deg,#000080,#0080ff); color:#fff; padding:6px; font-weight:bold; }
+.workspace { display:flex; gap:10px; padding:10px; }
+.chat-log { flex:3; height:320px; background:#000; border:3px inset #888; overflow-y:auto; padding:8px; }
+.user-list { flex:1; background:#000; border:3px inset #888; color:#0ff; padding:8px; }
+.input-bar { display:flex; gap:5px; padding:10px; background:#c0c0c0; }
+.input-bar input { flex:1; padding:6px; }
+.sys { color:yellow; }
+.user { color:#f0f; font-weight:bold; }
+.me { color:#0ff; font-weight:bold; }
+.msg { color:#fff; }
+img.chat-img { max-width:200px; margin-top:5px; border:2px solid #0f0; }
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -90,99 +27,87 @@ body {
 <body>
 
 <div class="chat-window">
-
-<div class="title-bar">
-    <div>💬 CyberZone_95 Live Chatroom</div>
-</div>
+<div class="title-bar">💬 CyberZone_95 Chat</div>
 
 <div class="workspace">
+<div class="chat-log" id="chatLog"></div>
 
-    <div class="chat-log" id="chatLog"></div>
-
-    <div class="user-list">
-
-        <div style="color:#ffff00;">ONLINE USERS</div>
-        <div id="userListBox"></div>
-
-        <div style="color:#ffff00; margin-top:10px;">UPDATE LOG</div>
-        <div class="update-log">
-            • AIM sound notifications<br>
-            • Timestamps on messages<br>
-            • /clear command<br>
-            • Join system messages<br>
-            • Live user list (60s timeout)<br>
-            • Typing indicator<br>
-            • Retro UI styling<br>
-        </div>
-
-    </div>
+<div class="user-list">
+<div style="color:yellow;">ONLINE USERS</div>
+<div id="userListBox"></div>
+</div>
 </div>
 
-<div id="typingBox" style="color:#ffff00; font-size:12px; padding:4px 10px;"></div>
+<div id="typingBox" style="color:yellow; padding:4px 10px;"></div>
 
 <div class="input-bar">
-    <input id="chatInput" placeholder="Type message...">
-    <button id="sendBtn">SEND</button>
+<input id="chatInput" placeholder="Type message...">
+<button id="sendBtn">Send</button>
+<button id="imgBtn">Image</button>
 </div>
 
+<input type="file" id="imgUpload" accept="image/*" style="display:none;">
 </div>
 
 <script>
 
 // ---------- USER ----------
-const currentAlias = "Guest_" + Math.floor(Math.random()*9000);
+let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
 // ---------- UI ----------
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
-const typingBox = document.getElementById("typingBox");
+const imgBtn = document.getElementById("imgBtn");
+const imgUpload = document.getElementById("imgUpload");
 
 // ---------- SOUND ----------
 const aimSound = new Audio("aim-message.mp3");
-function playAimSound() {
-    aimSound.currentTime = 0;
-    aimSound.play().catch(()=>{});
-}
+function playSound(){ aimSound.currentTime=0; aimSound.play().catch(()=>{}); }
 
 // ---------- MQTT ----------
 const topic = "luke_retro_global_open_lobby";
 const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ---------- STATE ----------
+// ---------- USERS ----------
 const users = {};
-const typingUsers = {};
 
 // ---------- USER LIST ----------
-function updateUserList() {
+function updateUsers(){
     const box = document.getElementById("userListBox");
-    box.innerHTML = "";
-
+    box.innerHTML="";
     const now = Date.now();
 
-    Object.keys(users).forEach(name => {
-        if (now - users[name] < 60000) {
-            const div = document.createElement("div");
-            div.textContent = "• " + name;
-            div.style.color = "#00ffff";
-            box.appendChild(div);
+    Object.keys(users).forEach(u=>{
+        if(now - users[u] < 60000){
+            const d=document.createElement("div");
+            d.textContent="• "+u;
+            box.appendChild(d);
         }
     });
 }
-
-setInterval(updateUserList, 5000);
+setInterval(updateUsers,5000);
 
 // ---------- SYSTEM ----------
-function system(msg) {
-    const div = document.createElement("div");
-    div.innerHTML = `<span class="sys-msg">*** ${msg}</span>`;
-    chatLog.appendChild(div);
+function sys(t){
+    const d=document.createElement("div");
+    d.innerHTML="*** "+t;
+    d.style.color="yellow";
+    chatLog.appendChild(d);
+}
+
+// ---------- RENDER ----------
+function render(text){
+    const img = /(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
+    if(img.test(text)){
+        return `<img class="chat-img" src="${text}">`;
+    }
+    return `<span class="msg">${text}</span>`;
 }
 
 // ---------- CONNECT ----------
-client.on("connect", () => {
+client.on("connect",()=>{
     client.subscribe(topic);
-
     client.publish(topic, JSON.stringify({
         type:"join",
         sender:currentAlias
@@ -190,98 +115,99 @@ client.on("connect", () => {
 });
 
 // ---------- MESSAGE ----------
-client.on("message", (t, payload) => {
-    const data = JSON.parse(payload.toString());
+client.on("message",(t,p)=>{
+    const d=JSON.parse(p.toString());
 
-    // JOIN
-    if (data.type === "join") {
-        users[data.sender] = Date.now();
-        system(`${data.sender} joined the chat`);
+    if(d.type==="join"){
+        users[d.sender]=Date.now();
+        sys(d.sender+" joined");
         return;
     }
 
-    // TYPING
-    if (data.type === "typing") {
-        typingUsers[data.sender] = Date.now();
-        return;
-    }
+    users[d.sender]=Date.now();
 
-    // NORMAL MESSAGE
-    users[data.sender] = Date.now();
+    if(d.sender!==currentAlias) playSound();
 
-    if (data.sender !== currentAlias) {
-        playAimSound();
-    }
+    const time=d.timestamp||"--:--";
 
-    const time = data.timestamp || "--:--";
-
-    const row = document.createElement("div");
-    row.innerHTML =
-        `<span class="${data.sender===currentAlias?"my-tag":"user-tag"}">
-        &lt;${data.sender}&gt;</span>
-        <span style="color:#00ff00;"> [${time}] </span>
-        <span class="text-white">${data.text}</span>`;
+    const row=document.createElement("div");
+    row.innerHTML=
+    `<span style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
+    <b>&lt;${d.sender}&gt;</b></span>
+    <span style="color:#0f0"> [${time}] </span>
+    ${render(d.text)}`;
 
     chatLog.appendChild(row);
-    chatLog.scrollTop = chatLog.scrollHeight;
+    chatLog.scrollTop=chatLog.scrollHeight;
 });
 
 // ---------- SEND ----------
-function sendMsg() {
-    const text = chatInput.value.trim();
-    if (!text) return;
+function send(){
+    const text=chatInput.value.trim();
+    if(!text) return;
 
-    // CLEAR
-    if (text === "/clear") {
-        chatLog.innerHTML = "";
-        system("Chat cleared");
-        chatInput.value = "";
+    if(text==="/clear"){
+        chatLog.innerHTML="";
+        sys("cleared");
+        chatInput.value="";
+        return;
+    }
+
+    if(text.startsWith("/nick ")){
+        currentAlias=text.replace("/nick ","");
+        sys("you are now "+currentAlias);
+        chatInput.value="";
         return;
     }
 
     client.publish(topic, JSON.stringify({
-        sender: currentAlias,
-        text: text,
-        timestamp: new Date().toLocaleTimeString([],{
+        sender:currentAlias,
+        text:text,
+        timestamp:new Date().toLocaleTimeString([],{
             hour:"numeric",
             minute:"2-digit"
         })
     }));
 
-    users[currentAlias] = Date.now();
-    chatInput.value = "";
+    users[currentAlias]=Date.now();
+    chatInput.value="";
 }
 
-sendBtn.onclick = sendMsg;
+// ---------- IMAGE UPLOAD ----------
+imgBtn.onclick=()=>imgUpload.click();
 
-chatInput.addEventListener("keypress", e=>{
-    if (e.key === "Enter") sendMsg();
-});
+imgUpload.onchange=async e=>{
+    const file=e.target.files[0];
+    if(!file) return;
 
-// ---------- TYPING EMITTER ----------
-let typingTimeout;
+    const form=new FormData();
+    form.append("file",file);
+    form.append("upload_preset","chat_upload");
 
-chatInput.addEventListener("input", () => {
-    client.publish(topic, JSON.stringify({
-        type:"typing",
-        sender:currentAlias
-    }));
-
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(()=>{}, 1000);
-});
-
-// ---------- TYPING DISPLAY ----------
-setInterval(() => {
-    const now = Date.now();
-
-    const active = Object.keys(typingUsers).filter(u =>
-        now - typingUsers[u] < 2000 && u !== currentAlias
+    const res=await fetch(
+        "https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",
+        { method:"POST", body:form }
     );
 
-    typingBox.textContent =
-        active.length ? `${active.join(", ")} is typing...` : "";
-}, 500);
+    const data=await res.json();
+
+    client.publish(topic, JSON.stringify({
+        sender:currentAlias,
+        text:data.secure_url,
+        timestamp:new Date().toLocaleTimeString([],{
+            hour:"numeric",
+            minute:"2-digit"
+        })
+    }));
+
+    users[currentAlias]=Date.now();
+};
+
+// ---------- EVENTS ----------
+sendBtn.onclick=send;
+chatInput.addEventListener("keypress",e=>{
+    if(e.key==="Enter") send();
+});
 
 </script>
 
