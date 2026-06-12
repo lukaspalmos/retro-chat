@@ -21,17 +21,17 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load universal MQTT over Secure WebSockets library library directly -->
+    <!-- Load universal MQTT over Secure WebSockets library directly -->
     <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.6 - AIM Chime Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.7 - True AIM MP3 Build)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** RETRO AIM SOUND CHIME INTEGRATED *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** RETRO AIM MP3 SOUND CHIME ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
@@ -51,8 +51,13 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
+<!-- NEW HTML5 AUDIO COMPONENT: Pre-loads the official AIM sound clip from Archive.org -->
+<audio id="aimChime" preload="auto">
+    <source src="https://archive.org" type="audio/mpeg">
+</audio>
+
 <script>
-  // 1. Initial 90s Login popup prompt setup handling sequence
+  // 1. Initial 90s Login popup prompt
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -64,51 +69,25 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
+  const aimChime = document.getElementById('aimChime');
 
   const lobbyTopic = "luke_retro_global_open_lobby_v10";
 
-  // Vibrant neon color list matching vintage 90s style profiles
+  // Vibrant neon color list 
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-  // Draw local handle profile node card
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // NEW FEATURE: Synth Engine that builds the authentic AIM multi-tone alert ding sound
-  function playAimChime() {
-      try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          const ctx = new AudioContext();
-          
-          // Note 1: High crisp initial ding peak tone
-          const osc1 = ctx.createOscillator();
-          const gain1 = ctx.createGain();
-          osc1.type = 'triangle';
-          osc1.frequency.setValueAtTime(880, ctx.currentTime); // High A note
-          gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-          gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-          osc1.connect(gain1);
-          gain1.connect(ctx.destination);
-          
-          // Note 2: Slightly delayed lower secondary harmonic frequency chime dropdown
-          setTimeout(() => {
-              const osc2 = ctx.createOscillator();
-              const gain2 = ctx.createGain();
-              osc2.type = 'sine';
-              osc2.frequency.setValueAtTime(1320, ctx.currentTime); // High E note
-              gain2.gain.setValueAtTime(0.1, ctx.currentTime);
-              gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-              osc2.connect(gain2);
-              gain2.connect(ctx.destination);
-              osc2.start();
-              osc2.stop(ctx.currentTime + 0.25);
-          }, 40);
-
-          osc1.start();
-          osc1.stop(ctx.currentTime + 0.15);
-      } catch (e) {
-          console.log("Audio play blocked awaiting standard user click event.");
+  // Function to play the audio element with fallback protection
+  function playAudioChime() {
+      if (aimChime) {
+          // Reset audio track progress pointer to zero to handle rapid message incoming streams
+          aimChime.currentTime = 0;
+          aimChime.play().catch(e => {
+              console.log("Audio play deferred until user types a letter or clicks the room canvas frame.");
+          });
       }
   }
 
@@ -119,19 +98,16 @@
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
       statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
-      
-      // Subscribe to the shared global data node
       client.subscribe(lobbyTopic);
   });
 
   client.on('message', (topic, payload) => {
       const data = JSON.parse(payload.toString());
       
-      // Clear placeholder texts upon first real arrival
       const currentStatus = document.getElementById('statusMessage');
       if (currentStatus) currentStatus.remove();
 
-      // Anti-Collision Check: If incoming user matches your color, auto shift yours down to avoid repetition
+      // Anti-Collision Check
       if (data.sender !== currentAlias && data.color === myHexColor) {
           const safeList = availableColors.filter(c => c !== data.color);
           myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
@@ -143,8 +119,8 @@
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
 
-      // TRIGGER CHIME ALERTS: Fire the AIM synthesizer note sequence layout automatically
-      playAimChime();
+      // TRIGGER CHIME ALERTS: Fire the MP3 audio source link instantly
+      playAudioChime();
   });
 
   client.on('error', (err) => {
@@ -161,7 +137,6 @@
           return;
       }
 
-      // Publish the text packet out across the world carrying nickname and unique color metadata properties
       client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text, color: myHexColor }));
       chatInput.value = '';
   }
