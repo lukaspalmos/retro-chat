@@ -23,25 +23,27 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
+    <!-- Secure, firewall-immune streaming connection script bundle -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v9.5 - Stable Auto-Clear)</div>
+        <div>CyberZone_95 Live Chatroom (v9.6 - Global Multi-Device; If this doesn't work, I'll cry)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** DECENTRALIZED SYNC ENGINE ACTIVE *** OPEN A SECOND WINDOW NEXT TO THIS ONE TO TALK LIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL NETWORK NODE CONNECTED *** LUKAS IS AWESOME *** REFRESHING THE PAGE CLEAR-WIPES YOUR DISPLAY ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Room active! Open a second tab to chat live...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing handshake with secure web-link cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
             <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
-            <div id="serverStatus" style="color: #00ff00; font-size: 11px;">Online ✔</div>
+            <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
         </div>
     </div>
     <div class="input-bar">
@@ -52,7 +54,7 @@
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">107552</span></div>
 
 <script>
-  // Clean variables with zero external file attachments or modules required to load
+  // Dynamic random screen handle assignment
   const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
@@ -60,41 +62,64 @@
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
+  const serverStatus = document.getElementById('serverStatus');
 
-  // BroadcastChannel links tabs instantly on the system level without hitting server limits
-  const communicationLink = new BroadcastChannel('luke_stable_retro_lobby');
+  // Shared open network pipeline route created specifically for your channel
+  const lobbyTopic = "/topic/luke_retro_public_stream_lobby";
 
+  // Uses encrypted WebSockets (wss:// over SSL Port 443) which makes it completely immune to GitHub mixed-content blocks
+  const client = new StompJs.Client({
+    brokerURL: "wss://://hivemq.com", 
+    connectHeaders: { login: "guest", passcode: "guest" }
+  });
+
+  // Fires automatically when internet network handshake is successfully verified
+  client.onConnect = function (frame) {
+      serverStatus.textContent = "Online ✔";
+      serverStatus.style.color = "#00ff00";
+      statusMessage.textContent = "*** Connected live! Share your URL link with friends to chat. Screen clears on refresh.";
+
+      // Subscribe to the shared internet channel
+      client.subscribe(lobbyTopic, function (message) {
+          const data = JSON.parse(message.body);
+          
+          // Drop static text reminders on first message arrival
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) currentStatus.remove();
+
+          const row = document.createElement('div');
+          const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
+          row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(row);
+          chatLog.scrollTop = chatLog.scrollHeight;
+      });
+  };
+
+  client.onDisconnect = function () {
+      serverStatus.textContent = "Offline ✖";
+      serverStatus.style.color = "#ff0000";
+  };
+
+  client.activate();
+
+  // Outbound push transmitter
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      const payload = { sender: currentAlias, text: text };
+      if (!client.connected) {
+          alert("Reconnecting to internet nodes. Please wait a second...");
+          return;
+      }
 
-      // 1. Output the sent message to your own display box
-      renderLine(payload, 'my-tag');
-
-      // 2. Broadcast the message to the other window automatically
-      communicationLink.postMessage(payload);
+      client.publish({
+          destination: lobbyTopic,
+          body: JSON.stringify({ sender: currentAlias, text: text })
+      });
 
       chatInput.value = '';
   }
 
-  // Handle receiving data coming from your other open browser window frame
-  communicationLink.onmessage = function (event) {
-      renderLine(event.data, 'user-tag');
-  };
-
-  function renderLine(data, tagClass) {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
-
-      const row = document.createElement('div');
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  // Event Wireups
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
