@@ -21,20 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load stable, unblockable browser peer connection engine bundle directly -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Load ScaleDrone directly from a highly accessible enterprise CDN -->
+    <script src="https://scaledrone.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v27.0 - Active Node Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v28.0 - Public Global Lobby)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL LOBBY NETWORK OPERATIONAL *** CHAT INTERNATIONALLY LIVE WITH ZERO SERVER LIMITS *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL NETWORK NODE ONLINE *** ALL VISITORS IN ONE SHARED LOBBY *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Starting direct peer-to-peer data engine...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure public WebSocket cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -49,10 +49,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112702</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112802</span></div>
 
 <script>
-  // 1. Prompt Username customization selection right at boot (Wiped of conflicting syntax parameters)
+  // 1. Clean Username prompt selection
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -72,127 +72,60 @@
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // Shared Global Room ID channel string pairing code
-  const globalLobbyID = "luke_retro_public_mesh_global_v27";
-  let peerInstance = null;
-  let networkConnections = [];
+  // 2. Initialize connection via stable community channel broker
+  const drone = new Scaledrone('askYg7u6u9P7gEsh');
+  const roomName = 'observable-luke-retro-global-lobby';
+  let roomInstance = null;
 
-  // 2. Initialize Swarm Router Connection Layer
-  function startMeshRouter() {
-      peerInstance = new Peer({
-          config: {'iceServers': [{ 'urls': 'stun:://google.com' }]}
-      });
+  drone.on('open', error => {
+      if (error) {
+          statusMessage.textContent = "HANDSHAKE TIMEOUT: " + error.message;
+          return console.error(error);
+      }
+      serverStatus.textContent = "Online ✔";
+      serverStatus.style.color = "#00ff00";
+      statusMessage.textContent = "*** Connected successfully! Anyone opening this URL links into the same public room. Screen clears on refresh.";
+      
+      // Subscribe to the shared global room channel instantly
+      roomInstance = drone.subscribe(roomName);
 
-      peerInstance.on('open', (id) => {
-          serverStatus.textContent = "Online ✔";
-          serverStatus.style.color = "#00ff00";
-          statusMessage.textContent = "*** Connected successfully! Tell friends to open your URL link right now to talk live.";
-          
-          // Connect immediately to the background main relay pool
-          const mainNodeLink = peerInstance.connect(globalLobbyID, {
-              metadata: { alias: currentAlias, color: myHexColor }
-          });
-          bindConnectionEvents(mainNodeLink);
-      });
-
-      peerInstance.on('error', (err) => {
-          if (err.type === 'id-taken' || err.message.includes('taken')) {
-              peerInstance.destroy();
-              startAsPrimaryHub();
-          }
-      });
-
-      peerInstance.on('connection', (incomingLine) => {
-          bindConnectionEvents(incomingLine);
-      });
-  }
-
-  function startAsPrimaryHub() {
-      peerInstance = new Peer(globalLobbyID, {
-          config: {'iceServers': [{ 'urls': 'stun:://google.com' }]}
-      });
-
-      peerInstance.on('open', () => {
-          serverStatus.textContent = "Online ✔";
-          serverStatus.style.color = "#00ff00";
-          statusMessage.textContent = "*** Lobby Active! You are the host node. Waiting for other computers to join...";
-      });
-
-      peerInstance.on('connection', (incomingLine) => {
-          bindConnectionEvents(incomingLine);
-      });
-  }
-
-  function bindConnectionEvents(conn) {
-      networkConnections.push(conn);
-
-      conn.on('open', () => {
-          if (statusMessage) statusMessage.remove();
-          const joinedUser = conn.metadata?.alias || "Hacker";
-          printSystemNotification(`*** User <${joinedUser}> has successfully hopped inside your chat grid link!`);
-      });
-
-      // 3. Receive Incoming Data Packets from completely separate devices across the internet
-      conn.on('data', (data) => {
-          if (statusMessage) statusMessage.remove();
+      // 3. Receive Incoming Live Message Broadcast packets
+      roomInstance.on('data', (message) => {
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) currentStatus.remove();
 
           // Anti-Collision Check: Auto switch color if someone has your exact style hex
-          if (data.sender !== currentAlias && data.color === myHexColor) {
-              const safeList = availableColors.filter(c => c !== data.color);
+          if (message.sender !== currentAlias && message.color === myHexColor) {
+              const safeList = availableColors.filter(c => c !== message.color);
               myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
               document.getElementById('myUsername').style.color = myHexColor;
           }
 
-          if (peerInstance.id === globalLobbyID) {
-              networkConnections.forEach(activeNode => {
-                  if (activeNode.open && activeNode.peer !== conn.peer) {
-                      activeNode.send(data);
-                  }
-              });
-          }
-
-          appendChatMessage(data.sender, data.text, data.color);
+          const row = document.createElement('div');
+          row.innerHTML = `<span style="color: ${message.color}; font-weight: bold;">&lt;${message.sender}&gt;</span> <span class="text-white">${message.text}</span>`;
+          chatLog.appendChild(row);
+          chatLog.scrollTop = chatLog.scrollHeight;
       });
-  }
+  });
 
   // 4. Outbound Text Transmission Push
   function sendMsg() {
       const text = chatInput.value.trim();
-      if (text === '') return;
+      if (text === '' || !roomInstance) return;
 
-      if (statusMessage) statusMessage.remove();
-      const packetPayload = { sender: currentAlias, text: text, color: myHexColor };
-
-      appendChatMessage(currentAlias, text, myHexColor);
-
-      networkConnections.forEach(conn => {
-          if (conn.open) conn.send(packetPayload);
+      // Broadcast payload over live WebSockets globally
+      drone.publish({
+          room: roomName,
+          message: { sender: currentAlias, text: text, color: myHexColor }
       });
 
       chatInput.value = '';
   }
 
-  function appendChatMessage(sender, msgText, colorHex) {
-      const row = document.createElement('div');
-      row.innerHTML = `<span style="color: ${colorHex}; font-weight: bold;">&lt;${sender}&gt;</span> <span class="text-white">${msgText}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  function printSystemNotification(text) {
-      const row = document.createElement('div');
-      row.className = 'sys-msg';
-      row.textContent = text;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
+  // Wiping page drops connection memory entirely, satisfying your auto-clear rule [INDEX]
   window.addEventListener('beforeunload', () => {
-      networkConnections = [];
-      if (peerInstance) peerInstance.destroy();
+      if (drone) drone.close();
   });
-
-  startMeshRouter();
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
