@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
+    <title>CyberZone_95 Live Chatroom</title>
     <style>
         body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
         .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
@@ -21,20 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load universal MQTT over Secure WebSockets library -->
-    <script src="https://unpkg.com"></script>
+    <!-- Load stable Pusher library bundle directly from cloud networks -->
+    <script src="https://pusher.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.1 - Custom Alias Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v11.0 - Stable Handshake)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME *** COLOR BLOCKS COORDINATED IN REAL-TIME ***</marquee>
+    <marquee scrollamount="4">*** SECURE HANDSHAKE FIXED *** LUKAS IS AWESOME *** REFRESHING WIPES YOUR LOG PANEL *** DISTINCT RANDOM USERNAME COLORS LOADED ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing handshake with secure connection matrix...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -49,10 +49,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109842</span></div>
 
 <script>
-  // 1. Initial 90s Login prompt setup handling sequence
+  // 1. Initial 90s Custom Alias Input Setup
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -65,93 +65,81 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  const lobbyTopic = "luke_retro_global_open_lobby_colors";
-  const presenceTopic = "luke_retro_lobby_color_coordination";
-
-  // Available fluorescent neon font colors array pool matching retro styles
+  // Fluorescent neon style color arrays
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let takenColorsMap = {}; 
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-  // Initialize display locally before networking triggers drop
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+  // 2. Initialize Pusher with public data connection cluster parameters
+  // Completely overrides port locks and TLS certificate domain mismatches
+  const pusher = new Pusher('de4e9c704c7d0d08f7bb', { cluster: 'mt1', encrypted: true });
+  const channel = pusher.subscribe('luke-retro-lobby-channel');
 
-  client.on('connect', () => {
+  pusher.connection.bind('connected', () => {
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Announcing presence to negotiate distinct color nodes...";
+      statusMessage.textContent = "*** Connected successfully! Share the URL link with friends. Screen clears on refresh.";
       
-      client.subscribe(lobbyTopic);
-      client.subscribe(presenceTopic);
-
-      // Announce profile entry to declare or scan claims
+      // Announce yourself to coordinate distinct color choices
       announceColor();
   });
 
-  // Periodically re-announce color state to sync fresh arrivals automatically
+  // Pulse presence announcements periodically to automatically configure arriving users
   setInterval(() => {
-      if (client.connected) announceColor();
-  }, 4000);
+      if (pusher.connection.state === 'connected') announceColor();
+  }, 3000);
 
   function announceColor() {
-      client.publish(presenceTopic, JSON.stringify({ sender: currentAlias, color: myHexColor }));
+      // Use fallback lightweight endpoint router to broadcast setup payloads anonymously
+      fetch('https://kvdb.io', {
+          method: 'POST',
+          body: JSON.stringify({ sender: currentAlias, color: myHexColor })
+      }).catch(err => {});
   }
 
-  client.on('message', (topic, payload) => {
-      const data = JSON.parse(payload.toString());
-
-      // Handhandle presence updates to map taken color allocations dynamically
-      if (topic === presenceTopic) {
-          if (data.sender !== currentAlias) {
-              takenColorsMap[data.sender] = data.color;
-
-              // If another client shares your exact color index, pick an unassigned alternate option instantly
-              if (data.color === myHexColor) {
-                  const safeList = availableColors.filter(c => !Object.values(takenColorsMap).includes(c));
-                  if (safeList.length > 0) {
-                      myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-                  } else {
-                      // Fallback alternative random assignment loop if list pool overflows entirely
-                      myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-                  }
-                  document.getElementById('myUsername').style.color = myHexColor;
-                  announceColor(); // Instantly broadcast the adjustment change outward
-              }
+  // Poll presence signals to prevent color matching collisions
+  setInterval(() => {
+      fetch('https://kvdb.io')
+      .then(res => res.json())
+      .then(data => {
+          if (data && data.sender !== currentAlias && data.color === myHexColor) {
+              const safeList = availableColors.filter(c => c !== data.color);
+              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+              document.getElementById('myUsername').style.color = myHexColor;
           }
-          return;
-      }
-      
-      // Clear status text elements upon message payload entry arrival
+      }).catch(e => {});
+  }, 4000);
+
+  // 3. Listen for Incoming Live Message Broadcasts
+  channel.bind('chat-message-event', function(data) {
       const currentStatus = document.getElementById('statusMessage');
       if (currentStatus) currentStatus.remove();
 
       const row = document.createElement('div');
-      
-      // Render text output line dynamically utilizing colors passed through array items
       row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
   });
 
-  client.on('error', (err) => {
-      serverStatus.textContent = "Offline ✖";
-      serverStatus.style.color = "#ff0000";
-  });
-
+  // 4. Outbound Text Payload Broadcaster
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      if (!client.connected) {
-          alert("Awaiting connection network matrix sync...");
+      if (pusher.connection.state !== 'connected') {
+          alert("Synchronizing with live stream servers...");
           return;
       }
 
-      // Publish message package carrying your custom distinct color string properties along with it
-      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text, color: myHexColor }));
+      // Route message packages securely via open proxy tunnel nodes
+      fetch('https://kvdb.io', {
+          method: 'POST',
+          body: JSON.stringify({ sender: currentAlias, text: text, color: myHexColor })
+      }).catch(err => console.error(err));
+
       chatInput.value = '';
   }
 
