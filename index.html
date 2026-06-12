@@ -21,20 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Robust, unblockable browser peer connection engine bundle loader -->
+    <!-- Load stable, unblockable browser peer connection engine bundle directly -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v26.0 - Global Shared Mesh)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v27.0 - Active Node Lobby)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** PUBLIC GLOBAL MESH ACTIVE *** CHAT LIVE ACROSS COMPLETELY SEPARATE COMPUTERS *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL LOBBY NETWORK OPERATIONAL *** CHAT INTERNATIONALLY LIVE WITH ZERO SERVER LIMITS *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Starting direct peer-to-peer data engine...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -49,11 +49,11 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112602</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112702</span></div>
 
 <script>
-  // 1. Prompt Username customization selection
-  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
+  // 1. Prompt Username customization selection right at boot (Wiped of conflicting syntax parameters)
+  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
   }
@@ -72,34 +72,31 @@
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // Shared Global Room ID matching node key string used to bind everybody together automatically
-  const globalLobbyID = "luke_retro_public_mesh_global";
+  // Shared Global Room ID channel string pairing code
+  const globalLobbyID = "luke_retro_public_mesh_global_v27";
   let peerInstance = null;
   let networkConnections = [];
 
   // 2. Initialize Swarm Router Connection Layer
   function startMeshRouter() {
-      // Create a unique temporary peer ID for your specific device session
       peerInstance = new Peer({
           config: {'iceServers': [{ 'urls': 'stun:://google.com' }]}
       });
 
-      peerInstance.on('open', (mySessionID) => {
+      peerInstance.on('open', (id) => {
           serverStatus.textContent = "Online ✔";
           serverStatus.style.color = "#00ff00";
-          statusMessage.textContent = "*** Connected successfully! Anyone opening your site link right now shares this exact screen window space.";
+          statusMessage.textContent = "*** Connected successfully! Tell friends to open your URL link right now to talk live.";
           
-          // Connect immediately to the background main relay pool id
+          // Connect immediately to the background main relay pool
           const mainNodeLink = peerInstance.connect(globalLobbyID, {
               metadata: { alias: currentAlias, color: myHexColor }
           });
           bindConnectionEvents(mainNodeLink);
       });
 
-      // Handle fallback listeners if your device happens to load first and serves as the master relay hub
       peerInstance.on('error', (err) => {
           if (err.type === 'id-taken' || err.message.includes('taken')) {
-              // If backup assignment misfires, rebuild yourself as the primary hub listener node
               peerInstance.destroy();
               startAsPrimaryHub();
           }
@@ -146,7 +143,6 @@
               document.getElementById('myUsername').style.color = myHexColor;
           }
 
-          // If you are currently acting as the primary hub channel, forward this packet to everyone else
           if (peerInstance.id === globalLobbyID) {
               networkConnections.forEach(activeNode => {
                   if (activeNode.open && activeNode.peer !== conn.peer) {
@@ -165,13 +161,10 @@
       if (text === '') return;
 
       if (statusMessage) statusMessage.remove();
-      
       const packetPayload = { sender: currentAlias, text: text, color: myHexColor };
 
-      // Print onto your own screen local monitor board instantly
       appendChatMessage(currentAlias, text, myHexColor);
 
-      // Distribute data payload directly to linked browsers internationally live
       networkConnections.forEach(conn => {
           if (conn.open) conn.send(packetPayload);
       });
@@ -194,13 +187,11 @@
       chatLog.scrollTop = chatLog.scrollHeight;
   }
 
-  // Wiping page drops the memory pool. Instantly satisfies the auto-clear rule [INDEX].
   window.addEventListener('beforeunload', () => {
       networkConnections = [];
       if (peerInstance) peerInstance.destroy();
   });
 
-  // Launch Engine Loops
   startMeshRouter();
 
   sendBtn.addEventListener('click', sendMsg);
