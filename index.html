@@ -6,76 +6,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    background:#000;
-    color:#0f0;
-    font-family:Courier New;
-    margin:0;
-    padding:15px;
+body{
+background:#000;
+color:#0f0;
+font-family:Courier New;
+margin:0;
+padding:15px;
 }
 
-.chat-window {
-    max-width:900px;
-    margin:auto;
-    background:#c0c0c0;
-    border:3px outset #888;
+.chat-window{
+max-width:900px;
+margin:auto;
+background:#c0c0c0;
+border:3px outset #888;
 }
 
-.title-bar {
-    background:linear-gradient(90deg,#000080,#0080ff);
-    color:#fff;
-    padding:6px;
-    font-weight:bold;
+.title-bar{
+background:linear-gradient(90deg,#000080,#0080ff);
+color:#fff;
+padding:6px;
+font-weight:bold;
 }
 
-.workspace { display:flex; gap:10px; padding:10px; }
+.workspace{display:flex;gap:10px;padding:10px;}
 
-.chat-log {
-    flex:3;
-    height:340px;
-    background:#000;
-    border:3px inset #888;
-    overflow-y:auto;
-    padding:8px;
+.chat-log{
+flex:3;
+height:340px;
+background:#000;
+border:3px inset #888;
+overflow-y:auto;
+padding:8px;
 }
 
-.user-list {
-    flex:1;
-    background:#000;
-    border:3px inset #888;
-    color:#0ff;
-    padding:8px;
-    font-size:13px;
+.user-list{
+flex:1;
+background:#000;
+border:3px inset #888;
+color:#0ff;
+padding:8px;
+font-size:13px;
 }
 
-.input-bar {
-    display:flex;
-    gap:5px;
-    padding:10px;
-    background:#c0c0c0;
+.input-bar{
+display:flex;
+gap:5px;
+padding:10px;
+background:#c0c0c0;
+flex-wrap:wrap;
 }
 
-.input-bar input {
-    flex:1;
-    padding:6px;
+.input-bar input{
+flex:1;
+padding:6px;
 }
 
-.msg { color:#fff; }
-.sys { color:yellow; }
+.msg{color:#fff;}
+.sys{color:yellow;}
 
-#replyBox {
-    display:none;
-    background:#111;
-    color:yellow;
-    padding:5px;
-    margin:5px 10px;
-    border-left:4px solid yellow;
-    font-size:12px;
+#replyBox{
+display:none;
+background:#111;
+color:yellow;
+padding:5px;
+margin:5px 10px;
+border-left:4px solid yellow;
+font-size:12px;
 }
 
-button {
-    cursor:pointer;
-}
+button{cursor:pointer;}
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -88,7 +87,6 @@ button {
 
 <div class="workspace">
 <div class="chat-log" id="chatLog"></div>
-
 <div class="user-list">
 <div style="color:yellow;">ONLINE USERS</div>
 <div id="userListBox"></div>
@@ -98,13 +96,12 @@ button {
 <div id="replyBox"></div>
 
 <div class="input-bar">
-<input id="chatInput" placeholder="Type message... (@mentions supported)">
+<input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
 <button id="imgBtn">Image</button>
 <button id="clearBtn">Clear</button>
+<input type="file" id="imgUpload" hidden>
 </div>
-
-<input type="file" id="imgUpload" accept="image/*" hidden>
 
 </div>
 
@@ -114,54 +111,71 @@ button {
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
 // ================= UI =================
-const chatLog = document.getElementById("chatLog");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const clearBtn = document.getElementById("clearBtn");
-const imgBtn = document.getElementById("imgBtn");
-const imgUpload = document.getElementById("imgUpload");
-const replyBox = document.getElementById("replyBox");
-const userListBox = document.getElementById("userListBox");
+const chatLog=document.getElementById("chatLog");
+const chatInput=document.getElementById("chatInput");
+const sendBtn=document.getElementById("sendBtn");
+const clearBtn=document.getElementById("clearBtn");
+const imgBtn=document.getElementById("imgBtn");
+const imgUpload=document.getElementById("imgUpload");
+const replyBox=document.getElementById("replyBox");
+const userListBox=document.getElementById("userListBox");
 
 // ================= MQTT =================
-const topic = "luke_retro_global_open_lobby";
-const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+const topic="luke_retro_global_open_lobby";
+const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
 // ================= DATA =================
-const users = {};
-let replyTarget = null;
+const users={};
+let replyTarget=null;
 
 // ================= SOUND =================
-const replySound = new Audio("aim-notif.mp3");
+const notif=new Audio("aim-notif.mp3");
+
+// ================= EMOJIS =================
+const emojis={
+":sob:":"😭",
+":fire:":"🔥",
+":heart:":"❤️",
+":skull:":"💀",
+":joy:":"😂",
+":cool:":"😎",
+":wave:":"👋",
+":thumbsup:":"👍"
+};
+
+function parseEmojis(text){
+Object.keys(emojis).forEach(k=>{
+text=text.split(k).join(emojis[k]);
+});
+return text;
+}
 
 // ================= SYSTEM =================
-function sys(text){
-const d = document.createElement("div");
-d.className = "sys";
-d.textContent = "*** " + text;
+function sys(t){
+const d=document.createElement("div");
+d.className="sys";
+d.textContent="*** "+t;
 chatLog.appendChild(d);
 }
 
-// ================= ONLINE USERS =================
+// ================= USERS =================
 function updateUsers(){
-const now = Date.now();
-userListBox.innerHTML = "";
+const now=Date.now();
+userListBox.innerHTML="";
 
 Object.keys(users).forEach(u=>{
-if(now - users[u] < 60000){
-const d = document.createElement("div");
-d.textContent = "• " + u;
+if(now-users[u]<60000){
+const d=document.createElement("div");
+d.textContent="• "+u;
 userListBox.appendChild(d);
 }
 });
 }
 
-// ================= MENTION HIGHLIGHT (FIXED) =================
-function highlightMentions(text){
-const escaped = currentAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const regex = new RegExp("@" + escaped, "g");
-
-return text.replace(regex,
+// ================= MENTION HIGHLIGHT =================
+function highlight(text){
+const safe=currentAlias.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+return text.replaceAll("@"+currentAlias,
 `<span style="color:yellow;font-weight:bold;">@${currentAlias}</span>`
 );
 }
@@ -170,7 +184,7 @@ return text.replace(regex,
 client.on("connect",()=>{
 client.subscribe(topic);
 
-client.publish(topic, JSON.stringify({
+client.publish(topic,JSON.stringify({
 type:"join",
 sender:currentAlias
 }));
@@ -178,119 +192,131 @@ sender:currentAlias
 
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
-const d = JSON.parse(p.toString());
+const d=JSON.parse(p.toString());
 
-if(d.type === "join"){
-users[d.sender] = Date.now();
-sys(d.sender + " joined");
+if(d.type==="join"){
+users[d.sender]=Date.now();
+sys(d.sender+" joined");
 updateUsers();
 return;
 }
 
-if(d.text !== undefined){
+if(d.text!==undefined){
 
-users[d.sender] = Date.now();
+users[d.sender]=Date.now();
 updateUsers();
 
-let text = d.text;
+let text=d.text;
 
-// 💛 FIX: mention detection + highlight + sound
-const isMention = text.includes("@"+currentAlias);
-if(isMention && d.sender !== currentAlias){
-replySound.currentTime = 0;
-replySound.play().catch(()=>{});
+// emojis FIRST
+text=parseEmojis(text);
+
+// mention highlight
+text=highlight(text);
+
+// image detection
+const img=/https?:\/\/.*\.(png|jpg|jpeg|gif|webp)/i;
+if(img.test(text)){
+text=`<img src="${text}" style="max-width:200px;border:2px solid #0f0;">`;
 }
-
-// APPLY HIGHLIGHT
-text = highlightMentions(text);
 
 // reply block
-let replyHTML = "";
+let replyHTML="";
 if(d.reply){
-replyHTML =
+replyHTML=
 `<div style="color:yellow;font-size:11px;border-left:4px solid yellow;padding-left:6px;margin-bottom:4px;background:#111;">
-↳ replying to <b>${d.reply.user}</b>: ${d.reply.text}
+↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
 </div>`;
 
-replySound.currentTime = 0;
-replySound.play().catch(()=>{});
+notif.currentTime=0;
+notif.play().catch(()=>{});
 }
 
-// image support (FIXED BACK IN)
-const imgRegex = /(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
-if(imgRegex.test(text)){
-text = `<img src="${text}" style="max-width:200px;border:2px solid #0f0;">`;
-}
+const row=document.createElement("div");
 
-const row = document.createElement("div");
-
-row.innerHTML =
-replyHTML +
+row.innerHTML=
+replyHTML+
 `<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
 &lt;${d.sender}&gt;</b>
- <span style="color:#0f0"> [${d.timestamp}] </span>
- <span style="color:#fff">${text}</span>
+<span style="color:#0f0"> [${d.timestamp}] </span>
+<span style="color:#fff">${text}</span>
 
- <button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
- style="margin-left:10px;font-size:10px;">Reply</button>`;
+<button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
+style="margin-left:10px;font-size:10px;">Reply</button>`;
 
 chatLog.appendChild(row);
-chatLog.scrollTop = chatLog.scrollHeight;
+chatLog.scrollTop=chatLog.scrollHeight;
 }
 });
 
 // ================= REPLY =================
-window.setReply = function(user,text){
-replyTarget = { user, text };
-
-replyBox.style.display = "block";
-replyBox.innerHTML =
-`↳ Replying to <b>${user}</b>: "${text}"`;
+window.setReply=function(user,text){
+replyTarget={user,text};
+replyBox.style.display="block";
+replyBox.innerHTML="↳ Replying to <b>"+user+"</b>: "+text;
 };
 
 // ================= SEND =================
 function send(){
-let text = chatInput.value.trim();
-if(!text) return;
+let text=chatInput.value.trim();
+if(!text)return;
 
-const payload = {
-sender: currentAlias,
+// /nick FIXED
+if(text.startsWith("/nick ")){
+currentAlias=text.replace("/nick ","");
+sys("you are now "+currentAlias);
+chatInput.value="";
+return;
+}
+
+// clear
+if(text==="/clear"){
+chatLog.innerHTML="";
+sys("chat cleared");
+chatInput.value="";
+return;
+}
+
+text=parseEmojis(text);
+
+const payload={
+sender:currentAlias,
 text,
-timestamp: new Date().toLocaleTimeString([],{
+timestamp:new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
 };
 
 if(replyTarget){
-payload.reply = replyTarget;
-replyTarget = null;
-replyBox.style.display = "none";
+payload.reply=replyTarget;
+replyTarget=null;
+replyBox.style.display="none";
 }
 
-client.publish(topic, JSON.stringify(payload));
-chatInput.value = "";
+client.publish(topic,JSON.stringify(payload));
+chatInput.value="";
 }
 
 // ================= IMAGE UPLOAD =================
-imgBtn.onclick = ()=> imgUpload.click();
+imgBtn.onclick=()=>imgUpload.click();
 
-imgUpload.onchange = async (e)=>{
-const file = e.target.files[0];
-if(!file) return;
+imgUpload.onchange=async e=>{
+const file=e.target.files[0];
+if(!file)return;
 
-const form = new FormData();
-form.append("file", file);
-form.append("upload_preset", "chat_upload"); // your preset
+const form=new FormData();
+form.append("file",file);
+form.append("upload_preset","chat_upload");
 
-const res = await fetch("https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",{
+const res=await fetch("https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",{
 method:"POST",
 body:form
 });
 
-const data = await res.json();
+const data=await res.json();
 
-client.publish(topic, JSON.stringify({
+client.publish(topic,JSON.stringify({
 sender:currentAlias,
 text:data.secure_url,
 timestamp:new Date().toLocaleTimeString([],{
@@ -301,17 +327,17 @@ minute:"2-digit"
 };
 
 // ================= EVENTS =================
-sendBtn.onclick = send;
+sendBtn.onclick=send;
 
-chatInput.addEventListener("keydown",(e)=>{
-if(e.key === "Enter"){
+chatInput.addEventListener("keydown",e=>{
+if(e.key==="Enter"){
 e.preventDefault();
 send();
 }
 });
 
-clearBtn.onclick = ()=>{
-chatLog.innerHTML = "";
+clearBtn.onclick=()=>{
+chatLog.innerHTML="";
 sys("chat cleared");
 };
 
