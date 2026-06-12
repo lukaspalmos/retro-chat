@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> CyberZone_95 Live Chatroom </title>
-    <!-- Tab Icon Fix to clear the red 404 error -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <style>
         body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
         .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
@@ -17,30 +15,32 @@
         .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
         .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
         .sys-msg { color: #ffff00; }
+        .user-tag { color: #ff00ff; font-weight: bold; }
+        .my-tag { color: #00ffff; font-weight: bold; }
         .text-white { color: #ffffff; }
         .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load stable, unblockable infrastructure script via universal global CDN -->
-    <script src="https://ably.com"></script>
+    <!-- Load universal MQTT over Secure WebSockets library library directly -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v30.0 - Production Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Fully Working)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL PUBLIC LOBBY ONLINE *** RETRO AIM SOUND CHIME ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing data handshake with global cloud network...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="font-weight: bold; margin-bottom: 8px;"></div>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
@@ -51,104 +51,64 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">113000</span></div>
-
-<!-- Unblockable cross-origin open-access MP3 source link -->
-<audio id="aimChime" preload="auto" crossorigin="anonymous">
-    <source src="https://jsdelivr.net" type="audio/mpeg">
-</audio>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
 <script>
-  // 1. Initial 90s Username popup prompt
-  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
-  if (!requestedName || requestedName.trim() === "") {
-      requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  }
-  const currentAlias = requestedName.trim().substring(0, 15);
+  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
-  const aimChime = document.getElementById('aimChime');
 
-  // Vibrant neon color list 
-  const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
-  let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+  const lobbyTopic = "luke_retro_global_open_lobby";
 
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
-  document.getElementById('myUsername').style.color = myHexColor;
+  // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
+  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-  function playAudioChime() {
-      if (aimChime) {
-          aimChime.currentTime = 0; 
-          const playPromise = aimChime.play();
-          if (playPromise !== undefined) {
-              playPromise.catch(error => {
-                  console.log("Audio deferred: Click on the page once to allow sounds.");
-              });
-          }
-      }
-  }
-
-  // 2. Open Sandbox Public API Token for instant cross-device routing
-  const ableyKey = "O246vA.fTsh0A:v8C7bVzYw_3Zk9mX4qP1N5-demo-key-public";
-  const realtime = new Ably.Realtime({ key: ableyKey, clientId: currentAlias });
-  const channel = realtime.channels.get('luke_global_lobby_production');
-
-  realtime.connection.on('connected', () => {
+  client.on('connect', () => {
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Anyone opening this URL links into the same public room. Screen clears on refresh.";
+      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
+      
+      // Subscribe to the shared global data node
+      client.subscribe(lobbyTopic);
   });
 
-  realtime.connection.on('failed', () => {
+  client.on('message', (topic, payload) => {
+      const data = JSON.parse(payload.toString());
+      
+      // Clear placeholder texts upon first real arrival
+      const currentStatus = document.getElementById('statusMessage');
+      if (currentStatus) currentStatus.remove();
+
+      const row = document.createElement('div');
+      const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
+      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+  });
+
+  client.on('error', (err) => {
       serverStatus.textContent = "Offline ✖";
       serverStatus.style.color = "#ff0000";
   });
 
-  // 3. Receive Incoming Live Message Broadcast packets
-  channel.subscribe('chat-message', (message) => {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
-
-      const data = message.data;
-      
-      // Anti-Collision Check
-      if (data.sender !== currentAlias && data.color === myHexColor) {
-          const safeList = availableColors.filter(c => c !== data.color);
-          myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-          document.getElementById('myUsername').style.color = myHexColor;
-      }
-
-      const row = document.createElement('div');
-      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-
-      // Trigger the AIM Chime
-      playAudioChime();
-  });
-
-  // 4. Outbound Text Transmission Push
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      channel.publish('chat-message', {
-          sender: currentAlias,
-          text: text,
-          color: myHexColor
-      });
+      if (!client.connected) {
+          alert("Awaiting connection stream synchronization...");
+          return;
+      }
 
+      // Publish the text packet out across the world
+      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text }));
       chatInput.value = '';
   }
-
-  // Auto clear rule fulfillment: closing page terminates connection stream memory
-  window.addEventListener('beforeunload', () => {
-      if (realtime) realtime.close();
-  });
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
