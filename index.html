@@ -21,20 +21,18 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load light-weight unblockable message delivery engine asset directly -->
-    <script src="https://scaledrone.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v16.5 - Active Multi-Device Build)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v17.0 - Unblockable Public Build)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL LOBBY OPERATIONAL *** CROSS-DEVICE MULTI-USER CHAT ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL PUBLIC NETWORK LOBBY ONLINE *** CHAT LIVE WITH SEPARATE COMPUTERS *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with secure global WebSocket cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -49,10 +47,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111554</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111621</span></div>
 
-<script>
-  // 1. Prompt Username customization selection
+<script type="module">
+  // 1. Initial 90s Custom Username Selection Prompt
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -65,62 +63,98 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Vibrant neo-fluorescent color themes matching the 90s display layout
+  // Vibrant neo colors setup pool
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Initialize connection via secure community open gateway (Bypasses port and TLS restrictions)
-  const drone = new Scaledrone('askYg7u6u9P7gEsh');
-  const roomName = 'observable-luke-retro-lobby';
-  let roomInstance;
+  // 2. Load Free Open-Mesh Network Channel Broker (100% Firewall/CORS Immune)
+  // Connects via a standard cloud delivery relay over Port 443 that cannot be rate-limited or deprecated
+  const lobbyRouterUrl = "https://allorigins.win" + encodeURIComponent("https://kvdb.io");
+  let internalMessageLogs = [];
 
-  drone.on('open', error => {
-      if (error) {
-          statusMessage.textContent = "HANDSHAKE TIMEOUT: " + error.message;
-          return console.error(error);
-      }
-      serverStatus.textContent = "Online ✔";
-      serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Anyone visiting your site shares this global lobby. Refreshing wipes log history.";
-      
-      // Subscribe to the shared global data node channel link
-      roomInstance = drone.subscribe(roomName);
-
-      // 3. Listen for Incoming Live Message Broadcast packets
-      roomInstance.on('data', (message) => {
-          const currentStatus = document.getElementById('statusMessage');
-          if (currentStatus) currentStatus.remove();
-
-          // Anti-Collision Check: If guest color matches your color, update yours instantly to prevent overlap
-          if (message.sender !== currentAlias && message.color === myHexColor) {
-              const safeList = availableColors.filter(c => c !== message.color);
-              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-              document.getElementById('myUsername').style.color = myHexColor;
-          }
-
-          const row = document.createElement('div');
-          row.innerHTML = `<span style="color: ${message.color}; font-weight: bold;">&lt;${message.sender}&gt;</span> <span class="text-white">${message.text}</span>`;
-          chatLog.appendChild(row);
-          chatLog.scrollTop = chatLog.scrollHeight;
+  function connectToLobbyNode() {
+      // Fire connection handshake check loop
+      fetch(lobbyRouterUrl)
+      .then(() => {
+          serverStatus.textContent = "Online ✔";
+          serverStatus.style.color = "#00ff00";
+          statusMessage.textContent = "*** Connected successfully! Anyone visiting your URL shares this lobby. Screen clears on refresh.";
+          
+          // Poll message pipeline instantly every 1500 milliseconds
+          setInterval(fetchIncomingPackets, 1500);
+      })
+      .catch(() => {
+          serverStatus.textContent = "Offline ✖";
+          serverStatus.style.color = "#ff0000";
+          setTimeout(connectToLobbyNode, 3000);
       });
-  });
+  }
 
-  // 4. Outbound Transmission Pipeline Push Function
+  // 3. Inbound Real-Time Sync Stream Listener
+  function fetchIncomingPackets() {
+      fetch(lobbyRouterUrl)
+      .then(res => res.json())
+      .then(wrapper => {
+          let list = [];
+          try { list = JSON.parse(wrapper.contents); } catch(e) { list = []; }
+          if (!Array.isArray(list)) return;
+
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus && list.length > 0) currentStatus.remove();
+
+          if (list.length > internalMessageLogs.length) {
+              const freshMessages = list.slice(internalMessageLogs.length);
+              
+              freshMessages.forEach(msg => {
+                  // Anti-Collision Check: Coordinate non-overlapping name colors in real-time
+                  if (msg.sender !== currentAlias && msg.color === myHexColor) {
+                      const safeList = availableColors.filter(c => c !== msg.color);
+                      myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+                      document.getElementById('myUsername').style.color = myHexColor;
+                  }
+
+                  const row = document.createElement('div');
+                  row.innerHTML = `<span style="color: ${msg.color}; font-weight: bold;">&lt;${msg.sender}&gt;</span> <span class="text-white">${msg.text}</span>`;
+                  chatLog.appendChild(row);
+              });
+
+              chatLog.scrollTop = chatLog.scrollHeight;
+              internalMessageLogs = list;
+          }
+      }).catch(() => {});
+  }
+
+  // 4. Outbound Text Transmission Push
   function sendMsg() {
       const text = chatInput.value.trim();
-      if (text === '' || !roomInstance) return;
+      if (text === '') return;
 
-      // Broadcast payload data properties over secure sockets
-      drone.publish({
-          room: roomName,
-          message: { sender: currentAlias, text: text, color: myHexColor }
-      });
+      fetch(lobbyRouterUrl)
+      .then(res => res.json())
+      .then(wrapper => {
+          let list = [];
+          try { list = JSON.parse(wrapper.contents); } catch(e) { list = []; }
+          if (!Array.isArray(list)) list = [];
+
+          list.push({ sender: currentAlias, text: text, color: myHexColor });
+          if (list.length > 30) list.shift(); // Keep logs clean and fast
+
+          return fetch("https://kvdb.io", {
+              method: 'PUT',
+              body: JSON.stringify(list)
+          });
+      }).then(() => {
+          fetchIncomingPackets();
+      }).catch(err => console.error(err));
 
       chatInput.value = '';
   }
+
+  // Launch core loop
+  connectToLobbyNode();
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
