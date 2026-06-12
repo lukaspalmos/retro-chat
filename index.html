@@ -53,7 +53,6 @@ body {
     gap:5px;
     padding:10px;
     background:#c0c0c0;
-    flex-wrap:wrap;
 }
 
 .input-bar input {
@@ -64,19 +63,15 @@ body {
 .msg { color:#fff; }
 .sys { color:yellow; }
 
-/* reply box */
+/* reply preview */
 #replyBox {
     display:none;
     background:#111;
     color:#0ff;
     padding:5px;
-    margin-bottom:5px;
+    margin:5px 10px;
     border-left:4px solid #0ff;
     font-size:12px;
-}
-
-button {
-    cursor:pointer;
 }
 </style>
 
@@ -118,7 +113,6 @@ const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const clearBtn = document.getElementById("clearBtn");
 const replyBox = document.getElementById("replyBox");
-const userListBox = document.getElementById("userListBox");
 
 // ================= MQTT =================
 const topic = "luke_retro_global_open_lobby";
@@ -136,20 +130,6 @@ d.innerHTML = "*** " + t;
 chatLog.appendChild(d);
 }
 
-// ================= ONLINE USERS (FIXED) =================
-function updateUsers(){
-const now = Date.now();
-userListBox.innerHTML = "";
-
-Object.keys(users).forEach(u=>{
-if(now - users[u] < 60000){
-const div = document.createElement("div");
-div.textContent = "• " + u;
-userListBox.appendChild(div);
-}
-});
-}
-
 // ================= CONNECT =================
 client.on("connect",()=>{
 client.subscribe(topic);
@@ -159,6 +139,21 @@ type:"join",
 sender:currentAlias
 }));
 });
+
+// ================= USERS =================
+function updateUsers(){
+const now = Date.now();
+const box = document.getElementById("userListBox");
+box.innerHTML = "";
+
+Object.keys(users).forEach(u=>{
+if(now - users[u] < 60000){
+const d = document.createElement("div");
+d.textContent = "• " + u;
+box.appendChild(d);
+}
+});
+}
 
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
@@ -177,22 +172,23 @@ if(d.text){
 users[d.sender] = Date.now();
 updateUsers();
 
-// message display
 const row = document.createElement("div");
 
+// reply block
 let replyHTML = "";
 if(d.reply){
 replyHTML =
-`<div style="color:#0ff;font-size:11px;border-left:3px solid #0ff;padding-left:5px;margin-bottom:3px;">
+`<div style="color:yellow;font-size:11px;border-left:3px solid yellow;padding-left:5px;margin-bottom:3px;">
 ↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
 </div>`;
 }
 
+// message
 row.innerHTML =
 replyHTML +
 `<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
 &lt;${d.sender}&gt;</b>
- <span style="color:#0f0">[${d.timestamp}]</span>
+ <span style="color:#0f0"> [${d.timestamp}] </span>
  <span style="color:#fff">${d.text}</span>
 
  <button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
@@ -206,22 +202,16 @@ chatLog.scrollTop = chatLog.scrollHeight;
 // ================= REPLY SYSTEM =================
 window.setReply = function(user,text){
 replyTarget = { user, text };
+
 replyBox.style.display = "block";
-replyBox.innerHTML = `Replying to <b>${user}</b>: "${text}"`;
+replyBox.style.color = "yellow";   // FIX: highlight in yellow
+replyBox.innerHTML = `↳ Replying to <b>${user}</b>: "${text}"`;
 };
 
-// ================= SEND =================
+// ================= SEND (FIXED ENTER ISSUE) =================
 function send(){
 let text = chatInput.value.trim();
 if(!text) return;
-
-// /clear FIXED
-if(text === "/clear"){
-chatLog.innerHTML = "";
-sys("chat cleared");
-chatInput.value = "";
-return;
-}
 
 const payload = {
 sender: currentAlias,
@@ -243,11 +233,22 @@ client.publish(topic, JSON.stringify(payload));
 chatInput.value = "";
 }
 
-// ================= CLEAR BUTTON =================
-clearBtn.onclick = sendBtn.onclick = send;
+// ================= EVENTS (FIXED) =================
+sendBtn.onclick = send;
 
-// ================= USER TRACKING LOOP =================
-setInterval(updateUsers, 5000);
+// FIX: reliable Enter key handling
+chatInput.addEventListener("keydown",(e)=>{
+if(e.key === "Enter"){
+e.preventDefault();
+send();
+}
+});
+
+// CLEAR BUTTON (FIXED)
+clearBtn.onclick = ()=>{
+chatLog.innerHTML = "";
+sys("chat cleared");
+};
 
 </script>
 
