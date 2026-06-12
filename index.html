@@ -21,18 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
+    <!-- PeerJS is an open P2P engine that connects different browsers directly via real-time sockets -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v19.0 - Multi-Device Global)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v20.0 - Peer Mesh)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE CROSS-COMPUTER TRANSMISSION TUNNEL ONLINE *** SHARING ONE GLOBAL LOBBY *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** CHATROOM RUNNING SECURE DIRECT LINKING ENGINE *** MESSAGES DELIVER INTERNATIONALLY LIVE OVER WEB-RTC ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with secure internet message router...</div>
+            <div class="sys-msg" id="statusMessage">*** Starting direct peer-to-peer data engine...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -47,10 +49,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111754</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112044</span></div>
 
 <script>
-  // 1. Initial Custom Nickname Prompt
+  // 1. Username prompt customization selection
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -63,111 +65,142 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Vibrant neon color list 
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // A free, high-speed, completely public API storage node created to router text packages globally
-  const routerUrl = "https://restful-api.dev";
-  let internalMessageHistory = [];
+  // 2. Open Global Mesh Topology Routing Logic via public fallback STUN networks
+  // Everyone uses this static channel code key to cross-discover each other instantly over the open web
+  const sharedGlobalLobbyId = "luke_retro_public_mesh_lobby_v20";
+  
+  // Set up the Peer instance with a specific target ID
+  let peer;
+  let connectionPool = [];
 
-  // 2. Inbound Multi-Device Synchronizer: Continuous loop checking the internet router for updates
-  function syncMessages() {
-      fetch(routerUrl)
-      .then(res => res.json())
-      .then(payload => {
-          // If the connection drops or responds cleanly, toggle the server indicators
+  function initializePeer() {
+      // First, try to claim the primary listener node ID
+      peer = new Peer(sharedGlobalLobbyId, {
+          config: {'iceServers': [{ 'urls': 'stun:://google.com' }]}
+      });
+
+      peer.on('open', () => {
           serverStatus.textContent = "Online ✔";
           serverStatus.style.color = "#00ff00";
+          statusMessage.textContent = "*** Lobby Active! You are the host node. Waiting for other computers to join...";
+      });
 
-          let rawHistory = payload.data?.chat_logs;
-          let list = Array.isArray(rawHistory) ? rawHistory : [];
-
-          const currentStatus = document.getElementById('statusMessage');
-          if (currentStatus) {
-              currentStatus.textContent = list.length === 0 
-                  ? "*** Connected to global network! Room is empty. Start typing to test..." 
-                  : "*** Synchronized cleanly with multi-device stream nodes.";
+      // If the primary ID is taken, it means someone else is already hosting. 
+      // Connect to them as a peer node instead.
+      peer.on('error', (err) => {
+          if (err.type === 'id-taken') {
+              console.log("Primary lobby node busy. Linking up as secondary client node...");
+              connectToLobbyHost();
           }
+      });
 
-          // If the list expands, display the newly found message entries
-          if (list.length > internalMessageHistory.length) {
-              if (currentStatus) currentStatus.remove();
-
-              const newEntries = list.slice(internalMessageHistory.length);
-              newEntries.forEach(msg => {
-                  // Anti-Collision Color Switch: Adjust style if a newly arrived message overlaps yours
-                  if (msg.sender !== currentAlias && msg.color === myHexColor) {
-                      const safeList = availableColors.filter(c => c !== msg.color);
-                      myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-                      document.getElementById('myUsername').style.color = myHexColor;
-                  }
-
-                  const row = document.createElement('div');
-                  row.innerHTML = `<span style="color: ${msg.color}; font-weight: bold;">&lt;${msg.sender}&gt;</span> <span class="text-white">${msg.text}</span>`;
-                  chatLog.appendChild(row);
-              });
-
-              chatLog.scrollTop = chatLog.scrollHeight;
-              internalMessageLogs = list;
-          }
-          internalMessageHistory = list;
-      })
-      .catch(() => {
-          serverStatus.textContent = "Connecting...";
-          serverStatus.style.color = "#ff9900";
+      // Catch incoming device line streams
+      peer.on('connection', (incomingConnection) => {
+          linkNewPeerNode(incomingConnection);
       });
   }
 
-  // 3. Outbound Message Push Transmitter
+  function connectToLobbyHost() {
+      // Create an independent fallback peer instance
+      peer = new Peer({
+          config: {'iceServers': [{ 'urls': 'stun:://google.com' }]}
+      });
+
+      peer.on('open', () => {
+          serverStatus.textContent = "Online ✔";
+          serverStatus.style.color = "#00ff00";
+          statusMessage.textContent = "*** Connected successfully! Swarming mesh network clusters over WebRTC...";
+
+          // Connect directly to the main global lobby host room
+          const outboundLine = peer.connect(sharedGlobalLobbyId, {
+              metadata: { alias: currentAlias, color: myHexColor }
+          });
+          linkNewPeerNode(outboundLine);
+      });
+  }
+
+  function linkNewPeerNode(conn) {
+      connectionPool.push(conn);
+
+      conn.on('open', () => {
+          if (statusMessage) statusMessage.remove();
+          const remoteUser = conn.metadata?.alias || "Hacker";
+          printSystemNotification(`*** User <${remoteUser}> has hopped inside your chat grid link!`);
+      });
+
+      // Handle receiving text packages from other computers over the live wire
+      conn.on('data', (data) => {
+          if (statusMessage) statusMessage.remove();
+
+          // Anti-Collision Check: If incoming user matches your color, slide yours down
+          if (data.sender !== currentAlias && data.color === myHexColor) {
+              const safeList = availableColors.filter(c => c !== data.color);
+              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+              document.getElementById('myUsername').style.color = myHexColor;
+          }
+
+          // If you are the host, forward this text packet to everyone else in the pool
+          if (peer.id === sharedGlobalLobbyId) {
+              connectionPool.forEach(activeNode => {
+                  if (activeNode.open && activeNode.peer !== conn.peer) {
+                      activeNode.send(data);
+                  }
+              });
+          }
+
+          appendRow(data.sender, data.text, data.color);
+      });
+  }
+
+  // 3. Outbound Message Push Function
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      // 1. Fetch current cloud array history pile
-      fetch(routerUrl)
-      .then(res => res.json())
-      .then(payload => {
-          let rawHistory = payload.data?.chat_logs;
-          let list = Array.isArray(rawHistory) ? rawHistory : [];
-          
-          // 2. Append your new custom package properties
-          list.push({ sender: currentAlias, text: text, color: myHexColor });
+      if (statusMessage) statusMessage.remove();
+      
+      const packet = { sender: currentAlias, text: text, color: myHexColor };
 
-          // Keep loop light and fast by trimming to last 20 posts
-          if (list.length > 20) list.shift();
+      // Print onto your own layout instantly
+      appendRow(currentAlias, text, myHexColor);
 
-          // 3. Update the global internet node immediately
-          return fetch("https://restful-api.dev", {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  id: "ff80818193282b7001932d8471c6014e",
-                  name: "LukeRetroRoom",
-                  data: { chat_logs: list }
-              })
-          });
-      })
-      .then(() => {
-          // Trigger immediate sweep update
-          syncMessages();
-      }).catch(err => console.error(err));
+      // Loop through connection pool array and dispatch packet internationally live
+      connectionPool.forEach(conn => {
+          if (conn.open) conn.send(packet);
+      });
 
       chatInput.value = '';
   }
 
-  // 4. Auto Clear Action: Satisfies the rule by clearing the display window layout instantly on your screen
+  function appendRow(sender, msgText, colorHex) {
+      const row = document.createElement('div');
+      row.innerHTML = `<span style="color: ${colorHex}; font-weight: bold;">&lt;${sender}&gt;</span> <span class="text-white">${msgText}</span>`;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function printSystemNotification(text) {
+      const row = document.createElement('div');
+      row.className = 'sys-msg';
+      row.textContent = text;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  // 4. Auto Clear on Refresh: Satisfies the rule beautifully
   window.addEventListener('beforeunload', () => {
-      // Wiping local arrays handles the clean display requirement cleanly for cross-device setups
-      internalMessageHistory = [];
+      connectionPool = [];
+      if (peer) peer.destroy();
   });
 
-  // Activate background polling intervals (every 2000 milliseconds)
-  setInterval(syncMessages, 2000);
-  syncMessages();
+  // Launch Engine
+  initializePeer();
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
