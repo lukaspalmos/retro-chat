@@ -63,14 +63,14 @@ body {
 .msg { color:#fff; }
 .sys { color:yellow; }
 
-/* reply preview */
+/* reply box */
 #replyBox {
     display:none;
     background:#111;
-    color:#0ff;
+    color:yellow;
     padding:5px;
     margin:5px 10px;
-    border-left:4px solid #0ff;
+    border-left:4px solid yellow;
     font-size:12px;
 }
 </style>
@@ -113,6 +113,7 @@ const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const clearBtn = document.getElementById("clearBtn");
 const replyBox = document.getElementById("replyBox");
+const userListBox = document.getElementById("userListBox");
 
 // ================= MQTT =================
 const topic = "luke_retro_global_open_lobby";
@@ -122,12 +123,29 @@ const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 const users = {};
 let replyTarget = null;
 
-// ================= SYSTEM =================
-function sys(t){
+// ================= SOUND (REPLY FIX) =================
+const replySound = new Audio("aim-notif.mp3");
+
+// ================= SYSTEM MESSAGE (SAFE) =================
+function sys(text){
 const d = document.createElement("div");
-d.style.color = "yellow";
-d.innerHTML = "*** " + t;
+d.className = "sys";
+d.textContent = "*** " + text;
 chatLog.appendChild(d);
+}
+
+// ================= ONLINE USERS =================
+function updateUsers(){
+const now = Date.now();
+userListBox.innerHTML = "";
+
+Object.keys(users).forEach(u=>{
+if(now - users[u] < 60000){
+const d = document.createElement("div");
+d.textContent = "• " + u;
+userListBox.appendChild(d);
+}
+});
 }
 
 // ================= CONNECT =================
@@ -140,26 +158,11 @@ sender:currentAlias
 }));
 });
 
-// ================= USERS =================
-function updateUsers(){
-const now = Date.now();
-const box = document.getElementById("userListBox");
-box.innerHTML = "";
-
-Object.keys(users).forEach(u=>{
-if(now - users[u] < 60000){
-const d = document.createElement("div");
-d.textContent = "• " + u;
-box.appendChild(d);
-}
-});
-}
-
-// ================= MESSAGE =================
+// ================= MESSAGE HANDLER (CLEAN SPLIT) =================
 client.on("message",(t,p)=>{
 const d = JSON.parse(p.toString());
 
-// JOIN
+// JOIN (system only)
 if(d.type === "join"){
 users[d.sender] = Date.now();
 sys(d.sender + " joined");
@@ -167,23 +170,35 @@ updateUsers();
 return;
 }
 
-// CHAT MESSAGE
-if(d.text){
+// CHAT MESSAGE ONLY
+if(d.text !== undefined){
+
 users[d.sender] = Date.now();
 updateUsers();
 
 const row = document.createElement("div");
 
-// reply block
+// 🔁 reply highlight FIXED
 let replyHTML = "";
+
 if(d.reply){
 replyHTML =
-`<div style="color:yellow;font-size:11px;border-left:3px solid yellow;padding-left:5px;margin-bottom:3px;">
-↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
+`<div style="
+color:yellow;
+font-size:11px;
+border-left:4px solid yellow;
+padding-left:6px;
+margin-bottom:4px;
+background:#111;">
+↳ replying to <b>${d.reply.user}</b>: ${d.reply.text}
 </div>`;
+
+// 🔔 reply sound FIXED
+replySound.currentTime = 0;
+replySound.play().catch(()=>{});
 }
 
-// message
+// message row
 row.innerHTML =
 replyHTML +
 `<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
@@ -204,14 +219,22 @@ window.setReply = function(user,text){
 replyTarget = { user, text };
 
 replyBox.style.display = "block";
-replyBox.style.color = "yellow";   // FIX: highlight in yellow
-replyBox.innerHTML = `↳ Replying to <b>${user}</b>: "${text}"`;
+replyBox.innerHTML =
+`↳ Replying to <b>${user}</b>: "${text}"`;
 };
 
-// ================= SEND (FIXED ENTER ISSUE) =================
+// ================= SEND =================
 function send(){
 let text = chatInput.value.trim();
 if(!text) return;
+
+// 🚫 CLEAR FIX (NO LONGER CONFLICTS WITH IMAGES OR MESSAGES)
+if(text === "/clear"){
+chatLog.innerHTML = "";
+sys("chat cleared");
+chatInput.value = "";
+return;
+}
 
 const payload = {
 sender: currentAlias,
@@ -233,10 +256,9 @@ client.publish(topic, JSON.stringify(payload));
 chatInput.value = "";
 }
 
-// ================= EVENTS (FIXED) =================
+// ================= EVENTS (FIXED PROPERLY) =================
 sendBtn.onclick = send;
 
-// FIX: reliable Enter key handling
 chatInput.addEventListener("keydown",(e)=>{
 if(e.key === "Enter"){
 e.preventDefault();
@@ -244,7 +266,6 @@ send();
 }
 });
 
-// CLEAR BUTTON (FIXED)
 clearBtn.onclick = ()=>{
 chatLog.innerHTML = "";
 sys("chat cleared");
