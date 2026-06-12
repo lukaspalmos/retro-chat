@@ -47,7 +47,7 @@ body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:1
 .sys { color:yellow; }
 img.chat-img { max-width:200px; border:2px solid #0f0; margin-top:5px; }
 
-/* ---------- EMOJI BOX ---------- */
+/* EMOJI BOX */
 #emojiBox {
     width:100%;
     background:#000;
@@ -62,9 +62,7 @@ img.chat-img { max-width:200px; border:2px solid #0f0; margin-top:5px; }
     padding:2px;
     cursor:pointer;
 }
-.emoji-item:hover {
-    background:#111;
-}
+.emoji-item:hover { background:#111; }
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -84,7 +82,6 @@ img.chat-img { max-width:200px; border:2px solid #0f0; margin-top:5px; }
 </div>
 </div>
 
-<!-- 👇 EMOJI SUGGESTIONS -->
 <div id="emojiBox"></div>
 
 <div class="input-bar">
@@ -105,7 +102,7 @@ const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const emojiBox = document.getElementById("emojiBox");
 
-// ---------- EMOJI MAP ----------
+// ---------- EMOJI MAP (FIXED) ----------
 const emojis = {
     ":sob:":"😭",
     ":fire:":"🔥",
@@ -114,11 +111,11 @@ const emojis = {
     ":joy:":"😂",
     ":cool:":"😎",
     ":wave:":"👋",
-    ":thumbsup:":"👍"
-    ":broken:":"💔"
-    ":speak:":"🗣️"
-    ":peak:":"🥹"
-    ":twin:":"✌️"
+    ":thumbsup:":"👍",
+    ":broken:":"💔",
+    ":speak:":"🗣️",
+    ":peak:":"🥹",
+    ":twin:":"✌️",
     ":wilt:":"🥀"
 };
 
@@ -145,6 +142,7 @@ function sys(t){
 
 // ---------- RENDER ----------
 function render(text){
+    if(!text) text="";
     const img=/(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
     if(img.test(text)) return `<img class="chat-img" src="${text}">`;
     return `<span class="msg">${text}</span>`;
@@ -180,14 +178,18 @@ client.on("message",(t,p)=>{
     users[d.sender]=Date.now();
     if(d.sender!==currentAlias) playSound();
 
+    const time = d.timestamp || "--:--";
+    const text = d.text || "";
+
     const row=document.createElement("div");
     row.innerHTML=
     `<span style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
     <b>&lt;${d.sender}&gt;</b></span>
-    <span style="color:#0f0"> [${d.timestamp}] </span>
-    ${render(d.text)}`;
+    <span style="color:#0f0"> [${time}] </span>
+    ${render(text)}`;
 
     chatLog.appendChild(row);
+    chatLog.scrollTop = chatLog.scrollHeight;
 });
 
 // ---------- EMOJI SUGGESTIONS ----------
