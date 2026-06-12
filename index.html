@@ -15,32 +15,30 @@
         .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
         .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
         .sys-msg { color: #ffff00; }
-        .user-tag { color: #ff00ff; font-weight: bold; }
-        .my-tag { color: #00ffff; font-weight: bold; }
         .text-white { color: #ffffff; }
         .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load universal MQTT over Secure WebSockets library library directly -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Load universal MQTT over Secure WebSockets library -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Fully Working)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.1 - Custom Alias Build)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** TALK LIVE WITH ANYONE FROM SEPARATE COMPUTERS *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME *** COLOR BLOCKS COORDINATED IN REAL-TIME ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
+            <div id="myUsername" style="font-weight: bold; margin-bottom: 8px;"></div>
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
@@ -54,8 +52,12 @@
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
 <script>
-  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+  // 1. Initial 90s Login prompt setup handling sequence
+  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
+  if (!requestedName || requestedName.trim() === "") {
+      requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  }
+  const currentAlias = requestedName.trim().substring(0, 15);
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
@@ -63,30 +65,73 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  const lobbyTopic = "luke_retro_global_open_lobby";
+  const lobbyTopic = "luke_retro_global_open_lobby_colors";
+  const presenceTopic = "luke_retro_lobby_color_coordination";
 
-  // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
+  // Available fluorescent neon font colors array pool matching retro styles
+  const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
+  let takenColorsMap = {}; 
+  let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+
+  // Initialize display locally before networking triggers drop
+  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+  document.getElementById('myUsername').style.color = myHexColor;
+
   const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
   client.on('connect', () => {
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
+      statusMessage.textContent = "*** Connected successfully! Announcing presence to negotiate distinct color nodes...";
       
-      // Subscribe to the shared global data node
       client.subscribe(lobbyTopic);
+      client.subscribe(presenceTopic);
+
+      // Announce profile entry to declare or scan claims
+      announceColor();
   });
+
+  // Periodically re-announce color state to sync fresh arrivals automatically
+  setInterval(() => {
+      if (client.connected) announceColor();
+  }, 4000);
+
+  function announceColor() {
+      client.publish(presenceTopic, JSON.stringify({ sender: currentAlias, color: myHexColor }));
+  }
 
   client.on('message', (topic, payload) => {
       const data = JSON.parse(payload.toString());
+
+      // Handhandle presence updates to map taken color allocations dynamically
+      if (topic === presenceTopic) {
+          if (data.sender !== currentAlias) {
+              takenColorsMap[data.sender] = data.color;
+
+              // If another client shares your exact color index, pick an unassigned alternate option instantly
+              if (data.color === myHexColor) {
+                  const safeList = availableColors.filter(c => !Object.values(takenColorsMap).includes(c));
+                  if (safeList.length > 0) {
+                      myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+                  } else {
+                      // Fallback alternative random assignment loop if list pool overflows entirely
+                      myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                  }
+                  document.getElementById('myUsername').style.color = myHexColor;
+                  announceColor(); // Instantly broadcast the adjustment change outward
+              }
+          }
+          return;
+      }
       
-      // Clear placeholder texts upon first real arrival
+      // Clear status text elements upon message payload entry arrival
       const currentStatus = document.getElementById('statusMessage');
       if (currentStatus) currentStatus.remove();
 
       const row = document.createElement('div');
-      const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      
+      // Render text output line dynamically utilizing colors passed through array items
+      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
   });
@@ -101,12 +146,12 @@
       if (text === '') return;
 
       if (!client.connected) {
-          alert("Awaiting connection stream synchronization...");
+          alert("Awaiting connection network matrix sync...");
           return;
       }
 
-      // Publish the text packet out across the world
-      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text }));
+      // Publish message package carrying your custom distinct color string properties along with it
+      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text, color: myHexColor }));
       chatInput.value = '';
   }
 
