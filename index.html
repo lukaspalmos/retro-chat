@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> CyberZone_95 Live Chatroom </title>
+    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
     <style>
         body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
         .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
@@ -21,20 +21,18 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load stable universal realtime communication engine directly -->
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v15.0 - Stable Edge Multi-Device)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v16.0 - Global Public Lobby)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL EDGE REPLICATOR ONLINE *** LUKAS IS AWESOME SAUCE *** STABLE MULTI-DEVICE TEXT STREAMING ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL LOBBY ONLINE *** CROSS-DEVICE COMMUNICATION ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Initializing multi-device secure stream bridge...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure public text node...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -49,7 +47,7 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111425</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111554</span></div>
 
 <script>
   // 1. Prompt Username customization selection
@@ -65,72 +63,71 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Fluorescent neon styling colors array
+  // Neon text colors for the retro styles layout look
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Initialize open, public web-socket cluster layer
-  // This cluster bypasses rate limits and links diverse computers cleanly over TLS port 443
-  const publicInstanceUrl = "https://supabase.co";
-  const publicAnonymousKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY3Nod3Nod3hsZmd5eHN0enNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDkzMTY0MDAsImV4cCI6MjAyNDg5MjQwMH0.example-key-pass";
-  
-  const client = supabase.createClient(publicInstanceUrl, publicAnonymousKey);
+  // Fully open, high-speed public event network endpoint channel route
+  const eventHubUrl = "https://sse.dev";
 
-  // Define global room logic channel node
-  const channel = client.channel('luke_global_lobby_v15', {
-      config: { broadcast: { self: true } }
-  });
+  // 2. Inbound Live Event Stream Listener
+  const eventSource = new EventSource(eventHubUrl);
 
-  // 3. Listen for Incoming Live Message Broadcasts
-  channel.on('broadcast', { event: 'msg' }, (payload) => {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
+  eventSource.onopen = function() {
+      serverStatus.textContent = "Online ✔";
+      serverStatus.style.color = "#00ff00";
+      statusMessage.textContent = "*** Connected successfully! Share the URL link with friends to chat live. Screen clears on refresh.";
+  };
 
-      const data = payload.payload;
-      
-      // Anti-Collision Check: If someone has your exact color, change yours automatically to prevent match
-      if (data.sender !== currentAlias && data.color === myHexColor) {
-          const safeList = availableColors.filter(c => c !== data.color);
-          myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-          document.getElementById('myUsername').style.color = myHexColor;
+  eventSource.onmessage = function(event) {
+      try {
+          const data = JSON.parse(event.data);
+          if (!data.text || !data.sender) return;
+
+          // Clear initial text placeholder prompts upon message appearance
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) currentStatus.remove();
+
+          // Anti-Collision Check: If guest color matches your color, update yours instantly to prevent overlap
+          if (data.sender !== currentAlias && data.color === myHexColor) {
+              const safeList = availableColors.filter(c => c !== data.color);
+              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+              document.getElementById('myUsername').style.color = myHexColor;
+          }
+
+          const row = document.createElement('div');
+          row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(row);
+          chatLog.scrollTop = chatLog.scrollHeight;
+      } catch (e) {
+          console.log("Ignored setup package.");
       }
+  };
 
-      const row = document.createElement('div');
-      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  });
+  eventSource.onerror = function() {
+      serverStatus.textContent = "Connecting...";
+      serverStatus.style.color = "#ff9900";
+  };
 
-  // Activate the secure pipeline link
-  channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-          serverStatus.textContent = "Online ✔";
-          serverStatus.style.color = "#00ff00";
-          statusMessage.textContent = "*** Connected successfully! Share the URL link with friends. Screen clears on refresh.";
-      } else {
-          serverStatus.textContent = "Connecting...";
-          serverStatus.style.color = "#ff9900";
-      }
-  });
-
-  // 4. Outbound Text Broadcaster
+  // 3. Outbound Message Push Function
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      channel.send({
-          type: 'broadcast',
-          event: 'msg',
-          payload: { sender: currentAlias, text: text, color: myHexColor }
-      });
+      // Publish the text packet out across the world via open event streams
+      fetch(eventHubUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: currentAlias, text: text, color: myHexColor })
+      }).catch(err => console.error("Network packet dropped:", err));
 
       chatInput.value = '';
   }
 
-  // Bind execution handlers
+  // Wire event handlers
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
