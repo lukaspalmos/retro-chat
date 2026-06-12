@@ -1,27 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberZone_95 Live Chatroom</title>
+
+<style>
+body {
+    background:#000;
+    color:#00ff00;
+    font-family:"Courier New", monospace;
+    margin:0;
+    padding:15px;
+}
+
+.chat-window {
+    max-width:800px;
+    margin:auto;
+    border:3px outset #888;
+    background:#c0c0c0;
+}
+
+.title-bar {
+    background:linear-gradient(90deg,#000080,#0080ff);
+    color:#fff;
+    padding:6px;
+    font-weight:bold;
+    display:flex;
+    justify-content:space-between;
+}
+
+.workspace {
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:#c0c0c0;
+}
+
+.chat-log {
+    flex:3;
+    height:320px;
+    background:#000;
+    border:3px inset #888;
+    overflow-y:auto;
+    padding:8px;
+}
+
+.user-list {
+    flex:1;
+    background:#000;
+    border:3px inset #888;
+    color:#00ffff;
+    padding:8px;
+    overflow-y:auto;
+}
+
+.input-bar {
+    display:flex;
+    padding:10px;
+    background:#c0c0c0;
+}
+
+.input-bar input {
+    flex:1;
+    padding:6px;
+}
+
+.sys-msg { color:yellow; }
+.user-tag { color:#ff00ff; font-weight:bold; }
+.my-tag { color:#00ffff; font-weight:bold; }
+.text-white { color:white; }
+
+.update-log {
+    font-size:11px;
+    color:#00ff00;
+    background:#000;
+    border:2px inset #888;
+    padding:6px;
+    margin-top:8px;
+    height:120px;
+    overflow-y:auto;
+    line-height:1.3;
+}
+</style>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body>
+
+<div class="chat-window">
+
+<div class="title-bar">
+    <div>💬 CyberZone_95 Live Chatroom</div>
+</div>
+
+<div class="workspace">
+
+    <div class="chat-log" id="chatLog"></div>
+
+    <div class="user-list">
+
+        <div style="color:#ffff00;">ONLINE USERS</div>
+        <div id="userListBox"></div>
+
+        <div style="color:#ffff00; margin-top:10px;">UPDATE LOG</div>
+        <div class="update-log">
+            • AIM sound notifications<br>
+            • Timestamps on messages<br>
+            • /clear command<br>
+            • Join system messages<br>
+            • Live user list (60s timeout)<br>
+            • Typing indicator<br>
+            • Retro UI styling<br>
+        </div>
+
+    </div>
+</div>
+
+<div id="typingBox" style="color:#ffff00; font-size:12px; padding:4px 10px;"></div>
+
+<div class="input-bar">
+    <input id="chatInput" placeholder="Type message...">
+    <button id="sendBtn">SEND</button>
+</div>
+
+</div>
+
+<script>
+
+// ---------- USER ----------
 const currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
+// ---------- UI ----------
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const typingBox = document.getElementById("typingBox");
 
+// ---------- SOUND ----------
 const aimSound = new Audio("aim-message.mp3");
 function playAimSound() {
     aimSound.currentTime = 0;
     aimSound.play().catch(()=>{});
 }
 
+// ---------- MQTT ----------
 const topic = "luke_retro_global_open_lobby";
 const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
+// ---------- STATE ----------
 const users = {};
-const typingUsers = {}; // 👈 NEW
+const typingUsers = {};
 
 // ---------- USER LIST ----------
 function updateUserList() {
     const box = document.getElementById("userListBox");
-    if (!box) return;
-
     box.innerHTML = "";
 
     const now = Date.now();
@@ -41,7 +175,7 @@ setInterval(updateUserList, 5000);
 // ---------- SYSTEM ----------
 function system(msg) {
     const div = document.createElement("div");
-    div.innerHTML = `<span style="color:yellow;">*** ${msg}</span>`;
+    div.innerHTML = `<span class="sys-msg">*** ${msg}</span>`;
     chatLog.appendChild(div);
 }
 
@@ -66,7 +200,7 @@ client.on("message", (t, payload) => {
         return;
     }
 
-    // TYPING 👇
+    // TYPING
     if (data.type === "typing") {
         typingUsers[data.sender] = Date.now();
         return;
@@ -83,10 +217,10 @@ client.on("message", (t, payload) => {
 
     const row = document.createElement("div");
     row.innerHTML =
-        `<span style="color:${data.sender===currentAlias?"#00ffff":"#ff00ff"}">
+        `<span class="${data.sender===currentAlias?"my-tag":"user-tag"}">
         &lt;${data.sender}&gt;</span>
         <span style="color:#00ff00;"> [${time}] </span>
-        <span style="color:#fff;">${data.text}</span>`;
+        <span class="text-white">${data.text}</span>`;
 
     chatLog.appendChild(row);
     chatLog.scrollTop = chatLog.scrollHeight;
@@ -97,6 +231,7 @@ function sendMsg() {
     const text = chatInput.value.trim();
     if (!text) return;
 
+    // CLEAR
     if (text === "/clear") {
         chatLog.innerHTML = "";
         system("Chat cleared");
@@ -117,6 +252,12 @@ function sendMsg() {
     chatInput.value = "";
 }
 
+sendBtn.onclick = sendMsg;
+
+chatInput.addEventListener("keypress", e=>{
+    if (e.key === "Enter") sendMsg();
+});
+
 // ---------- TYPING EMITTER ----------
 let typingTimeout;
 
@@ -127,7 +268,7 @@ chatInput.addEventListener("input", () => {
     }));
 
     clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => {}, 1000);
+    typingTimeout = setTimeout(()=>{}, 1000);
 });
 
 // ---------- TYPING DISPLAY ----------
@@ -138,16 +279,11 @@ setInterval(() => {
         now - typingUsers[u] < 2000 && u !== currentAlias
     );
 
-    if (active.length > 0) {
-        typingBox.textContent = active.join(", ") + " is typing...";
-    } else {
-        typingBox.textContent = "";
-    }
+    typingBox.textContent =
+        active.length ? `${active.join(", ")} is typing...` : "";
 }, 500);
 
-// ---------- EVENTS ----------
-sendBtn.onclick = sendMsg;
+</script>
 
-chatInput.addEventListener("keypress", e=>{
-    if (e.key === "Enter") sendMsg();
-});
+</body>
+</html>
