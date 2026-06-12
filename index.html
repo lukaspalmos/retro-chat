@@ -15,7 +15,7 @@ body {
 }
 
 .chat-window {
-    max-width:850px;
+    max-width:900px;
     margin:auto;
     background:#c0c0c0;
     border:3px outset #888;
@@ -32,7 +32,7 @@ body {
 
 .chat-log {
     flex:3;
-    height:330px;
+    height:340px;
     background:#000;
     border:3px inset #888;
     overflow-y:auto;
@@ -53,6 +53,7 @@ body {
     gap:5px;
     padding:10px;
     background:#c0c0c0;
+    flex-wrap:wrap;
 }
 
 .input-bar input {
@@ -63,19 +64,19 @@ body {
 .msg { color:#fff; }
 .sys { color:yellow; }
 
-img.chat-img {
-    max-width:200px;
-    border:2px solid #0f0;
-    margin-top:5px;
+/* reply box */
+#replyBox {
+    display:none;
+    background:#111;
+    color:#0ff;
+    padding:5px;
+    margin-bottom:5px;
+    border-left:4px solid #0ff;
+    font-size:12px;
 }
 
-/* typing */
-#typingBox {
-    color:black;
-    font-size:18px;
-    font-weight:bold;
-    padding:6px 10px;
-    min-height:22px;
+button {
+    cursor:pointer;
 }
 </style>
 
@@ -96,11 +97,12 @@ img.chat-img {
 </div>
 </div>
 
-<div id="typingBox"></div>
+<div id="replyBox"></div>
 
 <div class="input-bar">
-<input id="chatInput" placeholder="Type message... (@mentions supported)">
+<input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
+<button id="clearBtn">Clear</button>
 </div>
 
 </div>
@@ -114,61 +116,17 @@ let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
-const typingBox = document.getElementById("typingBox");
-
-// ================= TAB TITLE (DISCORD STYLE) =================
-const baseTitle = "CyberZone_95 Chat";
-let unread = 0;
-
-function updateTitle(){
-if(document.hidden && unread > 0){
-document.title = `(${unread}) ${baseTitle}`;
-} else {
-document.title = baseTitle;
-}
-}
-
-document.addEventListener("visibilitychange",()=>{
-if(!document.hidden){
-unread = 0;
-updateTitle();
-}
-});
-
-// ================= SOUND =================
-const messageSound = new Audio("aim-message.mp3");
-const mentionSound = new Audio("aim-notif.mp3");
-
-function playMessage(){
-messageSound.currentTime = 0;
-messageSound.play().catch(()=>{});
-}
-
-function playMention(){
-mentionSound.currentTime = 0;
-mentionSound.play().catch(()=>{});
-}
+const clearBtn = document.getElementById("clearBtn");
+const replyBox = document.getElementById("replyBox");
+const userListBox = document.getElementById("userListBox");
 
 // ================= MQTT =================
 const topic = "luke_retro_global_open_lobby";
 const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
 // ================= DATA =================
-const typingUsers = {};
-
-// ================= HISTORY =================
-const HISTORY_KEY = "cyberzone_chat_history";
-let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-
-function saveHistory(){
-localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-100)));
-}
-
-history.forEach(h=>{
-const div = document.createElement("div");
-div.innerHTML = h;
-chatLog.appendChild(div);
-});
+const users = {};
+let replyTarget = null;
 
 // ================= SYSTEM =================
 function sys(t){
@@ -178,33 +136,18 @@ d.innerHTML = "*** " + t;
 chatLog.appendChild(d);
 }
 
-// ================= RENDER =================
-function render(text){
+// ================= ONLINE USERS (FIXED) =================
+function updateUsers(){
+const now = Date.now();
+userListBox.innerHTML = "";
 
-if(!text) return "";
-
-// image
-const img = /(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
-if(img.test(text)){
-return `<img class="chat-img" src="${text}">`;
+Object.keys(users).forEach(u=>{
+if(now - users[u] < 60000){
+const div = document.createElement("div");
+div.textContent = "• " + u;
+userListBox.appendChild(div);
 }
-
-// 💛 DISCORD STYLE HIGHLIGHT
-text = text.replaceAll(
-"@" + currentAlias,
-`<span style="color:yellow;font-weight:bold;">@${currentAlias}</span>`
-);
-
-return `<span class="msg">${text}</span>`;
-}
-
-// ================= TYPING =================
-function updateTyping(){
-const list = Object.keys(typingUsers).filter(u => u !== currentAlias);
-
-typingBox.innerHTML = list.length
-? list.join(", ") + " is typing..."
-: "";
+});
 }
 
 // ================= CONNECT =================
@@ -223,99 +166,88 @@ const d = JSON.parse(p.toString());
 
 // JOIN
 if(d.type === "join"){
+users[d.sender] = Date.now();
 sys(d.sender + " joined");
+updateUsers();
 return;
 }
 
-// TYPING
-if(d.type === "typing"){
-typingUsers[d.sender] = true;
-updateTyping();
-return;
-}
+// CHAT MESSAGE
+if(d.text){
+users[d.sender] = Date.now();
+updateUsers();
 
-if(d.type === "stopTyping"){
-delete typingUsers[d.sender];
-updateTyping();
-return;
-}
-
-let text = d.text || "";
-
-// check mention
-const isMention = text.includes("@" + currentAlias);
-
-// sound logic FIXED (no double trigger)
-if(d.sender !== currentAlias){
-isMention ? playMention() : playMessage();
-}
-
-// unread counter
-if(document.hidden && d.sender !== currentAlias){
-unread++;
-updateTitle();
-}
-
-// message row
+// message display
 const row = document.createElement("div");
 
-const html =
-`<span style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
-<b>&lt;${d.sender}&gt;</b></span>
-<span style="color:#0f0"> [${d.timestamp||"--:--"}] </span>
-${render(text)}`;
+let replyHTML = "";
+if(d.reply){
+replyHTML =
+`<div style="color:#0ff;font-size:11px;border-left:3px solid #0ff;padding-left:5px;margin-bottom:3px;">
+↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
+</div>`;
+}
 
-row.innerHTML = html;
+row.innerHTML =
+replyHTML +
+`<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
+&lt;${d.sender}&gt;</b>
+ <span style="color:#0f0">[${d.timestamp}]</span>
+ <span style="color:#fff">${d.text}</span>
+
+ <button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
+ style="margin-left:10px;font-size:10px;">Reply</button>`;
+
 chatLog.appendChild(row);
-
-// save history
-history.push(html);
-saveHistory();
-
 chatLog.scrollTop = chatLog.scrollHeight;
+}
 });
 
-// ================= TYPING SEND =================
-chatInput.addEventListener("input",()=>{
-
-client.publish(topic, JSON.stringify({
-type:"typing",
-sender:currentAlias
-}));
-
-clearTimeout(window.typingTimer);
-
-window.typingTimer = setTimeout(()=>{
-client.publish(topic, JSON.stringify({
-type:"stopTyping",
-sender:currentAlias
-}));
-},1000);
-
-});
+// ================= REPLY SYSTEM =================
+window.setReply = function(user,text){
+replyTarget = { user, text };
+replyBox.style.display = "block";
+replyBox.innerHTML = `Replying to <b>${user}</b>: "${text}"`;
+};
 
 // ================= SEND =================
 function send(){
 let text = chatInput.value.trim();
 if(!text) return;
 
-client.publish(topic, JSON.stringify({
-sender:currentAlias,
-text:text,
-timestamp:new Date().toLocaleTimeString([],{
+// /clear FIXED
+if(text === "/clear"){
+chatLog.innerHTML = "";
+sys("chat cleared");
+chatInput.value = "";
+return;
+}
+
+const payload = {
+sender: currentAlias,
+text,
+timestamp: new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
-}));
+};
+
+if(replyTarget){
+payload.reply = replyTarget;
+replyTarget = null;
+replyBox.style.display = "none";
+}
+
+client.publish(topic, JSON.stringify(payload));
 
 chatInput.value = "";
 }
 
-sendBtn.onclick = send;
+// ================= CLEAR BUTTON =================
+clearBtn.onclick = sendBtn.onclick = send;
 
-chatInput.addEventListener("keypress",(e)=>{
-if(e.key === "Enter") send();
-});
+// ================= USER TRACKING LOOP =================
+setInterval(updateUsers, 5000);
 
 </script>
 
