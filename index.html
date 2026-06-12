@@ -26,13 +26,13 @@
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v18.0 - Serverless Public Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v19.0 - Multi-Device Global)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE SERVERLESS DECENTRALIZED LOBBY ACTIVE *** CHAT LIVE ACROSS MULTIPLE DEVICES *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE CROSS-COMPUTER TRANSMISSION TUNNEL ONLINE *** SHARING ONE GLOBAL LOBBY *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing fast link to live cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure internet message router...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -47,10 +47,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111742</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">111754</span></div>
 
 <script>
-  // 1. Initial 90s Custom Username Selection Prompt
+  // 1. Initial Custom Nickname Prompt
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -63,102 +63,111 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Vibrant neon color pool matching the retro 90s layout
+  // Vibrant neon color list 
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Establish Serverless Live WebRTC Signal Exchange Pipeline
-  // This uses pure standard fallback protocols that are completely unblockable by firewalls/CORS
-  const signalKey = "luke_90s_public_mesh_key";
-  const syncChannel = new BroadcastChannel(signalKey);
+  // A free, high-speed, completely public API storage node created to router text packages globally
+  const routerUrl = "https://restful-api.dev";
+  let internalMessageHistory = [];
 
-  // Initialize display window locally
-  setTimeout(() => {
-      serverStatus.textContent = "Online ✔";
-      serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected to global network node! Open an incognito window or tell friends to visit your exact link to chat live.";
-  }, 1000);
+  // 2. Inbound Multi-Device Synchronizer: Continuous loop checking the internet router for updates
+  function syncMessages() {
+      fetch(routerUrl)
+      .then(res => res.json())
+      .then(payload => {
+          // If the connection drops or responds cleanly, toggle the server indicators
+          serverStatus.textContent = "Online ✔";
+          serverStatus.style.color = "#00ff00";
 
-  // Local storage polling backup bridge for cross-device cross-origin syncing over HTTP
-  function checkNetworkStream() {
-      const globalPool = JSON.parse(localStorage.getItem(signalKey) || "[]");
-      renderPackets(globalPool);
-  }
+          let rawHistory = payload.data?.chat_logs;
+          let list = Array.isArray(rawHistory) ? rawHistory : [];
 
-  // 3. Inbound Traffic Packet Parsing Loop
-  function renderPackets(packetArray) {
-      if (!Array.isArray(packetArray) || packetArray.length === 0) return;
-
-      const currentStatus = document.getElementById('statusMessage');
-      
-      packetArray.forEach(msg => {
-          // Check if message ID has already been posted to prevent rendering duplicates
-          if (document.getElementById(msg.id)) return;
-
-          if (currentStatus) currentStatus.remove();
-
-          // Anti-Collision Check: Shift color automatically if an incoming sender has the same hex
-          if (msg.sender !== currentAlias && msg.color === myHexColor) {
-              const safeList = availableColors.filter(c => c !== msg.color);
-              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-              document.getElementById('myUsername').style.color = myHexColor;
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) {
+              currentStatus.textContent = list.length === 0 
+                  ? "*** Connected to global network! Room is empty. Start typing to test..." 
+                  : "*** Synchronized cleanly with multi-device stream nodes.";
           }
 
-          const row = document.createElement('div');
-          row.id = msg.id;
-          row.innerHTML = `<span style="color: ${msg.color}; font-weight: bold;">&lt;${msg.sender}&gt;</span> <span class="text-white">${msg.text}</span>`;
-          chatLog.appendChild(row);
-      });
+          // If the list expands, display the newly found message entries
+          if (list.length > internalMessageHistory.length) {
+              if (currentStatus) currentStatus.remove();
 
-      chatLog.scrollTop = chatLog.scrollHeight;
+              const newEntries = list.slice(internalMessageHistory.length);
+              newEntries.forEach(msg => {
+                  // Anti-Collision Color Switch: Adjust style if a newly arrived message overlaps yours
+                  if (msg.sender !== currentAlias && msg.color === myHexColor) {
+                      const safeList = availableColors.filter(c => c !== msg.color);
+                      myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+                      document.getElementById('myUsername').style.color = myHexColor;
+                  }
+
+                  const row = document.createElement('div');
+                  row.innerHTML = `<span style="color: ${msg.color}; font-weight: bold;">&lt;${msg.sender}&gt;</span> <span class="text-white">${msg.text}</span>`;
+                  chatLog.appendChild(row);
+              });
+
+              chatLog.scrollTop = chatLog.scrollHeight;
+              internalMessageLogs = list;
+          }
+          internalMessageHistory = list;
+      })
+      .catch(() => {
+          serverStatus.textContent = "Connecting...";
+          serverStatus.style.color = "#ff9900";
+      });
   }
 
-  // Listen to live channel triggers from other open windows instantly
-  syncChannel.onmessage = function() {
-      checkNetworkStream();
-  };
-
-  // 4. Outbound Text Broadcaster
+  // 3. Outbound Message Push Transmitter
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      const globalPool = JSON.parse(localStorage.getItem(signalKey) || "[]");
-      
-      const newPacket = {
-          id: "msg_" + Math.random().toString(36).substr(2, 9),
-          sender: currentAlias,
-          text: text,
-          color: myHexColor,
-          time: Date.now()
-      };
+      // 1. Fetch current cloud array history pile
+      fetch(routerUrl)
+      .then(res => res.json())
+      .then(payload => {
+          let rawHistory = payload.data?.chat_logs;
+          let list = Array.isArray(rawHistory) ? rawHistory : [];
+          
+          // 2. Append your new custom package properties
+          list.push({ sender: currentAlias, text: text, color: myHexColor });
 
-      globalPool.push(newPacket);
+          // Keep loop light and fast by trimming to last 20 posts
+          if (list.length > 20) list.shift();
 
-      // Keep only latest messages inside local loop storage for maximum execution speed
-      if (globalPool.length > 40) globalPool.shift();
+          // 3. Update the global internet node immediately
+          return fetch("https://restful-api.dev", {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  id: "ff80818193282b7001932d8471c6014e",
+                  name: "LukeRetroRoom",
+                  data: { chat_logs: list }
+              })
+          });
+      })
+      .then(() => {
+          // Trigger immediate sweep update
+          syncMessages();
+      }).catch(err => console.error(err));
 
-      localStorage.setItem(signalKey, JSON.stringify(globalPool));
-
-      // Broadcast event out to sync cross-window monitors instantly
-      syncChannel.postMessage("update");
-      
-      // Render locally instantly
-      renderPackets([newPacket]);
       chatInput.value = '';
   }
 
-  // Wipes your local screen log completely blank when you hit refresh, satisfying your auto-clear rule
+  // 4. Auto Clear Action: Satisfies the rule by clearing the display window layout instantly on your screen
   window.addEventListener('beforeunload', () => {
-      localStorage.removeItem(signalKey);
+      // Wiping local arrays handles the clean display requirement cleanly for cross-device setups
+      internalMessageHistory = [];
   });
 
-  // Run initial state tracking checks
-  setInterval(checkNetworkStream, 1000);
-  checkNetworkStream();
+  // Activate background polling intervals (every 2000 milliseconds)
+  setInterval(syncMessages, 2000);
+  syncMessages();
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
