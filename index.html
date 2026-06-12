@@ -61,6 +61,15 @@ padding:6px;
 }
 
 .sys{color:yellow;}
+
+.reply-preview{
+background:#111;
+border-left:4px solid yellow;
+color:yellow;
+padding:4px 6px;
+font-size:11px;
+margin-bottom:4px;
+}
 button{cursor:pointer;font-size:11px;margin-left:6px;}
 </style>
 
@@ -95,40 +104,35 @@ button{cursor:pointer;font-size:11px;margin-left:6px;}
 const userId = crypto.randomUUID();
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
-// ================= UI =================
+// ================= STATE =================
 const chatLog=document.getElementById("chatLog");
 const chatInput=document.getElementById("chatInput");
 const sendBtn=document.getElementById("sendBtn");
 const clearBtn=document.getElementById("clearBtn");
 const userListBox=document.getElementById("userListBox");
 
-// ================= MQTT =================
 const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ================= USERS (FIXED STRUCTURE) =================
-const users = {};
+const users={};
+let replyTarget=null;
 
 // ================= SOUND =================
 const notif=new Audio("aim-notif.mp3");
 
-// ================= ONLINE USERS RENDER =================
+// ================= USERS =================
 function renderUsers(){
 userListBox.innerHTML="";
-
 const now=Date.now();
 
 Object.values(users).forEach(u=>{
 if(now - u.lastSeen < 60000){
-const div=document.createElement("div");
-div.textContent="• "+u.name;
-userListBox.appendChild(div);
+const d=document.createElement("div");
+d.textContent="• "+u.name;
+userListBox.appendChild(d);
 }
 });
 }
-
-// periodic cleanup (IMPORTANT FIX)
-setInterval(renderUsers, 3000);
 
 // ================= SYSTEM =================
 function sys(t){
@@ -136,7 +140,6 @@ const d=document.createElement("div");
 d.className="sys";
 d.textContent="*** "+t;
 chatLog.appendChild(d);
-chatLog.scrollTop=chatLog.scrollHeight;
 }
 
 // ================= CONNECT =================
@@ -154,69 +157,62 @@ name:currentAlias
 client.on("message",(t,p)=>{
 const d=JSON.parse(p.toString());
 
-// JOIN EVENT
 if(d.type==="join"){
-if(!d.id || !d.name) return;
-
-users[d.id]={
-name:d.name,
-lastSeen:Date.now()
-};
-
+users[d.id]={name:d.name,lastSeen:Date.now()};
 renderUsers();
 sys(d.name+" joined");
 return;
 }
 
-// CHAT EVENT
 if(!d.text) return;
 
-// ALWAYS update sender presence (FIXED)
-const uid = d.id || d.sender;
-
-if(uid){
-users[uid]={
-name:d.sender,
-lastSeen:Date.now()
-};
-}
-
+users[d.id || d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
-// sound
-if(d.sender !== currentAlias){
+if(d.sender!==currentAlias){
 notif.currentTime=0;
 notif.play().catch(()=>{});
 }
 
-// build message (FULL DOM SAFE)
+// ================= MESSAGE BLOCK =================
 const row=document.createElement("div");
 
+// 🔥 REPLY BLOCK (IMPORTANT FIX)
+if(d.reply){
+const r=document.createElement("div");
+r.className="reply-preview";
+r.textContent=`↳ ${d.reply.user}: ${d.reply.text}`;
+row.appendChild(r);
+}
+
+// HEADER
 const header=document.createElement("span");
 header.style.color = d.sender===currentAlias ? "#0ff" : "#f0f";
 header.textContent = `<${d.sender}> `;
 
+// TIME
 const time=document.createElement("span");
 time.style.color="#0f0";
 time.textContent=` [${d.timestamp}] `;
 
+// TEXT
 const text=document.createElement("span");
 text.style.color="#fff";
 text.textContent=" "+d.text;
 
-// ALWAYS VISIBLE REPLY BUTTON (FIXED)
-const replyBtn=document.createElement("button");
-replyBtn.textContent="Reply";
-
-replyBtn.onclick=()=>{
-sys("replying to "+d.sender+": "+d.text);
+// REPLY BUTTON (VISIBLE ALWAYS)
+const btn=document.createElement("button");
+btn.textContent="Reply";
+btn.onclick=()=>{
+replyTarget={user:d.sender,text:d.text};
+sys("reply set to "+d.sender);
 };
 
-// assemble
+// ASSEMBLE
 row.appendChild(header);
 row.appendChild(time);
 row.appendChild(text);
-row.appendChild(replyBtn);
+row.appendChild(btn);
 
 chatLog.appendChild(row);
 chatLog.scrollTop=chatLog.scrollHeight;
@@ -227,7 +223,13 @@ function send(){
 let text=chatInput.value.trim();
 if(!text) return;
 
-// nick
+if(text==="/clear"){
+chatLog.innerHTML="";
+sys("chat cleared");
+chatInput.value="";
+return;
+}
+
 if(text.startsWith("/nick ")){
 currentAlias=text.replace("/nick ","");
 
@@ -242,24 +244,22 @@ chatInput.value="";
 return;
 }
 
-// clear
-if(text==="/clear"){
-chatLog.innerHTML="";
-sys("chat cleared");
-chatInput.value="";
-return;
-}
-
-client.publish(topic,JSON.stringify({
+const payload={
 id:userId,
 sender:currentAlias,
-text:text,
+text,
 timestamp:new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
-}));
+};
 
+if(replyTarget){
+payload.reply=replyTarget;
+replyTarget=null;
+}
+
+client.publish(topic,JSON.stringify(payload));
 chatInput.value="";
 }
 
