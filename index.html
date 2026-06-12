@@ -7,18 +7,81 @@
 
 <style>
 body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:15px; }
+
 .chat-window { max-width:800px; margin:auto; background:#c0c0c0; border:3px outset #888; }
 .title-bar { background:linear-gradient(90deg,#000080,#0080ff); color:#fff; padding:6px; font-weight:bold; }
+
 .workspace { display:flex; gap:10px; padding:10px; }
-.chat-log { flex:3; height:320px; background:#000; border:3px inset #888; overflow-y:auto; padding:8px; }
-.user-list { flex:1; background:#000; border:3px inset #888; color:#0ff; padding:8px; }
-.input-bar { display:flex; gap:5px; padding:10px; background:#c0c0c0; }
+
+.chat-log {
+    flex:3;
+    height:320px;
+    background:#000;
+    border:3px inset #888;
+    overflow-y:auto;
+    padding:8px;
+}
+
+.user-list {
+    flex:1;
+    background:#000;
+    border:3px inset #888;
+    color:#0ff;
+    padding:8px;
+}
+
+.input-bar {
+    display:flex;
+    gap:5px;
+    padding:10px;
+    background:#c0c0c0;
+}
+
 .input-bar input { flex:1; padding:6px; }
+
 .sys { color:yellow; }
 .user { color:#f0f; font-weight:bold; }
 .me { color:#0ff; font-weight:bold; }
 .msg { color:#fff; }
-img.chat-img { max-width:200px; margin-top:5px; border:2px solid #0f0; }
+
+img.chat-img {
+    max-width:200px;
+    margin-top:5px;
+    border:2px solid #0f0;
+}
+
+/* ---------- NEW UPLOAD UI ---------- */
+
+#previewBox {
+    display:none;
+    background:#000;
+    border:2px inset #888;
+    padding:6px;
+    margin:8px 10px;
+    color:#0ff;
+}
+
+#previewBox img {
+    max-width:120px;
+    display:block;
+    margin-top:5px;
+    border:2px solid #0f0;
+}
+
+#progressBar {
+    width:100%;
+    height:10px;
+    background:#222;
+    border:1px solid #0f0;
+    margin-top:5px;
+}
+
+#progressFill {
+    height:100%;
+    width:0%;
+    background:#0f0;
+}
+
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -39,6 +102,14 @@ img.chat-img { max-width:200px; margin-top:5px; border:2px solid #0f0; }
 </div>
 
 <div id="typingBox" style="color:yellow; padding:4px 10px;"></div>
+
+<!-- 👇 PREVIEW + PROGRESS UI -->
+<div id="previewBox">
+    <div>Image Preview:</div>
+    <img id="previewImg">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="uploadStatus">Ready</div>
+</div>
 
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
@@ -61,9 +132,17 @@ const sendBtn = document.getElementById("sendBtn");
 const imgBtn = document.getElementById("imgBtn");
 const imgUpload = document.getElementById("imgUpload");
 
+const previewBox = document.getElementById("previewBox");
+const previewImg = document.getElementById("previewImg");
+const progressFill = document.getElementById("progressFill");
+const uploadStatus = document.getElementById("uploadStatus");
+
 // ---------- SOUND ----------
 const aimSound = new Audio("aim-message.mp3");
-function playSound(){ aimSound.currentTime=0; aimSound.play().catch(()=>{}); }
+function playSound(){
+    aimSound.currentTime=0;
+    aimSound.play().catch(()=>{});
+}
 
 // ---------- MQTT ----------
 const topic = "luke_retro_global_open_lobby";
@@ -74,9 +153,9 @@ const users = {};
 
 // ---------- USER LIST ----------
 function updateUsers(){
-    const box = document.getElementById("userListBox");
+    const box=document.getElementById("userListBox");
     box.innerHTML="";
-    const now = Date.now();
+    const now=Date.now();
 
     Object.keys(users).forEach(u=>{
         if(now - users[u] < 60000){
@@ -173,34 +252,59 @@ function send(){
     chatInput.value="";
 }
 
-// ---------- IMAGE UPLOAD ----------
+// ---------- IMAGE UPLOAD (WITH PREVIEW + PROGRESS) ----------
 imgBtn.onclick=()=>imgUpload.click();
 
 imgUpload.onchange=async e=>{
     const file=e.target.files[0];
     if(!file) return;
 
+    // ---------- PREVIEW ----------
+    previewBox.style.display="block";
+    previewImg.src=URL.createObjectURL(file);
+    uploadStatus.textContent="Uploading...";
+
+    progressFill.style.width="0%";
+
     const form=new FormData();
     form.append("file",file);
     form.append("upload_preset","chat_upload");
 
-    const res=await fetch(
-        "https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",
-        { method:"POST", body:form }
-    );
+    // ---------- UPLOAD WITH PROGRESS ----------
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST","https://api.cloudinary.com/v1_1/dbrruuftv/image/upload");
 
-    const data=await res.json();
+    xhr.upload.onprogress = (e)=>{
+        if(e.lengthComputable){
+            const percent = (e.loaded/e.total)*100;
+            progressFill.style.width = percent+"%";
+        }
+    };
 
-    client.publish(topic, JSON.stringify({
-        sender:currentAlias,
-        text:data.secure_url,
-        timestamp:new Date().toLocaleTimeString([],{
-            hour:"numeric",
-            minute:"2-digit"
-        })
-    }));
+    xhr.onload = ()=>{
+        const data = JSON.parse(xhr.responseText);
 
-    users[currentAlias]=Date.now();
+        uploadStatus.textContent="Uploaded ✔";
+
+        client.publish(topic, JSON.stringify({
+            sender:currentAlias,
+            text:data.secure_url,
+            timestamp:new Date().toLocaleTimeString([],{
+                hour:"numeric",
+                minute:"2-digit"
+            })
+        }));
+
+        users[currentAlias]=Date.now();
+
+        setTimeout(()=>{
+            previewBox.style.display="none";
+            progressFill.style.width="0%";
+            uploadStatus.textContent="Ready";
+        },1000);
+    };
+
+    xhr.send(form);
 };
 
 // ---------- EVENTS ----------
