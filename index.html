@@ -8,7 +8,12 @@
 <style>
 body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:15px; }
 
-.chat-window { max-width:800px; margin:auto; background:#c0c0c0; border:3px outset #888; }
+.chat-window {
+    max-width:850px;
+    margin:auto;
+    background:#c0c0c0;
+    border:3px outset #888;
+}
 
 .title-bar {
     background:linear-gradient(90deg,#000080,#0080ff);
@@ -21,7 +26,7 @@ body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:1
 
 .chat-log {
     flex:3;
-    height:320px;
+    height:330px;
     background:#000;
     border:3px inset #888;
     overflow-y:auto;
@@ -34,6 +39,7 @@ body { background:#000; color:#0f0; font-family:Courier New; margin:0; padding:1
     border:3px inset #888;
     color:#0ff;
     padding:8px;
+    font-size:13px;
 }
 
 .input-bar {
@@ -58,7 +64,7 @@ img.chat-img {
     margin-top:5px;
 }
 
-/* EMOJI BOX */
+/* ---------- EMOJI ---------- */
 #emojiBox {
     width:100%;
     background:#000;
@@ -75,7 +81,15 @@ img.chat-img {
 }
 .emoji-item:hover { background:#111; }
 
-/* IMAGE UPLOAD UI */
+/* ---------- TYPING ---------- */
+#typingBox {
+    color:yellow;
+    font-size:12px;
+    padding:4px 10px;
+    min-height:18px;
+}
+
+/* ---------- IMAGE UPLOAD ---------- */
 #previewBox {
     display:none;
     background:#000;
@@ -95,8 +109,8 @@ img.chat-img {
     width:100%;
     height:10px;
     background:#222;
-    margin-top:5px;
     border:1px solid #0f0;
+    margin-top:5px;
 }
 
 #progressFill {
@@ -124,8 +138,8 @@ img.chat-img {
 </div>
 
 <div id="emojiBox"></div>
+<div id="typingBox"></div>
 
-<!-- IMAGE PREVIEW -->
 <div id="previewBox">
     <div>Image Preview:</div>
     <img id="previewImg">
@@ -140,7 +154,6 @@ img.chat-img {
 </div>
 
 <input type="file" id="imgUpload" accept="image/*" style="display:none;">
-
 </div>
 
 <script>
@@ -156,27 +169,27 @@ const imgBtn = document.getElementById("imgBtn");
 const imgUpload = document.getElementById("imgUpload");
 
 const emojiBox = document.getElementById("emojiBox");
+const typingBox = document.getElementById("typingBox");
+
 const previewBox = document.getElementById("previewBox");
 const previewImg = document.getElementById("previewImg");
 const progressFill = document.getElementById("progressFill");
 const uploadStatus = document.getElementById("uploadStatus");
 
-// ---------- EMOJI MAP ----------
+// ---------- DATA ----------
 const emojis = {
-":sob:":"😭",
-":fire:":"🔥",
-":heart:":"❤️",
-":skull:":"💀",
-":joy:":"😂",
-":cool:":"😎",
-":wave:":"👋",
-":thumbsup:":"👍",
-":broken:":"💔",
-":speak:":"🗣️",
-":peak:":"🥹",
-":twin:":"✌️",
-":wilt:":"🥀"
+":sob:":"😭", ":fire:":"🔥", ":heart:":"❤️",
+":skull:":"💀", ":joy:":"😂", ":cool:":"😎",
+":wave:":"👋", ":thumbsup:":"👍",
+":broken:":"💔", ":speak:":"🗣️",
+":peak:":"🥹", ":twin:":"✌️", ":wilt:":"🥀"
 };
+
+const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+const topic = "luke_retro_global_open_lobby";
+
+const users = {};
+const typingUsers = {};
 
 // ---------- SOUND ----------
 const aimSound = new Audio("aim-message.mp3");
@@ -184,12 +197,6 @@ function playSound(){
 aimSound.currentTime=0;
 aimSound.play().catch(()=>{});
 }
-
-// ---------- MQTT ----------
-const topic="luke_retro_global_open_lobby";
-const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
-
-const users={};
 
 // ---------- SYSTEM ----------
 function sys(t){
@@ -201,19 +208,55 @@ chatLog.appendChild(d);
 
 // ---------- RENDER ----------
 function render(text){
-if(!text) text="";
+if(!text) return "";
 const img=/(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
 if(img.test(text)) return `<img class="chat-img" src="${text}">`;
 return `<span class="msg">${text}</span>`;
 }
 
-// ---------- EMOJI REPLACE ----------
+// ---------- EMOJI ----------
 function parseEmojis(text){
-Object.keys(emojis).forEach(code=>{
-text=text.split(code).join(emojis[code]);
+Object.keys(emojis).forEach(e=>{
+text=text.split(e).join(emojis[e]);
 });
 return text;
 }
+
+// ---------- ONLINE USERS ----------
+function updateUsers(){
+const box=document.getElementById("userListBox");
+box.innerHTML="";
+const now=Date.now();
+
+Object.keys(users).forEach(u=>{
+if(now-users[u]<60000){
+const d=document.createElement("div");
+d.textContent="• "+u;
+box.appendChild(d);
+}
+});
+}
+setInterval(updateUsers,5000);
+
+// ---------- TYPING (BLINKING DOTS) ----------
+let dotIndex = 0;
+
+function updateTyping(){
+const names = Object.keys(typingUsers).filter(u=>u!==currentAlias);
+
+if(names.length===0){
+typingBox.textContent="";
+return;
+}
+
+dotIndex = (dotIndex + 1) % 4;
+const dots = ".".repeat(dotIndex);
+
+typingBox.textContent = `${names.join(", ")} is typing${dots}`;
+}
+
+// blink animation
+setInterval(updateTyping, 400);
 
 // ---------- CONNECT ----------
 client.on("connect",()=>{
@@ -234,34 +277,56 @@ sys(d.sender+" joined");
 return;
 }
 
+if(d.type==="typing"){
+typingUsers[d.sender]=true;
+return;
+}
+
+if(d.type==="stopTyping"){
+delete typingUsers[d.sender];
+return;
+}
+
 users[d.sender]=Date.now();
 if(d.sender!==currentAlias) playSound();
-
-const time=d.timestamp||"--:--";
 
 const row=document.createElement("div");
 row.innerHTML=
 `<span style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
 <b>&lt;${d.sender}&gt;</b></span>
-<span style="color:#0f0"> [${time}] </span>
+<span style="color:#0f0"> [${d.timestamp||"--:--"}] </span>
 ${render(d.text||"")}`;
 
 chatLog.appendChild(row);
 chatLog.scrollTop=chatLog.scrollHeight;
 });
 
-// ---------- EMOJI AUTOCOMPLETE ----------
+// ---------- TYPING SEND ----------
+let typingTimeout;
+
 chatInput.addEventListener("input",()=>{
 
+client.publish(topic, JSON.stringify({
+type:"typing",
+sender:currentAlias
+}));
+
+clearTimeout(typingTimeout);
+
+typingTimeout=setTimeout(()=>{
+client.publish(topic, JSON.stringify({
+type:"stopTyping",
+sender:currentAlias
+}));
+},1200);
+
+// emoji suggestions
 const value=chatInput.value;
 const match=value.match(/:[a-zA-Z0-9_]*$/);
 
 if(match){
-const query=match[0];
-
-const results=Object.keys(emojis)
-.filter(e=>e.startsWith(query))
-.slice(0,5);
+const q=match[0];
+const results=Object.keys(emojis).filter(e=>e.startsWith(q)).slice(0,5);
 
 if(results.length){
 emojiBox.style.display="block";
@@ -278,7 +343,6 @@ ${e} → ${emojis[e]}
 window.insertEmoji=function(code){
 chatInput.value=chatInput.value.replace(/:[a-zA-Z0-9_]*$/,code);
 emojiBox.style.display="none";
-chatInput.focus();
 };
 
 // ---------- SEND ----------
@@ -289,14 +353,12 @@ if(!text) return;
 if(text==="/clear"){
 chatLog.innerHTML="";
 sys("cleared");
-chatInput.value="";
 return;
 }
 
 if(text.startsWith("/nick ")){
 currentAlias=text.replace("/nick ","");
 sys("you are now "+currentAlias);
-chatInput.value="";
 return;
 }
 
@@ -333,7 +395,7 @@ form.append("upload_preset","chat_upload");
 const xhr=new XMLHttpRequest();
 xhr.open("POST","https://api.cloudinary.com/v1_1/dbrruuftv/image/upload");
 
-xhr.upload.onprogress=(e)=>{
+xhr.upload.onprogress=e=>{
 if(e.lengthComputable){
 progressFill.style.width=(e.loaded/e.total)*100+"%";
 }
@@ -342,20 +404,17 @@ progressFill.style.width=(e.loaded/e.total)*100+"%";
 xhr.onload=()=>{
 const data=JSON.parse(xhr.responseText);
 
-client.publish(topic, JSON.stringify({
+client.publish(topic,{
 sender:currentAlias,
 text:data.secure_url,
 timestamp:new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
-}));
+});
 
 uploadStatus.textContent="Uploaded ✔";
-
-setTimeout(()=>{
-previewBox.style.display="none";
-},1000);
+setTimeout(()=>previewBox.style.display="none",1000);
 };
 
 xhr.send(form);
