@@ -95,7 +95,10 @@ client.on('message', (topic, payload) => {
 
       const row = document.createElement('div');
       const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      row.innerHTML =
+    `<span class="${tagClass}">&lt;${data.sender}&gt;</span>
+     <span style="color:#00aa00;">[${timestamp}]</span>
+     <span class="text-white">${data.text}</span>`;
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
   });
@@ -115,7 +118,14 @@ client.on('message', (topic, payload) => {
       }
 
       // Publish the text packet out across the world
-      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text }));
+      client.publish(lobbyTopic, JSON.stringify({
+    sender: currentAlias,
+    text: text,
+    timestamp: new Date().toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit'
+    })
+}));
       chatInput.value = '';
   }
 
