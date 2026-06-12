@@ -1,136 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> CyberZone_95 Live Chatroom </title>
-    <style>
-        body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
-        .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
-        .title-bar { background: linear-gradient(90deg, #000080, #0080fe); color: white; padding: 4px 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .title-controls span { background-color: #c0c0c0; color: black; border: 2px outset #fff; padding: 0 5px; font-size: 11px; cursor: pointer; margin-left: 2px; }
-        marquee { background-color: #ff00ff; color: #ffffff; font-weight: bold; padding: 3px; font-size: 12px; border-bottom: 2px inset #fff; }
-        .workspace { display: flex; background-color: #c0c0c0; padding: 10px; gap: 10px; }
-        .chat-log { flex: 3; height: 300px; background-color: #000; color: #00ff00; border: 3px inset #808080; padding: 8px; overflow-y: scroll; font-size: 13px; line-height: 1.4; }
-        .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
-        .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
-        .sys-msg { color: #ffff00; }
-        .user-tag { color: #ff00ff; font-weight: bold; }
-        .my-tag { color: #00ffff; font-weight: bold; }
-        .text-white { color: #ffffff; }
-        .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
-        .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
-        .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
-        .btn-95:active { border: 2px inset #ffffff; }
-    </style>
-    <!-- Load universal MQTT over Secure WebSockets library library directly -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberZone_95 Live Chatroom</title>
+
+<style>
+body {
+    background-color: #000;
+    color: #00FF00;
+    font-family: "Courier New", Courier, monospace;
+    padding: 15px;
+    margin: 0;
+}
+
+.chat-window {
+    border: 3px outset #808080;
+    background-color: #c0c0c0;
+    color: #000;
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+}
+
+.title-bar {
+    background: linear-gradient(90deg, #000080, #0080fe);
+    color: white;
+    padding: 4px 8px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+
+.workspace {
+    display: flex;
+    background-color: #c0c0c0;
+    padding: 10px;
+    gap: 10px;
+}
+
+.chat-log {
+    flex: 3;
+    height: 300px;
+    background: black;
+    color: #00ff00;
+    border: 3px inset #808080;
+    padding: 8px;
+    overflow-y: scroll;
+}
+
+.user-list {
+    flex: 1;
+    height: 300px;
+    background: black;
+    color: #00ffff;
+    border: 3px inset #808080;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.input-bar {
+    display: flex;
+    padding: 10px;
+    background: #c0c0c0;
+}
+
+.input-bar input {
+    flex: 1;
+    padding: 5px;
+}
+
+.btn-95 {
+    margin-left: 5px;
+}
+
+.sys-msg { color: yellow; }
+.user-tag { color: #ff00ff; font-weight: bold; }
+.my-tag { color: #00ffff; font-weight: bold; }
+.text-white { color: white; }
+
+</style>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
+
 <body>
 
 <div class="chat-window">
-    <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Fully Working)</div>
-        <div class="title-controls"><span>_</span><span>X</span></div>
-    </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES EVERYTHING ***</marquee>
-    <div class="workspace">
-        <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
-        </div>
-        <div class="user-list">
-            <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
-            <br>
-            <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
-            <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
-        </div>
-    </div>
-    <div class="input-bar">
-        <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
-        <button id="sendBtn" class="btn-95">SEND</button>
+<div class="title-bar">
+    <div>💬 CyberZone_95 Chat</div>
+</div>
+
+<div class="workspace">
+    <div class="chat-log" id="chatLog"></div>
+
+    <div class="user-list">
+        <div style="color:#ffff00;">ONLINE USERS</div>
+        <div id="userListBox"></div>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
+
+<div class="input-bar">
+    <input id="chatInput" placeholder="Type message...">
+    <button id="sendBtn" class="btn-95">SEND</button>
+</div>
+</div>
 
 <script>
-  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+// ---------- USER ----------
+let currentAlias = "Guest_" + Math.floor(Math.random() * 9000);
 
-  const chatLog = document.getElementById('chatLog');
-  const chatInput = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const statusMessage = document.getElementById('statusMessage');
-  const serverStatus = document.getElementById('serverStatus');
-  const aimSound = new Audio('aim-message.mp3');
+// ---------- UI ----------
+const chatLog = document.getElementById("chatLog");
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
 
-  function playAimSound() {
+// ---------- SOUND ----------
+const aimSound = new Audio("aim-message.mp3");
+function playAimSound() {
     aimSound.currentTime = 0;
     aimSound.play().catch(() => {});
-  }
-  const lobbyTopic = "luke_retro_global_open_lobby";
+}
 
-  // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
-  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+// ---------- MQTT ----------
+const topic = "luke_retro_global_open_lobby";
+const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-  client.on('connect', () => {
-      serverStatus.textContent = "Online ✔";
-      serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
-      
-      // Subscribe to the shared global data node
-      client.subscribe(lobbyTopic);
-  });
+// ---------- USER TRACKING ----------
+const users = {}; // { name: lastSeen }
 
-client.on('message', (topic, payload) => {
+function updateUserList() {
+    const box = document.getElementById("userListBox");
+    box.innerHTML = "";
+
+    const now = Date.now();
+
+    Object.keys(users).forEach(name => {
+        if (now - users[name] < 60000) {
+            const div = document.createElement("div");
+            div.textContent = "• " + name;
+            div.style.color = "#00ffff";
+            box.appendChild(div);
+        }
+    });
+}
+
+// cleanup loop
+setInterval(updateUserList, 5000);
+
+// ---------- SYSTEM MESSAGE ----------
+function system(msg) {
+    const div = document.createElement("div");
+    div.innerHTML = `<span class="sys-msg">*** ${msg}</span>`;
+    chatLog.appendChild(div);
+}
+
+// ---------- CONNECT ----------
+client.on("connect", () => {
+    client.subscribe(topic);
+
+    client.publish(topic, JSON.stringify({
+        type: "join",
+        sender: currentAlias
+    }));
+});
+
+// ---------- MESSAGE ----------
+client.on("message", (t, payload) => {
     const data = JSON.parse(payload.toString());
+
+    users[data.sender] = Date.now();
+    updateUserList();
+
+    if (data.type === "join") {
+        system(`${data.sender} joined the chat`);
+        return;
+    }
 
     if (data.sender !== currentAlias) {
         playAimSound();
     }
-      
-      // Clear placeholder texts upon first real arrival
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
 
-      const row = document.createElement('div');
-      const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
-      row.innerHTML =
-    `<span class="${tagClass}">&lt;${data.sender}&gt;</span>
-     <span style="color:#00aa00;">[${timestamp}]</span>
-     <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  });
+    const row = document.createElement("div");
+    const time = data.timestamp || "--:--";
 
-  client.on('error', (err) => {
-      serverStatus.textContent = "Offline ✖";
-      serverStatus.style.color = "#ff0000";
-  });
+    row.innerHTML =
+        `<span class="${data.sender === currentAlias ? "my-tag" : "user-tag"}">
+        &lt;${data.sender}&gt;</span>
+        <span style="color:#00ff00;"> [${time}] </span>
+        <span class="text-white">${data.text}</span>`;
 
-  function sendMsg() {
-      const text = chatInput.value.trim();
-      if (text === '') return;
+    chatLog.appendChild(row);
+    chatLog.scrollTop = chatLog.scrollHeight;
+});
 
-      if (!client.connected) {
-          alert("Awaiting connection stream synchronization...");
-          return;
-      }
+// ---------- SEND ----------
+function sendMsg() {
+    const text = chatInput.value.trim();
+    if (!text) return;
 
-      // Publish the text packet out across the world
-      client.publish(lobbyTopic, JSON.stringify({
-    sender: currentAlias,
-    text: text,
-    timestamp: new Date().toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit'
-    })
-}));
-      chatInput.value = '';
-  }
+    // /nick command
+    if (text.startsWith("/nick ")) {
+        currentAlias = text.replace("/nick ", "").trim();
+        system("You are now " + currentAlias);
+        chatInput.value = "";
+        return;
+    }
 
-  sendBtn.addEventListener('click', sendMsg);
-  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+    client.publish(topic, JSON.stringify({
+        sender: currentAlias,
+        text: text,
+        timestamp: new Date().toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit"
+        })
+    }));
+
+    users[currentAlias] = Date.now();
+
+    chatInput.value = "";
+}
+
+sendBtn.onclick = sendMsg;
+
+chatInput.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMsg();
+});
 </script>
+
 </body>
 </html>
