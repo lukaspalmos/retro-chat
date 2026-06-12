@@ -1,4 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CyberZone_95 Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+background:#000;
+color:#0f0;
+font-family:Courier New;
+margin:0;
+padding:15px;
+}
+
+.chat-window{
+max-width:900px;
+margin:auto;
+background:#c0c0c0;
+border:3px outset #888;
+}
+
+.title-bar{
+background:linear-gradient(90deg,#000080,#0080ff);
+color:#fff;
+padding:6px;
+font-weight:bold;
+}
+
+.workspace{display:flex;gap:10px;padding:10px;}
+
+.chat-log{
+flex:3;
+height:340px;
+background:#000;
+border:3px inset #888;
+overflow-y:auto;
+padding:8px;
+}
+
+.user-list{
+flex:1;
+background:#000;
+border:3px inset #888;
+color:#0ff;
+padding:8px;
+font-size:13px;
+}
+
+.input-bar{
+display:flex;
+gap:5px;
+padding:10px;
+background:#c0c0c0;
+}
+
+.input-bar input{
+flex:1;
+padding:6px;
+}
+
+.sys{color:yellow;}
+
+.replyBox{
+background:#111;
+border-left:4px solid yellow;
+color:yellow;
+padding:4px;
+font-size:11px;
+margin-bottom:4px;
+}
+
+.msgBtn{
+font-size:11px;
+margin-left:6px;
+cursor:pointer;
+}
+</style>
+
+<!-- ✅ FIX 1: safer CDN -->
+<script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="chat-window">
+<div class="title-bar">💬 CyberZone_95 Chat</div>
+
+<div class="workspace">
+<div class="chat-log" id="chatLog"></div>
+
+<div class="user-list">
+<div style="color:yellow;">ONLINE USERS</div>
+<div id="userListBox"></div>
+</div>
+</div>
+
+<div class="input-bar">
+<input id="chatInput" placeholder="Type message...">
+<button id="sendBtn">Send</button>
+<button id="imgBtn">Image</button>
+<button id="clearBtn">Clear</button>
+<input type="file" id="imgUpload" hidden>
+</div>
+
+</div>
+
 <script>
+
+// ================= SAFETY CHECK =================
+if (!window.mqtt) {
+alert("MQTT failed to load. Check internet or CDN.");
+throw new Error("mqtt not loaded");
+}
 
 // ================= USER =================
 const userId = crypto.randomUUID();
@@ -21,19 +136,8 @@ const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 const users={};
 let replyTarget=null;
 
-// ================= SOUND (FIXED VERSION) =================
-const messageSound = new Audio("aim-message.mp3");
-const replySound = new Audio("aim-notif.mp3");
-
-function playMessageSound(){
-messageSound.currentTime = 0;
-messageSound.play().catch(()=>{});
-}
-
-function playReplySound(){
-replySound.currentTime = 0;
-replySound.play().catch(()=>{});
-}
+// ================= SOUND =================
+const notif=new Audio("aim-notif.mp3");
 
 // ================= USERS =================
 function renderUsers(){
@@ -84,18 +188,11 @@ if(!d.text) return;
 users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
-/* ================= SOUND LOGIC FIX ================= */
-
-// reply sound FIRST (higher priority)
-if(d.reply && d.sender !== currentAlias){
-playReplySound();
-}
-// normal message sound
-else if(d.sender !== currentAlias){
-playMessageSound();
+if(d.sender!==currentAlias){
+notif.currentTime=0;
+notif.play().catch(()=>{});
 }
 
-// ================= MESSAGE =================
 const row=document.createElement("div");
 
 // REPLY BLOCK
@@ -142,7 +239,6 @@ text:d.text
 sys("replying to "+d.sender);
 };
 
-// BUILD
 row.appendChild(header);
 row.appendChild(time);
 row.appendChild(content);
@@ -247,3 +343,6 @@ sys("chat cleared");
 };
 
 </script>
+
+</body>
+</html>
