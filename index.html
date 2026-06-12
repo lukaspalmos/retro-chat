@@ -64,16 +64,6 @@ padding:6px;
 .msg{color:#fff;}
 .sys{color:yellow;}
 
-#replyBox{
-display:none;
-background:#111;
-color:yellow;
-padding:5px;
-margin:5px 10px;
-border-left:4px solid yellow;
-font-size:12px;
-}
-
 button{cursor:pointer;}
 </style>
 
@@ -93,8 +83,6 @@ button{cursor:pointer;}
 </div>
 </div>
 
-<div id="replyBox"></div>
-
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
@@ -107,6 +95,10 @@ button{cursor:pointer;}
 
 <script>
 
+// ================= ID SYSTEM (FIX FOR DUPLICATES) =================
+const userId = localStorage.getItem("cyber_uid") || crypto.randomUUID();
+localStorage.setItem("cyber_uid", userId);
+
 // ================= USER =================
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
@@ -117,7 +109,6 @@ const sendBtn=document.getElementById("sendBtn");
 const clearBtn=document.getElementById("clearBtn");
 const imgBtn=document.getElementById("imgBtn");
 const imgUpload=document.getElementById("imgUpload");
-const replyBox=document.getElementById("replyBox");
 const userListBox=document.getElementById("userListBox");
 
 // ================= MQTT =================
@@ -125,7 +116,7 @@ const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
 // ================= DATA =================
-const users={};
+const users={}; 
 let replyTarget=null;
 
 // ================= SOUND =================
@@ -144,10 +135,24 @@ const emojis={
 };
 
 function parseEmojis(text){
-Object.keys(emojis).forEach(k=>{
+for(const k in emojis){
 text=text.split(k).join(emojis[k]);
-});
+}
 return text;
+}
+
+// ================= USERS FIXED =================
+function updateUsers(){
+const now=Date.now();
+userListBox.innerHTML="";
+
+Object.values(users).forEach(u=>{
+if(now-u.lastSeen<60000){
+const div=document.createElement("div");
+div.textContent="• "+u.name;
+userListBox.appendChild(div);
+}
+});
 }
 
 // ================= SYSTEM =================
@@ -158,35 +163,14 @@ d.textContent="*** "+t;
 chatLog.appendChild(d);
 }
 
-// ================= USERS =================
-function updateUsers(){
-const now=Date.now();
-userListBox.innerHTML="";
-
-Object.keys(users).forEach(u=>{
-if(now-users[u]<60000){
-const d=document.createElement("div");
-d.textContent="• "+u;
-userListBox.appendChild(d);
-}
-});
-}
-
-// ================= MENTION HIGHLIGHT =================
-function highlight(text){
-const safe=currentAlias.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
-return text.replaceAll("@"+currentAlias,
-`<span style="color:yellow;font-weight:bold;">@${currentAlias}</span>`
-);
-}
-
 // ================= CONNECT =================
 client.on("connect",()=>{
 client.subscribe(topic);
 
 client.publish(topic,JSON.stringify({
 type:"join",
-sender:currentAlias
+id:userId,
+name:currentAlias
 }));
 });
 
@@ -194,40 +178,39 @@ sender:currentAlias
 client.on("message",(t,p)=>{
 const d=JSON.parse(p.toString());
 
+// JOIN
 if(d.type==="join"){
-users[d.sender]=Date.now();
-sys(d.sender+" joined");
+if(!d.id) return;
+
+users[d.id]={
+name:d.name,
+lastSeen:Date.now()
+};
+
 updateUsers();
+sys(d.name+" joined");
 return;
 }
 
+// CHAT
 if(d.text!==undefined){
 
-users[d.sender]=Date.now();
+if(d.id){
+users[d.id]={
+name:d.sender,
+lastSeen:Date.now()
+};
 updateUsers();
+}
 
-let text=d.text;
+let text=parseEmojis(d.text);
 
-// emojis FIRST
-text=parseEmojis(text);
-
-// mention highlight
-text=highlight(text);
-
-// image detection
 const img=/https?:\/\/.*\.(png|jpg|jpeg|gif|webp)/i;
 if(img.test(text)){
 text=`<img src="${text}" style="max-width:200px;border:2px solid #0f0;">`;
 }
 
-// reply block
-let replyHTML="";
-if(d.reply){
-replyHTML=
-`<div style="color:yellow;font-size:11px;border-left:4px solid yellow;padding-left:6px;margin-bottom:4px;background:#111;">
-↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
-</div>`;
-
+if(d.sender!==currentAlias){
 notif.currentTime=0;
 notif.play().catch(()=>{});
 }
@@ -235,35 +218,31 @@ notif.play().catch(()=>{});
 const row=document.createElement("div");
 
 row.innerHTML=
-replyHTML+
 `<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
 &lt;${d.sender}&gt;</b>
 <span style="color:#0f0"> [${d.timestamp}] </span>
-<span style="color:#fff">${text}</span>
-
-<button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
-style="margin-left:10px;font-size:10px;">Reply</button>`;
+<span style="color:#fff">${text}</span>`;
 
 chatLog.appendChild(row);
 chatLog.scrollTop=chatLog.scrollHeight;
 }
 });
 
-// ================= REPLY =================
-window.setReply=function(user,text){
-replyTarget={user,text};
-replyBox.style.display="block";
-replyBox.innerHTML="↳ Replying to <b>"+user+"</b>: "+text;
-};
-
 // ================= SEND =================
 function send(){
 let text=chatInput.value.trim();
-if(!text)return;
+if(!text) return;
 
-// /nick FIXED
+// nickname
 if(text.startsWith("/nick ")){
 currentAlias=text.replace("/nick ","");
+
+client.publish(topic,JSON.stringify({
+type:"join",
+id:userId,
+name:currentAlias
+}));
+
 sys("you are now "+currentAlias);
 chatInput.value="";
 return;
@@ -279,22 +258,16 @@ return;
 
 text=parseEmojis(text);
 
-const payload={
+client.publish(topic,JSON.stringify({
+id:userId,
 sender:currentAlias,
 text,
 timestamp:new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
-};
+}));
 
-if(replyTarget){
-payload.reply=replyTarget;
-replyTarget=null;
-replyBox.style.display="none";
-}
-
-client.publish(topic,JSON.stringify(payload));
 chatInput.value="";
 }
 
@@ -303,20 +276,21 @@ imgBtn.onclick=()=>imgUpload.click();
 
 imgUpload.onchange=async e=>{
 const file=e.target.files[0];
-if(!file)return;
+if(!file) return;
 
 const form=new FormData();
 form.append("file",file);
 form.append("upload_preset","chat_upload");
 
-const res=await fetch("https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",{
-method:"POST",
-body:form
-});
+const res=await fetch(
+"https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",
+{method:"POST",body:form}
+);
 
 const data=await res.json();
 
 client.publish(topic,JSON.stringify({
+id:userId,
 sender:currentAlias,
 text:data.secure_url,
 timestamp:new Date().toLocaleTimeString([],{
