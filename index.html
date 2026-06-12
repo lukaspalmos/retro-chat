@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
+    <title> CyberZone_95 Live Chatroom </title>
     <style>
         body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
         .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
@@ -21,18 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
+    <!-- Load universal MQTT over Secure WebSockets library directly -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v29.0 - Public Global Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.5 - Custom Color Sync)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE SECURE GLOBAL SYNC ONLINE *** PUBLIC LOBBY ROOM OPEN TO EVERYONE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Synchronizing data lines with secure web matrix...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -47,10 +49,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112901</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
 <script>
-  // 1. Username Prompt Customization
+  // 1. Initial 90s Login popup prompt setup handling sequence
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -63,84 +65,66 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Vibrant neon themes array colors 
+  const lobbyTopic = "luke_retro_global_open_lobby_v10";
+
+  // Vibrant neon color list matching vintage 90s style profiles
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
+  // Draw local handle profile node card
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Connect to a dedicated public web socket channel cluster using native browser scripts
-  const publicApiKey = "o7K27fN8z8K9O2yWv4Z9fK1N7wS6zP0x"; 
-  const socketUrl = `wss://://piesocket.com{publicApiKey}&notify_self=1`;
-  
-  let socket;
+  // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
+  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-  function initSocket() {
-      socket = new WebSocket(socketUrl);
+  client.on('connect', () => {
+      serverStatus.textContent = "Online ✔";
+      serverStatus.style.color = "#00ff00";
+      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
+      
+      // Subscribe to the shared global data node
+      client.subscribe(lobbyTopic);
+  });
 
-      socket.onopen = function() {
-          serverStatus.textContent = "Online ✔";
-          serverStatus.style.color = "#00ff00";
-          statusMessage.textContent = "*** Connected successfully! Anyone opening your site link right now shares this exact screen window space.";
-      };
+  client.on('message', (topic, payload) => {
+      const data = JSON.parse(payload.toString());
+      
+      // Clear placeholder texts upon first real arrival
+      const currentStatus = document.getElementById('statusMessage');
+      if (currentStatus) currentStatus.remove();
 
-      socket.onmessage = function(event) {
-          try {
-              const data = JSON.parse(event.data);
-              if (!data.text || !data.sender) return;
-              
-              // Clear initial connection text line upon message arrival
-              const currentStatus = document.getElementById('statusMessage');
-              if (currentStatus) currentStatus.remove();
+      // Anti-Collision Check: If incoming user matches your color, auto shift yours down to avoid repetition
+      if (data.sender !== currentAlias && data.color === myHexColor) {
+          const safeList = availableColors.filter(c => c !== data.color);
+          myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+          document.getElementById('myUsername').style.color = myHexColor;
+      }
 
-              const row = document.createElement('div');
-              
-              // Handle anti-collision username colors in real-time
-              if (data.sender !== currentAlias && data.color === myHexColor) {
-                  const safeList = availableColors.filter(c => c !== data.color);
-                  myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-                  document.getElementById('myUsername').style.color = myHexColor;
-              }
+      const row = document.createElement('div');
+      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+  });
 
-              row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-              chatLog.appendChild(row);
-              chatLog.scrollTop = chatLog.scrollHeight;
-          } catch (e) {
-              console.log("Malformed transmission block received.");
-          }
-      };
+  client.on('error', (err) => {
+      serverStatus.textContent = "Offline ✖";
+      serverStatus.style.color = "#ff0000";
+  });
 
-      socket.onclose = function() {
-          serverStatus.textContent = "Offline ✖";
-          serverStatus.style.color = "#ff0000";
-          setTimeout(initSocket, 2000); // Auto reconnect loop
-      };
-  }
-
-  initSocket();
-
-  // 3. Outbound Message Publishing Function
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      if (socket.readyState !== WebSocket.OPEN) {
-          alert("Synchronizing data nodes with server stream...");
+      if (!client.connected) {
+          alert("Awaiting connection stream synchronization...");
           return;
       }
 
-      // Package data parameters together and push live
-      const payload = { sender: currentAlias, text: text, color: myHexColor };
-      socket.send(JSON.stringify(payload));
-      
+      // Publish the text packet out across the world carrying nickname and unique color metadata properties
+      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text, color: myHexColor }));
       chatInput.value = '';
   }
-
-  // Wiping page drops connection memory entirely, satisfying your auto-clear rule
-  window.addEventListener('beforeunload', () => {
-      if (socket) socket.close();
-  });
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
