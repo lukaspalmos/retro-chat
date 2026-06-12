@@ -15,30 +15,32 @@
         .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
         .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
         .sys-msg { color: #ffff00; }
+        .user-tag { color: #ff00ff; font-weight: bold; }
+        .my-tag { color: #00ffff; font-weight: bold; }
         .text-white { color: #ffffff; }
         .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load ScaleDrone directly from a highly accessible enterprise CDN -->
-    <script src="https://scaledrone.com"></script>
+    <!-- Load universal MQTT over Secure WebSockets library library directly -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v28.0 - Public Global Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Fully Working)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL NETWORK NODE ONLINE *** ALL VISITORS IN ONE SHARED LOBBY *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME YOU SHOULD GIVE HIM MONEY *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Handshaking with secure public WebSocket cluster...</div>
+            <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="font-weight: bold; margin-bottom: 8px;"></div>
+            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
@@ -49,15 +51,11 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112802</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
 <script>
-  // 1. Clean Username prompt selection
-  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
-  if (!requestedName || requestedName.trim() === "") {
-      requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  }
-  const currentAlias = requestedName.trim().substring(0, 15);
+  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
@@ -65,67 +63,52 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Vibrant neon color list 
-  const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
-  let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+  const lobbyTopic = "luke_retro_global_open_lobby";
 
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
-  document.getElementById('myUsername').style.color = myHexColor;
+  // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
+  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-  // 2. Initialize connection via stable community channel broker
-  const drone = new Scaledrone('askYg7u6u9P7gEsh');
-  const roomName = 'observable-luke-retro-global-lobby';
-  let roomInstance = null;
-
-  drone.on('open', error => {
-      if (error) {
-          statusMessage.textContent = "HANDSHAKE TIMEOUT: " + error.message;
-          return console.error(error);
-      }
+  client.on('connect', () => {
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Anyone opening this URL links into the same public room. Screen clears on refresh.";
+      statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
       
-      // Subscribe to the shared global room channel instantly
-      roomInstance = drone.subscribe(roomName);
-
-      // 3. Receive Incoming Live Message Broadcast packets
-      roomInstance.on('data', (message) => {
-          const currentStatus = document.getElementById('statusMessage');
-          if (currentStatus) currentStatus.remove();
-
-          // Anti-Collision Check: Auto switch color if someone has your exact style hex
-          if (message.sender !== currentAlias && message.color === myHexColor) {
-              const safeList = availableColors.filter(c => c !== message.color);
-              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-              document.getElementById('myUsername').style.color = myHexColor;
-          }
-
-          const row = document.createElement('div');
-          row.innerHTML = `<span style="color: ${message.color}; font-weight: bold;">&lt;${message.sender}&gt;</span> <span class="text-white">${message.text}</span>`;
-          chatLog.appendChild(row);
-          chatLog.scrollTop = chatLog.scrollHeight;
-      });
+      // Subscribe to the shared global data node
+      client.subscribe(lobbyTopic);
   });
 
-  // 4. Outbound Text Transmission Push
+  client.on('message', (topic, payload) => {
+      const data = JSON.parse(payload.toString());
+      
+      // Clear placeholder texts upon first real arrival
+      const currentStatus = document.getElementById('statusMessage');
+      if (currentStatus) currentStatus.remove();
+
+      const row = document.createElement('div');
+      const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
+      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
+  });
+
+  client.on('error', (err) => {
+      serverStatus.textContent = "Offline ✖";
+      serverStatus.style.color = "#ff0000";
+  });
+
   function sendMsg() {
       const text = chatInput.value.trim();
-      if (text === '' || !roomInstance) return;
+      if (text === '') return;
 
-      // Broadcast payload over live WebSockets globally
-      drone.publish({
-          room: roomName,
-          message: { sender: currentAlias, text: text, color: myHexColor }
-      });
+      if (!client.connected) {
+          alert("Awaiting connection stream synchronization...");
+          return;
+      }
 
+      // Publish the text packet out across the world
+      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text }));
       chatInput.value = '';
   }
-
-  // Wiping page drops connection memory entirely, satisfying your auto-clear rule
-  window.addEventListener('beforeunload', () => {
-      if (drone) drone.close();
-  });
 
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
