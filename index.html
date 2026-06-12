@@ -21,17 +21,17 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load universal MQTT over Secure WebSockets library directly -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Load universal MQTT over Secure WebSockets library library directly -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.5 - Custom Color Sync)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.6 - AIM Chime Build)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** RETRO AIM SOUND CHIME INTEGRATED *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
@@ -75,6 +75,43 @@
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
+  // NEW FEATURE: Synth Engine that builds the authentic AIM multi-tone alert ding sound
+  function playAimChime() {
+      try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const ctx = new AudioContext();
+          
+          // Note 1: High crisp initial ding peak tone
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(880, ctx.currentTime); // High A note
+          gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          
+          // Note 2: Slightly delayed lower secondary harmonic frequency chime dropdown
+          setTimeout(() => {
+              const osc2 = ctx.createOscillator();
+              const gain2 = ctx.createGain();
+              osc2.type = 'sine';
+              osc2.frequency.setValueAtTime(1320, ctx.currentTime); // High E note
+              gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+              gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+              osc2.connect(gain2);
+              gain2.connect(ctx.destination);
+              osc2.start();
+              osc2.stop(ctx.currentTime + 0.25);
+          }, 40);
+
+          osc1.start();
+          osc1.stop(ctx.currentTime + 0.15);
+      } catch (e) {
+          console.log("Audio play blocked awaiting standard user click event.");
+      }
+  }
+
   // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
   const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
@@ -105,6 +142,9 @@
       row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
+
+      // TRIGGER CHIME ALERTS: Fire the AIM synthesizer note sequence layout automatically
+      playAimChime();
   });
 
   client.on('error', (err) => {
