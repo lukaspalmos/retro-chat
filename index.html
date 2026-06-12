@@ -1,128 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberZone_95 Live Chatroom</title>
+const currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
-<style>
-body {
-    background:#000;
-    color:#00ff00;
-    font-family:"Courier New", monospace;
-    margin:0;
-    padding:15px;
-}
-
-.chat-window {
-    max-width:750px;
-    margin:auto;
-    border:3px outset #888;
-    background:#c0c0c0;
-}
-
-.title-bar {
-    background:linear-gradient(90deg,#000080,#0080ff);
-    color:#fff;
-    padding:6px;
-    font-weight:bold;
-    display:flex;
-    justify-content:space-between;
-}
-
-.workspace {
-    display:flex;
-    gap:10px;
-    padding:10px;
-    background:#c0c0c0;
-}
-
-.chat-log {
-    flex:3;
-    height:300px;
-    background:#000;
-    border:3px inset #888;
-    overflow-y:auto;
-    padding:8px;
-}
-
-.user-list {
-    flex:1;
-    background:#000;
-    border:3px inset #888;
-    color:#00ffff;
-    padding:8px;
-    overflow-y:auto;
-}
-
-.input-bar {
-    display:flex;
-    padding:10px;
-    background:#c0c0c0;
-}
-
-.input-bar input {
-    flex:1;
-    padding:5px;
-}
-
-.sys-msg { color:yellow; }
-.user-tag { color:#ff00ff; font-weight:bold; }
-.my-tag { color:#00ffff; font-weight:bold; }
-.text-white { color:white; }
-</style>
-
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-</head>
-
-<body>
-
-<div class="chat-window">
-    <div class="title-bar">
-        <div>💬 CyberZone_95 Chat</div>
-    </div>
-
-    <div class="workspace">
-        <div class="chat-log" id="chatLog"></div>
-
-        <div class="user-list">
-            <div style="color:#ffff00;">ONLINE USERS</div>
-            <div id="userListBox"></div>
-        </div>
-    </div>
-
-    <div class="input-bar">
-        <input id="chatInput" placeholder="Type message...">
-        <button id="sendBtn">SEND</button>
-    </div>
-</div>
-
-<script>
-// ---------- USER ----------
-let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
-
-// ---------- UI ----------
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
+const typingBox = document.getElementById("typingBox");
 
-// ---------- SOUND ----------
 const aimSound = new Audio("aim-message.mp3");
 function playAimSound() {
     aimSound.currentTime = 0;
     aimSound.play().catch(()=>{});
 }
 
-// ---------- MQTT ----------
 const topic = "luke_retro_global_open_lobby";
 const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ---------- USERS (FIXED) ----------
-const users = {}; // { name: lastSeen }
+const users = {};
+const typingUsers = {}; // 👈 NEW
 
 // ---------- USER LIST ----------
 function updateUserList() {
     const box = document.getElementById("userListBox");
+    if (!box) return;
+
     box.innerHTML = "";
 
     const now = Date.now();
@@ -142,7 +41,7 @@ setInterval(updateUserList, 5000);
 // ---------- SYSTEM ----------
 function system(msg) {
     const div = document.createElement("div");
-    div.innerHTML = `<span class="sys-msg">*** ${msg}</span>`;
+    div.innerHTML = `<span style="color:yellow;">*** ${msg}</span>`;
     chatLog.appendChild(div);
 }
 
@@ -160,39 +59,34 @@ client.on("connect", () => {
 client.on("message", (t, payload) => {
     const data = JSON.parse(payload.toString());
 
-    // ---------- JOIN ----------
+    // JOIN
     if (data.type === "join") {
         users[data.sender] = Date.now();
         system(`${data.sender} joined the chat`);
         return;
     }
 
-    // ---------- FIXED RENAME HANDLING ----------
-    if (data.type === "rename") {
-
-        delete users[data.oldName];          // REMOVE OLD NAME
-        users[data.sender] = Date.now();     // ADD NEW NAME
-
-        system(`${data.oldName} is now known as ${data.sender}`);
-        updateUserList();
+    // TYPING 👇
+    if (data.type === "typing") {
+        typingUsers[data.sender] = Date.now();
         return;
     }
 
-    // ---------- NORMAL MESSAGE ----------
+    // NORMAL MESSAGE
     users[data.sender] = Date.now();
 
     if (data.sender !== currentAlias) {
         playAimSound();
     }
 
-    const row = document.createElement("div");
     const time = data.timestamp || "--:--";
 
+    const row = document.createElement("div");
     row.innerHTML =
-        `<span class="${data.sender===currentAlias?"my-tag":"user-tag"}">
+        `<span style="color:${data.sender===currentAlias?"#00ffff":"#ff00ff"}">
         &lt;${data.sender}&gt;</span>
         <span style="color:#00ff00;"> [${time}] </span>
-        <span class="text-white">${data.text}</span>`;
+        <span style="color:#fff;">${data.text}</span>`;
 
     chatLog.appendChild(row);
     chatLog.scrollTop = chatLog.scrollHeight;
@@ -203,23 +97,9 @@ function sendMsg() {
     const text = chatInput.value.trim();
     if (!text) return;
 
-    // ---------- /nick FIXED ----------
-    if (text.startsWith("/nick ")) {
-        const newName = text.replace("/nick ","").trim();
-        if (!newName) return;
-
-        client.publish(topic, JSON.stringify({
-            type:"rename",
-            oldName: currentAlias,
-            sender: newName
-        }));
-
-        system(`${currentAlias} is now known as ${newName}`);
-
-        delete users[currentAlias];   // REMOVE OLD
-        currentAlias = newName;       // UPDATE NAME
-        users[currentAlias] = Date.now();
-
+    if (text === "/clear") {
+        chatLog.innerHTML = "";
+        system("Chat cleared");
         chatInput.value = "";
         return;
     }
@@ -237,12 +117,37 @@ function sendMsg() {
     chatInput.value = "";
 }
 
+// ---------- TYPING EMITTER ----------
+let typingTimeout;
+
+chatInput.addEventListener("input", () => {
+    client.publish(topic, JSON.stringify({
+        type:"typing",
+        sender:currentAlias
+    }));
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {}, 1000);
+});
+
+// ---------- TYPING DISPLAY ----------
+setInterval(() => {
+    const now = Date.now();
+
+    const active = Object.keys(typingUsers).filter(u =>
+        now - typingUsers[u] < 2000 && u !== currentAlias
+    );
+
+    if (active.length > 0) {
+        typingBox.textContent = active.join(", ") + " is typing...";
+    } else {
+        typingBox.textContent = "";
+    }
+}, 500);
+
+// ---------- EVENTS ----------
 sendBtn.onclick = sendMsg;
 
 chatInput.addEventListener("keypress", e=>{
-    if (e.key==="Enter") sendMsg();
+    if (e.key === "Enter") sendMsg();
 });
-</script>
-
-</body>
-</html>
