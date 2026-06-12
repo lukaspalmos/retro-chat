@@ -6,78 +6,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    background:#000;
-    color:#0f0;
-    font-family:Courier New;
-    margin:0;
-    padding:15px;
+body{
+background:#000;
+color:#0f0;
+font-family:Courier New;
+margin:0;
+padding:15px;
 }
 
-.chat-window {
-    max-width:900px;
-    margin:auto;
-    background:#c0c0c0;
-    border:3px outset #888;
+.chat-window{
+max-width:900px;
+margin:auto;
+background:#c0c0c0;
+border:3px outset #888;
 }
 
-.title-bar {
-    background:linear-gradient(90deg,#000080,#0080ff);
-    color:#fff;
-    padding:6px;
-    font-weight:bold;
+.title-bar{
+background:linear-gradient(90deg,#000080,#0080ff);
+color:#fff;
+padding:6px;
+font-weight:bold;
 }
 
-.workspace { display:flex; gap:10px; padding:10px; }
+.workspace{display:flex;gap:10px;padding:10px;}
 
-.chat-log {
-    flex:3;
-    height:340px;
-    background:#000;
-    border:3px inset #888;
-    overflow-y:auto;
-    padding:8px;
+.chat-log{
+flex:3;
+height:340px;
+background:#000;
+border:3px inset #888;
+overflow-y:auto;
+padding:8px;
 }
 
-.user-list {
-    flex:1;
-    background:#000;
-    border:3px inset #888;
-    color:#0ff;
-    padding:8px;
-    font-size:13px;
+.user-list{
+flex:1;
+background:#000;
+border:3px inset #888;
+color:#0ff;
+padding:8px;
+font-size:13px;
 }
 
-.input-bar {
-    display:flex;
-    gap:5px;
-    padding:10px;
-    background:#c0c0c0;
-    flex-wrap:wrap;
+.input-bar{
+display:flex;
+gap:5px;
+padding:10px;
+background:#c0c0c0;
 }
 
-.input-bar input {
-    flex:1;
-    padding:6px;
+.input-bar input{
+flex:1;
+padding:6px;
 }
 
-.msg { color:#fff; }
-.sys { color:yellow; }
-
-/* reply box */
-#replyBox {
-    display:none;
-    background:#111;
-    color:#0ff;
-    padding:5px;
-    margin-bottom:5px;
-    border-left:4px solid #0ff;
-    font-size:12px;
-}
-
-button {
-    cursor:pointer;
-}
+.sys{color:yellow;}
+button{cursor:pointer;font-size:11px;margin-left:6px;}
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -97,8 +81,6 @@ button {
 </div>
 </div>
 
-<div id="replyBox"></div>
-
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
@@ -110,144 +92,191 @@ button {
 <script>
 
 // ================= USER =================
+const userId = crypto.randomUUID();
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
 // ================= UI =================
-const chatLog = document.getElementById("chatLog");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const clearBtn = document.getElementById("clearBtn");
-const replyBox = document.getElementById("replyBox");
-const userListBox = document.getElementById("userListBox");
+const chatLog=document.getElementById("chatLog");
+const chatInput=document.getElementById("chatInput");
+const sendBtn=document.getElementById("sendBtn");
+const clearBtn=document.getElementById("clearBtn");
+const userListBox=document.getElementById("userListBox");
 
 // ================= MQTT =================
-const topic = "luke_retro_global_open_lobby";
-const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+const topic="luke_retro_global_open_lobby";
+const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ================= DATA =================
+// ================= USERS (FIXED STRUCTURE) =================
 const users = {};
-let replyTarget = null;
 
-// ================= SYSTEM =================
-function sys(t){
-const d = document.createElement("div");
-d.style.color = "yellow";
-d.innerHTML = "*** " + t;
-chatLog.appendChild(d);
-}
+// ================= SOUND =================
+const notif=new Audio("aim-notif.mp3");
 
-// ================= ONLINE USERS (FIXED) =================
-function updateUsers(){
-const now = Date.now();
-userListBox.innerHTML = "";
+// ================= ONLINE USERS RENDER =================
+function renderUsers(){
+userListBox.innerHTML="";
 
-Object.keys(users).forEach(u=>{
-if(now - users[u] < 60000){
-const div = document.createElement("div");
-div.textContent = "• " + u;
+const now=Date.now();
+
+Object.values(users).forEach(u=>{
+if(now - u.lastSeen < 60000){
+const div=document.createElement("div");
+div.textContent="• "+u.name;
 userListBox.appendChild(div);
 }
 });
+}
+
+// periodic cleanup (IMPORTANT FIX)
+setInterval(renderUsers, 3000);
+
+// ================= SYSTEM =================
+function sys(t){
+const d=document.createElement("div");
+d.className="sys";
+d.textContent="*** "+t;
+chatLog.appendChild(d);
+chatLog.scrollTop=chatLog.scrollHeight;
 }
 
 // ================= CONNECT =================
 client.on("connect",()=>{
 client.subscribe(topic);
 
-client.publish(topic, JSON.stringify({
+client.publish(topic,JSON.stringify({
 type:"join",
-sender:currentAlias
+id:userId,
+name:currentAlias
 }));
 });
 
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
-const d = JSON.parse(p.toString());
+const d=JSON.parse(p.toString());
 
-// JOIN
-if(d.type === "join"){
-users[d.sender] = Date.now();
-sys(d.sender + " joined");
-updateUsers();
+// JOIN EVENT
+if(d.type==="join"){
+if(!d.id || !d.name) return;
+
+users[d.id]={
+name:d.name,
+lastSeen:Date.now()
+};
+
+renderUsers();
+sys(d.name+" joined");
 return;
 }
 
-// CHAT MESSAGE
-if(d.text){
-users[d.sender] = Date.now();
-updateUsers();
+// CHAT EVENT
+if(!d.text) return;
 
-// message display
-const row = document.createElement("div");
+// ALWAYS update sender presence (FIXED)
+const uid = d.id || d.sender;
 
-let replyHTML = "";
-if(d.reply){
-replyHTML =
-`<div style="color:#0ff;font-size:11px;border-left:3px solid #0ff;padding-left:5px;margin-bottom:3px;">
-↳ reply to <b>${d.reply.user}</b>: ${d.reply.text}
-</div>`;
+if(uid){
+users[uid]={
+name:d.sender,
+lastSeen:Date.now()
+};
 }
 
-row.innerHTML =
-replyHTML +
-`<b style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
-&lt;${d.sender}&gt;</b>
- <span style="color:#0f0">[${d.timestamp}]</span>
- <span style="color:#fff">${d.text}</span>
+renderUsers();
 
- <button onclick="setReply('${d.sender}','${d.text.replace(/'/g,"")}')"
- style="margin-left:10px;font-size:10px;">Reply</button>`;
+// sound
+if(d.sender !== currentAlias){
+notif.currentTime=0;
+notif.play().catch(()=>{});
+}
+
+// build message (FULL DOM SAFE)
+const row=document.createElement("div");
+
+const header=document.createElement("span");
+header.style.color = d.sender===currentAlias ? "#0ff" : "#f0f";
+header.textContent = `<${d.sender}> `;
+
+const time=document.createElement("span");
+time.style.color="#0f0";
+time.textContent=` [${d.timestamp}] `;
+
+const text=document.createElement("span");
+text.style.color="#fff";
+text.textContent=" "+d.text;
+
+// ALWAYS VISIBLE REPLY BUTTON (FIXED)
+const replyBtn=document.createElement("button");
+replyBtn.textContent="Reply";
+
+replyBtn.onclick=()=>{
+sys("replying to "+d.sender+": "+d.text);
+};
+
+// assemble
+row.appendChild(header);
+row.appendChild(time);
+row.appendChild(text);
+row.appendChild(replyBtn);
 
 chatLog.appendChild(row);
-chatLog.scrollTop = chatLog.scrollHeight;
-}
+chatLog.scrollTop=chatLog.scrollHeight;
 });
-
-// ================= REPLY SYSTEM =================
-window.setReply = function(user,text){
-replyTarget = { user, text };
-replyBox.style.display = "block";
-replyBox.innerHTML = `Replying to <b>${user}</b>: "${text}"`;
-};
 
 // ================= SEND =================
 function send(){
-let text = chatInput.value.trim();
+let text=chatInput.value.trim();
 if(!text) return;
 
-// /clear FIXED
-if(text === "/clear"){
-chatLog.innerHTML = "";
-sys("chat cleared");
-chatInput.value = "";
+// nick
+if(text.startsWith("/nick ")){
+currentAlias=text.replace("/nick ","");
+
+client.publish(topic,JSON.stringify({
+type:"join",
+id:userId,
+name:currentAlias
+}));
+
+sys("you are now "+currentAlias);
+chatInput.value="";
 return;
 }
 
-const payload = {
-sender: currentAlias,
-text,
-timestamp: new Date().toLocaleTimeString([],{
+// clear
+if(text==="/clear"){
+chatLog.innerHTML="";
+sys("chat cleared");
+chatInput.value="";
+return;
+}
+
+client.publish(topic,JSON.stringify({
+id:userId,
+sender:currentAlias,
+text:text,
+timestamp:new Date().toLocaleTimeString([],{
 hour:"numeric",
 minute:"2-digit"
 })
+}));
+
+chatInput.value="";
+}
+
+// ================= EVENTS =================
+sendBtn.onclick=send;
+
+chatInput.addEventListener("keydown",(e)=>{
+if(e.key==="Enter"){
+e.preventDefault();
+send();
+}
+});
+
+clearBtn.onclick=()=>{
+chatLog.innerHTML="";
+sys("chat cleared");
 };
-
-if(replyTarget){
-payload.reply = replyTarget;
-replyTarget = null;
-replyBox.style.display = "none";
-}
-
-client.publish(topic, JSON.stringify(payload));
-
-chatInput.value = "";
-}
-
-// ================= CLEAR BUTTON =================
-clearBtn.onclick = sendBtn.onclick = send;
-
-// ================= USER TRACKING LOOP =================
-setInterval(updateUsers, 5000);
 
 </script>
 
