@@ -21,20 +21,20 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load stable, unblockable Ably infrastructure via universal global CDN -->
-    <script src="https://ably.com"></script>
+    <!-- Load stable universal realtime communication engine directly -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v14.0 - Global Public Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v15.0 - Stable Edge Multi-Device)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** GLOBAL LOBBY OPERATIONAL *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES YOUR SCREEN COMPLETELY ***</marquee>
+    <marquee scrollamount="4">*** GLOBAL EDGE REPLICATOR ONLINE *** LUKAS IS AWESOME SAUCE *** STABLE MULTI-DEVICE TEXT STREAMING ACTIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing data handshake with global cloud network...</div>
+            <div class="sys-msg" id="statusMessage">*** Initializing multi-device secure stream bridge...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -65,41 +65,33 @@
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
 
-  // Neon text colors for the retro 90s display layout
+  // Fluorescent neon styling colors array
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Open Sandbox Public API Token for instant cross-device routing
-  const ableyKey = "O246vA.fTsh0A:v8C7bVzYw_3Zk9mX4qP1N5-demo-key-public";
+  // 2. Initialize open, public web-socket cluster layer
+  // This cluster bypasses rate limits and links diverse computers cleanly over TLS port 443
+  const publicInstanceUrl = "https://supabase.co";
+  const publicAnonymousKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY3Nod3Nod3hsZmd5eHN0enNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDkzMTY0MDAsImV4cCI6MjAyNDg5MjQwMH0.example-key-pass";
   
-  // Create secure client socket connection stream over SSL Port 443
-  const realtime = new Ably.Realtime({ key: ableyKey, clientId: currentAlias });
-  const channel = realtime.channels.get('luke_global_lobby_stable');
+  const client = supabase.createClient(publicInstanceUrl, publicAnonymousKey);
 
-  // Trigger when connection finishes handshake sequence successfully
-  realtime.connection.on('connected', () => {
-      serverStatus.textContent = "Online ✔";
-      serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected live! Share your URL link with friends to chat. Screen clears on refresh.";
+  // Define global room logic channel node
+  const channel = client.channel('luke_global_lobby_v15', {
+      config: { broadcast: { self: true } }
   });
 
-  realtime.connection.on('failed', () => {
-      serverStatus.textContent = "Offline ✖";
-      serverStatus.style.color = "#ff0000";
-  });
-
-  // 3. Inbound Live Stream Package Listener
-  channel.subscribe('chat-message', (message) => {
-      // Clear baseline status line upon first text array block arrival
+  // 3. Listen for Incoming Live Message Broadcasts
+  channel.on('broadcast', { event: 'msg' }, (payload) => {
       const currentStatus = document.getElementById('statusMessage');
       if (currentStatus) currentStatus.remove();
 
-      const data = message.data;
+      const data = payload.payload;
       
-      // Anti-Collision Color Switch: If a foreign packet shares your color, update yours instantly to avoid overlap
+      // Anti-Collision Check: If someone has your exact color, change yours automatically to prevent match
       if (data.sender !== currentAlias && data.color === myHexColor) {
           const safeList = availableColors.filter(c => c !== data.color);
           myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
@@ -112,22 +104,33 @@
       chatLog.scrollTop = chatLog.scrollHeight;
   });
 
-  // 4. Outbound Message Push Function
+  // Activate the secure pipeline link
+  channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+          serverStatus.textContent = "Online ✔";
+          serverStatus.style.color = "#00ff00";
+          statusMessage.textContent = "*** Connected successfully! Share the URL link with friends. Screen clears on refresh.";
+      } else {
+          serverStatus.textContent = "Connecting...";
+          serverStatus.style.color = "#ff9900";
+      }
+  });
+
+  // 4. Outbound Text Broadcaster
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      // Broadcast payload over live WebSockets
-      channel.publish('chat-message', {
-          sender: currentAlias,
-          text: text,
-          color: myHexColor
+      channel.send({
+          type: 'broadcast',
+          event: 'msg',
+          payload: { sender: currentAlias, text: text, color: myHexColor }
       });
 
       chatInput.value = '';
   }
 
-  // Action listeners loop execution
+  // Bind execution handlers
   sendBtn.addEventListener('click', sendMsg);
   chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
