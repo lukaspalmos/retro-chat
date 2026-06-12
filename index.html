@@ -5,97 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
     <style>
-        body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
-        .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
-        .title-bar { background: linear-gradient(90deg, #000080, #0080fe); color: white; padding: 4px 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .title-controls span { background-color: #c0c0c0; color: black; border: 2px outset #fff; padding: 0 5px; font-size: 11px; cursor: pointer; margin-left: 2px; }
-        marquee { background-color: #ff00ff; color: #ffffff; font-weight: bold; padding: 3px; font-size: 12px; border-bottom: 2px inset #fff; }
-        .workspace { display: flex; background-color: #c0c0c0; padding: 10px; gap: 10px; }
-        .chat-log { flex: 3; height: 300px; background-color: #000; color: #00ff00; border: 3px inset #808080; padding: 8px; overflow-y: scroll; font-size: 13px; line-height: 1.4; }
-        .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
-        .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
-        .sys-msg { color: #ffff00; }
-        .user-tag { color: #ff00ff; font-weight: bold; }
-        .my-tag { color: #00ffff; font-weight: bold; }
-        .text-white { color: #ffffff; }
-        .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
-        .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
-        .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
-        .btn-95:active { border: 2px inset #ffffff; }
+        body { 
+            background-color: #000000; 
+            color: #00FF00; 
+            font-family: "Courier New", Courier, monospace; 
+            padding: 15px; 
+            margin: 0; 
+        }
+        /* Retro Windows System Border Style */
+        .chat-window { 
+            border: 3px outset #808080; 
+            background-color: #c0c0c0; 
+            color: #000; 
+            width: 100%; 
+            max-width: 750px; 
+            margin: 0 auto; 
+            box-shadow: 5px 5px 0px #555555; 
+        }
+        /* Title Bar */
+        .title-bar { 
+            background: linear-gradient(90deg, #000080, #0080fe); 
+            color: white; 
+            padding: 4px 8px; 
+            font-weight: bold; 
+            font-size: 14px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .title-controls span { 
+            background-color: #c0c0c0; 
+            color: black; 
+            border: 2px outset #fff; 
+            padding: 0 5px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            margin-left: 2px; 
+        }
+        /* System Marquee Warning */
+        marquee { 
+            background-color: #ff00ff; 
+            color: #ffffff; 
+            font-weight: bold; 
+            padding: 3px; 
+            font-size: 12px; 
+            border-bottom: 2px inset #fff; 
+        }
+        /* Main Workspace holding the hidden P2P embed */
+        .workspace { 
+            background-color: #c0c0c0; 
+            padding: 10px; 
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 3px inset #808080;
+            background: #000;
+        }
+        /* Retro Animated Counter at bottom */
+        .visitor-counter { 
+            text-align: center; 
+            margin-top: 15px; 
+            font-size: 12px; 
+            color: #888; 
+        }
+        .counter-badge { 
+            background: #222; 
+            color: #ff0000; 
+            padding: 2px 6px; 
+            border: 1px solid #444; 
+            font-weight: bold; 
+            letter-spacing: 2px; 
+        }
     </style>
 </head>
 <body>
 
 <div class="chat-window">
+    <!-- 90s OS Window Title Bar -->
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v9.7 - Stable Sync)</div>
-        <div class="title-controls"><span>_</span><span>X</span></div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Global Sync)</div>
+        <div class="title-controls">
+            <span>_</span>
+            <span>X</span>
+        </div>
     </div>
-    <marquee scrollamount="4">*** DECENTRALIZED ENGINE STABLE *** OPEN A SECOND WINDOW TO TALK LIVE *** REFRESHING WIPES EVERYTHING ***</marquee>
+
+    <!-- Retro Scrolling Banner -->
+    <marquee scrollamount="4">*** CHATROOM IS NOW LIVE INTERNATIONALLY *** LUKAS IS AWESOME *** REFRESHING WIPES EVERYTHING ***</marquee>
+
+    <!-- Main Chat Workspace -->
     <div class="workspace">
-        <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Room live! Open a second tab side-by-side to chat live...</div>
-        </div>
-        <div class="user-list">
-            <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
-            <br>
-            <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
-            <div id="serverStatus" style="color: #00ff00; font-size: 11px;">Online ✔</div>
-        </div>
-    </div>
-    <div class="input-bar">
-        <input type="text" id="chatInput" placeholder="Type text here..." autocomplete="off" maxlength="150">
-        <button id="sendBtn" class="btn-95">SEND</button>
+        <!-- Secure, throwaway, non-storing global P2P frame that wipes data on reload -->
+        <iframe 
+            src="https://chitchatter.im" 
+            allow="microphone; camera; display-capture">
+        </iframe>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">107552</span></div>
 
-<script>
-  // Clean variables with absolutely no external scripts required to execute
-  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+<!-- Classic Web Counter -->
+<div class="visitor-counter">
+    YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109254</span>
+</div>
 
-  const chatLog = document.getElementById('chatLog');
-  const chatInput = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const statusMessage = document.getElementById('statusMessage');
-
-  // Secure browser native pipeline (completely avoids cross-origin domain blockages)
-  const connectionChannel = new BroadcastChannel('luke_final_stable_lobby');
-
-  function sendMsg() {
-      const text = chatInput.value.trim();
-      if (text === '') return;
-
-      const payload = { sender: currentAlias, text: text };
-
-      // 1. Render onto your own screen panel instantly
-      appendLine(payload, 'my-tag');
-
-      // 2. Cross-stream the payload package to your secondary window frame
-      connectionChannel.postMessage(payload);
-
-      chatInput.value = '';
-  }
-
-  // Handle incoming data feeds arriving from your secondary window pane
-  connectionChannel.onmessage = function (event) {
-      appendLine(event.data, 'user-tag');
-  };
-
-  function appendLine(data, tagClass) {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
-
-      const row = document.createElement('div');
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  sendBtn.addEventListener('click', sendMsg);
-  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
-</script>
 </body>
 </html>
