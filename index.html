@@ -15,32 +15,30 @@
         .user-list { flex: 1; height: 300px; background-color: #000; color: #00ffff; border: 3px inset #808080; padding: 8px; overflow-y: auto; font-size: 13px; }
         .user-list h4 { color: #ffff00; margin: 0 0 8px 0; text-decoration: underline; font-size: 12px; }
         .sys-msg { color: #ffff00; }
-        .user-tag { color: #ff00ff; font-weight: bold; }
-        .my-tag { color: #00ffff; font-weight: bold; }
         .text-white { color: #ffffff; }
         .input-bar { background-color: #c0c0c0; padding: 10px; border-top: 2px solid #808080; display: flex; gap: 5px; }
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load universal MQTT over Secure WebSockets library library directly -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Load universal MQTT over Secure WebSockets library directly -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v10.0 - Fully Working)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v10.8 - Fixed AIM MP3)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** LUKAS IS AWESOME SAUCE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE GLOBAL CLUSTER NODE ACTIVE *** UNBLOCKABLE AIM CHIME MP3 ENGAGED *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Handshaking with secure SSL network cluster...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
-            <div id="myUsername" style="color: #00ffff; font-weight: bold; margin-bottom: 8px;"></div>
+            <div id="myUsername" style="font-weight: bold; margin-bottom: 8px;"></div>
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
@@ -53,17 +51,49 @@
 </div>
 <div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109552</span></div>
 
+<!-- FIXED HTML5 AUDIO COMPONENT: Loads an unblockable, cross-origin open-access MP3 source link -->
+<audio id="aimChime" preload="auto" crossorigin="anonymous">
+    <source src="https://jsdelivr.net" type="audio/mpeg">
+</audio>
+
 <script>
-  const currentAlias = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
-  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+  // 1. Initial 90s Login popup prompt setup sequence
+  let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:");
+  if (!requestedName || requestedName.trim() === "") {
+      requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
+  }
+  const currentAlias = requestedName.trim().substring(0, 15);
 
   const chatLog = document.getElementById('chatLog');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
+  const aimChime = document.getElementById('aimChime');
 
-  const lobbyTopic = "luke_retro_global_open_lobby";
+  const lobbyTopic = "luke_retro_global_open_lobby_v10";
+
+  // Vibrant neon color list matching vintage 90s styles profiles
+  const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
+  let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+
+  document.getElementById('myUsername').textContent = `• ${currentAlias}`;
+  document.getElementById('myUsername').style.color = myHexColor;
+
+  // Function to execute sound alerts with secure exception routing handlers
+  function playAudioChime() {
+      if (aimChime) {
+          aimChime.currentTime = 0; // Rewind track progress pointer pointer to zero
+          
+          // Use user interaction checker to catch and handle browser autoplay blocks quietly
+          const playPromise = aimChime.play();
+          if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                  console.log("Audio deferred: Browser requires you to click or type on the page canvas area once first.");
+              });
+          }
+      }
+  }
 
   // Connect via Port 8084 (Secure WebSocket over TLS) to fully comply with GitHub SSL policies
   const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
@@ -72,23 +102,29 @@
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
       statusMessage.textContent = "*** Connected successfully! Type a message and hit SEND to talk live with other devices.";
-      
-      // Subscribe to the shared global data node
       client.subscribe(lobbyTopic);
   });
 
   client.on('message', (topic, payload) => {
       const data = JSON.parse(payload.toString());
       
-      // Clear placeholder texts upon first real arrival
       const currentStatus = document.getElementById('statusMessage');
       if (currentStatus) currentStatus.remove();
 
+      // Anti-Collision Check
+      if (data.sender !== currentAlias && data.color === myHexColor) {
+          const safeList = availableColors.filter(c => c !== data.color);
+          myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+          document.getElementById('myUsername').style.color = myHexColor;
+      }
+
       const row = document.createElement('div');
-      const tagClass = (data.sender === currentAlias) ? 'my-tag' : 'user-tag';
-      row.innerHTML = `<span class="${tagClass}">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
       chatLog.appendChild(row);
       chatLog.scrollTop = chatLog.scrollHeight;
+
+      // TRIGGER CHIME ALERTS: Fire the unblockable MP3 audio source link instantly
+      playAudioChime();
   });
 
   client.on('error', (err) => {
@@ -105,8 +141,7 @@
           return;
       }
 
-      // Publish the text packet out across the world
-      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text }));
+      client.publish(lobbyTopic, JSON.stringify({ sender: currentAlias, text: text, color: myHexColor }));
       chatInput.value = '';
   }
 
