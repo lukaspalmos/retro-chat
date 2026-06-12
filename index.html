@@ -62,15 +62,20 @@ padding:6px;
 
 .sys{color:yellow;}
 
-.reply-preview{
+.replyBox{
 background:#111;
 border-left:4px solid yellow;
 color:yellow;
-padding:4px 6px;
+padding:4px;
 font-size:11px;
 margin-bottom:4px;
 }
-button{cursor:pointer;font-size:11px;margin-left:6px;}
+
+.msgBtn{
+font-size:11px;
+margin-left:6px;
+cursor:pointer;
+}
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -93,7 +98,9 @@ button{cursor:pointer;font-size:11px;margin-left:6px;}
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
+<button id="imgBtn">Image</button>
 <button id="clearBtn">Clear</button>
+<input type="file" id="imgUpload" hidden>
 </div>
 
 </div>
@@ -104,16 +111,20 @@ button{cursor:pointer;font-size:11px;margin-left:6px;}
 const userId = crypto.randomUUID();
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
-// ================= STATE =================
+// ================= UI =================
 const chatLog=document.getElementById("chatLog");
 const chatInput=document.getElementById("chatInput");
 const sendBtn=document.getElementById("sendBtn");
 const clearBtn=document.getElementById("clearBtn");
+const imgBtn=document.getElementById("imgBtn");
+const imgUpload=document.getElementById("imgUpload");
 const userListBox=document.getElementById("userListBox");
 
+// ================= MQTT =================
 const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
+// ================= STATE =================
 const users={};
 let replyTarget=null;
 
@@ -126,7 +137,7 @@ userListBox.innerHTML="";
 const now=Date.now();
 
 Object.values(users).forEach(u=>{
-if(now - u.lastSeen < 60000){
+if(now-u.lastSeen<60000){
 const d=document.createElement("div");
 d.textContent="• "+u.name;
 userListBox.appendChild(d);
@@ -166,7 +177,7 @@ return;
 
 if(!d.text) return;
 
-users[d.id || d.sender]={name:d.sender,lastSeen:Date.now()};
+users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
 if(d.sender!==currentAlias){
@@ -174,13 +185,13 @@ notif.currentTime=0;
 notif.play().catch(()=>{});
 }
 
-// ================= MESSAGE BLOCK =================
+// ================= MESSAGE =================
 const row=document.createElement("div");
 
-// 🔥 REPLY BLOCK (IMPORTANT FIX)
+// 🔁 REPLY BLOCK (NOW REAL ID BASED)
 if(d.reply){
 const r=document.createElement("div");
-r.className="reply-preview";
+r.className="replyBox";
 r.textContent=`↳ ${d.reply.user}: ${d.reply.text}`;
 row.appendChild(r);
 }
@@ -195,23 +206,36 @@ const time=document.createElement("span");
 time.style.color="#0f0";
 time.textContent=` [${d.timestamp}] `;
 
-// TEXT
-const text=document.createElement("span");
-text.style.color="#fff";
-text.textContent=" "+d.text;
+// CONTENT (IMAGE FIXED HERE)
+const content=document.createElement("span");
 
-// REPLY BUTTON (VISIBLE ALWAYS)
+if(d.type==="image"){
+const img=document.createElement("img");
+img.src=d.text;
+img.style.maxWidth="200px";
+img.style.border="2px solid #0f0";
+content.appendChild(img);
+} else {
+content.textContent=" "+d.text;
+}
+
+// REPLY BUTTON (ALWAYS EXISTS)
 const btn=document.createElement("button");
+btn.className="msgBtn";
 btn.textContent="Reply";
 btn.onclick=()=>{
-replyTarget={user:d.sender,text:d.text};
-sys("reply set to "+d.sender);
+replyTarget={
+id:d.msgId,
+user:d.sender,
+text:d.text
+};
+sys("replying to "+d.sender);
 };
 
-// ASSEMBLE
+// BUILD
 row.appendChild(header);
 row.appendChild(time);
-row.appendChild(text);
+row.appendChild(content);
 row.appendChild(btn);
 
 chatLog.appendChild(row);
@@ -223,6 +247,7 @@ function send(){
 let text=chatInput.value.trim();
 if(!text) return;
 
+// CLEAR
 if(text==="/clear"){
 chatLog.innerHTML="";
 sys("chat cleared");
@@ -230,6 +255,7 @@ chatInput.value="";
 return;
 }
 
+// NICK
 if(text.startsWith("/nick ")){
 currentAlias=text.replace("/nick ","");
 
@@ -244,7 +270,11 @@ chatInput.value="";
 return;
 }
 
+// MESSAGE ID (CRITICAL FIX)
+const msgId=crypto.randomUUID();
+
 const payload={
+msgId,
 id:userId,
 sender:currentAlias,
 text,
@@ -263,10 +293,41 @@ client.publish(topic,JSON.stringify(payload));
 chatInput.value="";
 }
 
+// ================= IMAGE UPLOAD =================
+imgBtn.onclick=()=>imgUpload.click();
+
+imgUpload.onchange=async e=>{
+const file=e.target.files[0];
+if(!file) return;
+
+const form=new FormData();
+form.append("file",file);
+form.append("upload_preset","chat_upload");
+
+const res=await fetch(
+"https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",
+{method:"POST",body:form}
+);
+
+const data=await res.json();
+
+client.publish(topic,JSON.stringify({
+msgId:crypto.randomUUID(),
+id:userId,
+sender:currentAlias,
+type:"image",
+text:data.secure_url,
+timestamp:new Date().toLocaleTimeString([],{
+hour:"numeric",
+minute:"2-digit"
+})
+}));
+};
+
 // ================= EVENTS =================
 sendBtn.onclick=send;
 
-chatInput.addEventListener("keydown",(e)=>{
+chatInput.addEventListener("keydown",e=>{
 if(e.key==="Enter"){
 e.preventDefault();
 send();
