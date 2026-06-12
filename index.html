@@ -122,7 +122,7 @@
       chatInput.value = '';
   }
 
-  // Wiping page drops connection memory entirely, satisfying your auto-clear rule [INDEX]
+  // Wiping page drops connection memory entirely, satisfying your auto-clear rule
   window.addEventListener('beforeunload', () => {
       if (drone) drone.close();
   });
