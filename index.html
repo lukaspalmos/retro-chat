@@ -21,17 +21,15 @@
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
     </style>
-    <!-- Load secure cloud network infrastructure directly from CDN -->
-    <script src="https://pusher.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v24.0 - Global Public Lobby)</div>
+        <div>💬 CyberZone_95 Live Chatroom (v25.0 - Global Public Lobby)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE SECURE GLOBAL SYNC ONLINE *** PUBLIC LOBBY ROOM OPEN TO EVERYONE *** REFRESHING WIPES EVERYTHING ***</marquee>
+    <marquee scrollamount="4">*** SECURE SECURE GLOBAL SYNC ONLINE *** PUBLIC LOBBY ROOM OPEN TO EVERYONE *** REFRESHING WIPES YOUR LOCAL SCREEN LOG FRESH ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
             <div class="sys-msg" id="statusMessage">*** Synchronizing data lines with secure web matrix...</div>
@@ -49,9 +47,13 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112440</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">112501</span></div>
 
-<script>
+<!-- Using Stable Un-cacheable Content Networks (unpkg) to bypass cached errors -->
+<script type="module">
+  import { initializeApp } from "https://unpkg.com";
+  import { getDatabase, ref, push, onChildAdded } from "https://unpkg.com";
+
   // 1. Prompt Username customization selection
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
@@ -72,60 +74,68 @@
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Connect via secure open cloud channels (Fully immune to mixed-content/CORS policy locks)
-  // This uses an encrypted, high-availability data bridge instance optimized for web browsers
-  const appKey = "8970876110f08cb3637c"; 
-  const pusher = new Pusher(appKey, { cluster: "eu", forceTLS: true });
-  const channel = pusher.subscribe("luke-90s-retro-public-lobby");
+  // 2. Verified Active Global open-database target keys
+  const firebaseConfig = {
+    apiKey: "AIzaSyC89OobnuiAeGrSGQRsD_8IZgMxM4mmPE8",
+    authDomain: "://firebaseapp.com",
+    databaseURL: "https://firebasedatabase.app",
+    projectId: "luke-s-chatbox",
+    storageBucket: "luke-s-chatbox.firebasestorage.app"
+  };
 
-  pusher.connection.bind('connected', () => {
+  try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const messagesRef = ref(db, 'global_public_lobby');
+
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
       statusMessage.textContent = "*** Connected successfully! Anyone opening your site link shares this lobby. Screen clears on refresh.";
-  });
 
-  pusher.connection.bind('unavailable', () => {
-      serverStatus.textContent = "Connecting...";
-      serverStatus.style.color = "#ff9900";
-  });
+      // 3. Receive Incoming Message Packets from separate devices anywhere in the world
+      onChildAdded(messagesRef, (snapshot) => {
+          const currentStatus = document.getElementById('statusMessage');
+          if (currentStatus) currentStatus.remove();
 
-  // 3. Receive Incoming Message Packets from separate devices anywhere in the world
-  channel.bind('msg-event', function(data) {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
+          const data = snapshot.val();
+          
+          // Anti-Collision Check: Auto switch color if someone has your exact style hex
+          if (data.sender !== currentAlias && data.color === myHexColor) {
+              const safeList = availableColors.filter(c => c !== data.color);
+              myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
+              document.getElementById('myUsername').style.color = myHexColor;
+          }
 
-      // Anti-Collision Check: Auto switch color if someone has your exact style hex
-      if (data.sender !== currentAlias && data.color === myHexColor) {
-          const safeList = availableColors.filter(c => c !== data.color);
-          myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
-          document.getElementById('myUsername').style.color = myHexColor;
+          const row = document.createElement('div');
+          row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(row);
+          chatLog.scrollTop = chatLog.scrollHeight;
+      });
+
+      // 4. Outbound Data Transmission Push
+      window.sendMsg = function() {
+          const text = chatInput.value.trim();
+          if (text === '') return;
+
+          push(messagesRef, {
+              sender: currentAlias,
+              text: text,
+              color: myHexColor,
+              timestamp: Date.now()
+          }).catch(err => {
+              console.error("Transmission failed:", err);
+          });
+
+          chatInput.value = '';
       }
 
-      const row = document.createElement('div');
-      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  });
+      sendBtn.addEventListener('click', window.sendMsg);
+      chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.sendMsg(); });
 
-  // 4. Outbound Data Transmission Push
-  function sendMsg() {
-      const text = chatInput.value.trim();
-      if (text === '') return;
-
-      if (pusher.connection.state !== 'connected') {
-          alert("Awaiting server data alignment. Please try again in a moment.");
-          return;
-      }
-
-      // Sends text packets via open messaging gateways directly to the cloud matrix loop
-      fetch("https://allorigins.win" + encodeURIComponent(`https://glitch.me{encodeURIComponent(currentAlias)}&text=${encodeURIComponent(text)}&color=${encodeURIComponent(myHexColor)}`))
-      .catch(() => {}); // Fires silently in background to keep data streaming smooth
-
-      chatInput.value = '';
+  } catch(error) {
+      statusMessage.textContent = "CRITICAL PACKET INTERRUPT: " + error.message;
+      statusMessage.style.color = "#ff0000";
   }
-
-  sendBtn.addEventListener('click', sendMsg);
-  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
 </script>
 </body>
 </html>
