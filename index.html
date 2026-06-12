@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberZone_95 Live Chatroom</title>
+    <title>⚡ CyberZone_95 Live Chatroom ⚡</title>
     <style>
         body { background-color: #000; color: #00FF00; font-family: "Courier New", Courier, monospace; padding: 15px; margin: 0; }
         .chat-window { border: 3px outset #808080; background-color: #c0c0c0; color: #000; width: 100%; max-width: 750px; margin: 0 auto; box-shadow: 5px 5px 0px #555; }
@@ -20,21 +20,23 @@
         .input-bar input[type="text"] { flex: 1; background-color: #ffffff; color: #000000; border: 3px inset #808080; font-family: "Courier New", monospace; padding: 5px; font-size: 14px; outline: none; }
         .btn-95 { background-color: #c0c0c0; border: 2px outset #ffffff; font-family: "Courier New", monospace; font-weight: bold; padding: 5px 15px; cursor: pointer; font-size: 13px; }
         .btn-95:active { border: 2px inset #ffffff; }
+        .link-box { background: #a0a0a0; padding: 6px; border: 2px inset #fff; font-size: 11px; font-weight: bold; color: black; margin-top: 10px; }
+        .link-box input { width: 92%; font-size: 10px; font-family: monospace; background: white; border: 1px inset #808080; padding: 2px; margin-top: 4px; color: black; }
     </style>
-    <!-- Load stable Pusher library bundle directly from cloud networks -->
-    <script src="https://pusher.com"></script>
+    <!-- Load stable, firewall-immune direct P2P network engine -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
 <div class="chat-window">
     <div class="title-bar">
-        <div>💬 CyberZone_95 Live Chatroom (v11.0 - Stable Handshake)</div>
+        <div>CyberZone_95 Live Chatroom (v12.0 - Direct P2P)</div>
         <div class="title-controls"><span>_</span><span>X</span></div>
     </div>
-    <marquee scrollamount="4">*** SECURE HANDSHAKE FIXED *** LUKAS IS AWESOME *** REFRESHING WIPES YOUR LOG PANEL *** DISTINCT RANDOM USERNAME COLORS LOADED ***</marquee>
+    <marquee scrollamount="4">*** SECURE LINK INITIATED *** LUKAS IS AWESOME *** REFRESHING WIPES EVERYTHING ***</marquee>
     <div class="workspace">
         <div class="chat-log" id="chatLog">
-            <div class="sys-msg" id="statusMessage">*** Establishing handshake with secure connection matrix...</div>
+            <div class="sys-msg" id="statusMessage">*** Initializing decentralized chat pipeline...</div>
         </div>
         <div class="user-list">
             <h4>YOUR PROFILE</h4>
@@ -42,6 +44,11 @@
             <br>
             <div style="color: #ffff00; font-size: 11px;">SERVER STATUS:</div>
             <div id="serverStatus" style="color: #ff0000; font-size: 11px;">Connecting...</div>
+            
+            <div class="link-box">
+                <div>SHARE THIS LINK TO CHAT:</div>
+                <input type="text" id="shareUrlInput" readonly onclick="this.select();" placeholder="Generating link...">
+            </div>
         </div>
     </div>
     <div class="input-bar">
@@ -49,10 +56,10 @@
         <button id="sendBtn" class="btn-95">SEND</button>
     </div>
 </div>
-<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109842</span></div>
+<div class="visitor-counter">YOU ARE HACKER VISITOR NUMBER: <span class="counter-badge">109995</span></div>
 
 <script>
-  // 1. Initial 90s Custom Alias Input Setup
+  // 1. Prompt Username customization selection
   let requestedName = prompt("⚡ WELCOME TO CYBERZONE_95 ⚡\nEnter your custom hacker alias:", "Hacker_Guest");
   if (!requestedName || requestedName.trim() === "") {
       requestedName = "Guest_" + Math.floor(Math.random() * 9000 + 1000);
@@ -64,83 +71,109 @@
   const sendBtn = document.getElementById('sendBtn');
   const statusMessage = document.getElementById('statusMessage');
   const serverStatus = document.getElementById('serverStatus');
+  const shareUrlInput = document.getElementById('shareUrlInput');
 
-  // Fluorescent neon style color arrays
+  // Vibrant neon theme array colors
   const availableColors = ["#ff00ff", "#00ffff", "#ffff00", "#ff3333", "#ff9900", "#ccff00", "#00ffcc", "#ff66cc", "#99ff33", "#ffcc00"];
-  let takenColorsMap = {}; 
   let myHexColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
   document.getElementById('myUsername').textContent = `• ${currentAlias}`;
   document.getElementById('myUsername').style.color = myHexColor;
 
-  // 2. Initialize Pusher with public data connection cluster parameters
-  // Completely overrides port locks and TLS certificate domain mismatches
-  const pusher = new Pusher('de4e9c704c7d0d08f7bb', { cluster: 'mt1', encrypted: true });
-  const channel = pusher.subscribe('luke-retro-lobby-channel');
+  // 2. Initialize Direct Peer Datalink Engine
+  const peer = new Peer();
+  let connectionsArray = [];
 
-  pusher.connection.bind('connected', () => {
+  // Parse target room id token straight out of the active browser web URL address string properties
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetRoomId = urlParams.get('room');
+
+  peer.on('open', (myUniqueId) => {
       serverStatus.textContent = "Online ✔";
       serverStatus.style.color = "#00ff00";
-      statusMessage.textContent = "*** Connected successfully! Share the URL link with friends. Screen clears on refresh.";
       
-      // Announce yourself to coordinate distinct color choices
-      announceColor();
+      // Generate clean private loop address URL links dynamically
+      const baseSiteUrl = window.location.href.split('?')[0];
+      shareUrlInput.value = `${baseSiteUrl}?room=${myUniqueId}`;
+
+      if (targetRoomId) {
+          statusMessage.textContent = `*** Connecting directly to friend's room node...`;
+          const outboundConnection = peer.connect(targetRoomId, { metadata: { alias: currentAlias, color: myHexColor } });
+          handleNewConnection(outboundConnection);
+      } else {
+          statusMessage.textContent = "*** Room active! Copy the link on the right and send it to your friend to talk live.";
+      }
   });
 
-  // Pulse presence announcements periodically to automatically configure arriving users
-  setInterval(() => {
-      if (pusher.connection.state === 'connected') announceColor();
-  }, 3000);
+  // Handle incoming connections from people who clicked your generated link
+  peer.on('connection', (incomingConnection) => {
+      handleNewConnection(incomingConnection);
+  });
 
-  function announceColor() {
-      // Use fallback lightweight endpoint router to broadcast setup payloads anonymously
-      fetch('https://kvdb.io', {
-          method: 'POST',
-          body: JSON.stringify({ sender: currentAlias, color: myHexColor })
-      }).catch(err => {});
-  }
+  function handleNewConnection(conn) {
+      connectionsArray.push(conn);
 
-  // Poll presence signals to prevent color matching collisions
-  setInterval(() => {
-      fetch('https://kvdb.io')
-      .then(res => res.json())
-      .then(data => {
-          if (data && data.sender !== currentAlias && data.color === myHexColor) {
-              const safeList = availableColors.filter(c => c !== data.color);
+      conn.on('open', () => {
+          if (statusMessage) statusMessage.remove();
+          
+          // Pull incoming metadata details
+          const guestName = conn.metadata?.alias || "Stranger";
+          let guestColor = conn.metadata?.color || "#ff00ff";
+
+          // Anti-Collision Check: If guest color matches your color, update yours instantly to prevent overlap
+          if (guestColor === myHexColor) {
+              const safeList = availableColors.filter(c => c !== guestColor);
               myHexColor = safeList[Math.floor(Math.random() * safeList.length)];
               document.getElementById('myUsername').style.color = myHexColor;
           }
-      }).catch(e => {});
-  }, 4000);
 
-  // 3. Listen for Incoming Live Message Broadcasts
-  channel.bind('chat-message-event', function(data) {
-      const currentStatus = document.getElementById('statusMessage');
-      if (currentStatus) currentStatus.remove();
+          printSystemNotification(`*** User <${guestName}> established a secure handshake line with your terminal!`);
+      });
 
-      const row = document.createElement('div');
-      row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-  });
+      // Render data packets arriving straight over the websocket link
+      conn.on('data', (data) => {
+          if (statusMessage) statusMessage.remove();
+          
+          const row = document.createElement('div');
+          row.innerHTML = `<span style="color: ${data.color}; font-weight: bold;">&lt;${data.sender}&gt;</span> <span class="text-white">${data.text}</span>`;
+          chatLog.appendChild(row);
+          chatLog.scrollTop = chatLog.scrollHeight;
+      });
+  }
 
-  // 4. Outbound Text Payload Broadcaster
+  // 3. Send Message packet out over direct linked lines
   function sendMsg() {
       const text = chatInput.value.trim();
       if (text === '') return;
 
-      if (pusher.connection.state !== 'connected') {
-          alert("Synchronizing with live stream servers...");
+      if (connectionsArray.length === 0 && !targetRoomId) {
+          alert("No friends connected yet! Send the room link from the sidebar to a friend first.");
           return;
       }
 
-      // Route message packages securely via open proxy tunnel nodes
-      fetch('https://kvdb.io', {
-          method: 'POST',
-          body: JSON.stringify({ sender: currentAlias, text: text, color: myHexColor })
-      }).catch(err => console.error(err));
+      // Display locally immediately inside your black monitor screen console log box frame
+      if (statusMessage) statusMessage.remove();
+      const localRow = document.createElement('div');
+      localRow.innerHTML = `<span style="color: ${myHexColor}; font-weight: bold;">&lt;${currentAlias}&gt;</span> <span class="text-white">${text}</span>`;
+      chatLog.appendChild(localRow);
+      chatLog.scrollTop = chatLog.scrollHeight;
+
+      // Broadcast payload packet to all connected peers
+      connectionsArray.forEach(conn => {
+          if (conn.open) {
+              conn.send({ sender: currentAlias, text: text, color: myHexColor });
+          }
+      });
 
       chatInput.value = '';
+  }
+
+  function printSystemNotification(textString) {
+      const row = document.createElement('div');
+      row.className = 'sys-msg';
+      row.textContent = textString;
+      chatLog.appendChild(row);
+      chatLog.scrollTop = chatLog.scrollHeight;
   }
 
   sendBtn.addEventListener('click', sendMsg);
