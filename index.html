@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CyberZone_95 Live Chatroom</title>
+<title>CyberZone_95 Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -53,7 +53,6 @@ body {
     gap:5px;
     padding:10px;
     background:#c0c0c0;
-    flex-wrap:wrap;
 }
 
 .input-bar input {
@@ -70,31 +69,14 @@ img.chat-img {
     margin-top:5px;
 }
 
-/* ---------- TYPING (UPDATED) ---------- */
+/* typing */
 #typingBox {
-    color:black;              /* requested */
-    font-size:18px;           /* bigger for visibility */
+    color:black;
+    font-size:18px;
     font-weight:bold;
     padding:6px 10px;
     min-height:22px;
 }
-
-/* ---------- EMOJI ---------- */
-#emojiBox {
-    width:100%;
-    background:#000;
-    border:2px inset #888;
-    color:#0ff;
-    font-size:12px;
-    padding:4px;
-    display:none;
-}
-
-.emoji-item {
-    padding:2px;
-    cursor:pointer;
-}
-.emoji-item:hover { background:#111; }
 </style>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -114,11 +96,10 @@ img.chat-img {
 </div>
 </div>
 
-<div id="emojiBox"></div>
 <div id="typingBox"></div>
 
 <div class="input-bar">
-<input id="chatInput" placeholder="Type message... (:sob: :fire: :heart:)">
+<input id="chatInput" placeholder="Type message... (@mentions supported)">
 <button id="sendBtn">Send</button>
 </div>
 
@@ -126,70 +107,107 @@ img.chat-img {
 
 <script>
 
-// ---------- USER ----------
+// ================= USER =================
 let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
-// ---------- UI ----------
+// ================= UI =================
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
-const emojiBox = document.getElementById("emojiBox");
 const typingBox = document.getElementById("typingBox");
 
-// ---------- SOUND ----------
-const aimSound = new Audio("aim-message.mp3");
-const mentionSound = new Audio("aim-notif.mp3"); // reuse or swap later
+// ================= TAB TITLE (DISCORD STYLE) =================
+const baseTitle = "CyberZone_95 Chat";
+let unread = 0;
 
-function playSound(){
-aimSound.currentTime=0;
-aimSound.play().catch(()=>{});
+function updateTitle(){
+if(document.hidden && unread > 0){
+document.title = `(${unread}) ${baseTitle}`;
+} else {
+document.title = baseTitle;
+}
+}
+
+document.addEventListener("visibilitychange",()=>{
+if(!document.hidden){
+unread = 0;
+updateTitle();
+}
+});
+
+// ================= SOUND =================
+const messageSound = new Audio("aim-message.mp3");
+const mentionSound = new Audio("aim-notif.mp3");
+
+function playMessage(){
+messageSound.currentTime = 0;
+messageSound.play().catch(()=>{});
 }
 
 function playMention(){
-mentionSound.currentTime=0;
+mentionSound.currentTime = 0;
 mentionSound.play().catch(()=>{});
 }
 
-// ---------- MQTT ----------
-const topic="luke_retro_global_open_lobby";
-const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+// ================= MQTT =================
+const topic = "luke_retro_global_open_lobby";
+const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ---------- DATA ----------
-const users={};
-const typingUsers={};
+// ================= DATA =================
+const typingUsers = {};
 
-// ---------- CHAT HISTORY (NEW) ----------
+// ================= HISTORY =================
 const HISTORY_KEY = "cyberzone_chat_history";
-let chatHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
 
 function saveHistory(){
-localStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory.slice(-100)));
+localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-100)));
 }
 
-// ---------- LOAD HISTORY ----------
-chatHistory.forEach(m=>{
-const div=document.createElement("div");
-div.innerHTML=m;
+history.forEach(h=>{
+const div = document.createElement("div");
+div.innerHTML = h;
 chatLog.appendChild(div);
 });
 
-// ---------- SYSTEM ----------
+// ================= SYSTEM =================
 function sys(t){
-const d=document.createElement("div");
-d.innerHTML="*** "+t;
-d.style.color="yellow";
+const d = document.createElement("div");
+d.style.color = "yellow";
+d.innerHTML = "*** " + t;
 chatLog.appendChild(d);
 }
 
-// ---------- RENDER ----------
+// ================= RENDER =================
 function render(text){
+
 if(!text) return "";
-const img=/(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
-if(img.test(text)) return `<img class="chat-img" src="${text}">`;
+
+// image
+const img = /(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i;
+if(img.test(text)){
+return `<img class="chat-img" src="${text}">`;
+}
+
+// 💛 DISCORD STYLE HIGHLIGHT
+text = text.replaceAll(
+"@" + currentAlias,
+`<span style="color:yellow;font-weight:bold;">@${currentAlias}</span>`
+);
+
 return `<span class="msg">${text}</span>`;
 }
 
-// ---------- CONNECT ----------
+// ================= TYPING =================
+function updateTyping(){
+const list = Object.keys(typingUsers).filter(u => u !== currentAlias);
+
+typingBox.innerHTML = list.length
+? list.join(", ") + " is typing..."
+: "";
+}
+
+// ================= CONNECT =================
 client.on("connect",()=>{
 client.subscribe(topic);
 
@@ -199,43 +217,47 @@ sender:currentAlias
 }));
 });
 
-// ---------- MESSAGE ----------
+// ================= MESSAGE =================
 client.on("message",(t,p)=>{
-const d=JSON.parse(p.toString());
+const d = JSON.parse(p.toString());
 
-// join
-if(d.type==="join"){
-users[d.sender]=Date.now();
-sys(d.sender+" joined");
+// JOIN
+if(d.type === "join"){
+sys(d.sender + " joined");
 return;
 }
 
-// typing
-if(d.type==="typing"){
-typingUsers[d.sender]=true;
+// TYPING
+if(d.type === "typing"){
+typingUsers[d.sender] = true;
+updateTyping();
 return;
 }
 
-if(d.type==="stopTyping"){
+if(d.type === "stopTyping"){
 delete typingUsers[d.sender];
+updateTyping();
 return;
 }
 
-users[d.sender]=Date.now();
+let text = d.text || "";
 
-// sound
-if(d.sender!==currentAlias){
-playSound();
+// check mention
+const isMention = text.includes("@" + currentAlias);
+
+// sound logic FIXED (no double trigger)
+if(d.sender !== currentAlias){
+isMention ? playMention() : playMessage();
 }
 
-// mention system (NEW)
-let text = d.text || "";
-if(text.includes("@"+currentAlias)){
-playMention();
+// unread counter
+if(document.hidden && d.sender !== currentAlias){
+unread++;
+updateTitle();
 }
 
 // message row
-const row=document.createElement("div");
+const row = document.createElement("div");
 
 const html =
 `<span style="color:${d.sender===currentAlias?"#0ff":"#f0f"}">
@@ -246,68 +268,36 @@ ${render(text)}`;
 row.innerHTML = html;
 chatLog.appendChild(row);
 
-// save history (NEW)
-chatHistory.push(html);
+// save history
+history.push(html);
 saveHistory();
 
-chatLog.scrollTop=chatLog.scrollHeight;
+chatLog.scrollTop = chatLog.scrollHeight;
 });
 
-// ---------- EMOJI ----------
-const emojis={
-":sob:":"😭", ":fire:":"🔥", ":heart:":"❤️",
-":skull:":"💀", ":joy:":"😂", ":cool:":"😎"
-};
-
+// ================= TYPING SEND =================
 chatInput.addEventListener("input",()=>{
 
-// typing send
 client.publish(topic, JSON.stringify({
 type:"typing",
 sender:currentAlias
 }));
 
-clearTimeout(window.typingTimeout);
-window.typingTimeout=setTimeout(()=>{
+clearTimeout(window.typingTimer);
+
+window.typingTimer = setTimeout(()=>{
 client.publish(topic, JSON.stringify({
 type:"stopTyping",
 sender:currentAlias
 }));
-},1200);
+},1000);
 
-// emoji box
-const value=chatInput.value;
-const match=value.match(/:[a-zA-Z0-9_]*$/);
-
-if(match){
-const q=match[0];
-const results=Object.keys(emojis).filter(e=>e.startsWith(q));
-
-if(results.length){
-emojiBox.style.display="block";
-emojiBox.innerHTML=results.map(e=>
-`<div class="emoji-item" onclick="insertEmoji('${e}')">
-${e} → ${emojis[e]}
-</div>`
-).join("");
-} else emojiBox.style.display="none";
-
-} else emojiBox.style.display="none";
 });
 
-window.insertEmoji=function(code){
-chatInput.value=chatInput.value.replace(/:[a-zA-Z0-9_]*$/,code);
-emojiBox.style.display="none";
-};
-
-// ---------- SEND ----------
+// ================= SEND =================
 function send(){
-let text=chatInput.value.trim();
+let text = chatInput.value.trim();
 if(!text) return;
-
-text=text.replace(/:[a-zA-Z0-9_]*$/, m=>{
-return emojis[m]||m;
-});
 
 client.publish(topic, JSON.stringify({
 sender:currentAlias,
@@ -318,13 +308,13 @@ minute:"2-digit"
 })
 }));
 
-chatInput.value="";
+chatInput.value = "";
 }
 
-// ---------- EVENTS ----------
-sendBtn.onclick=send;
-chatInput.addEventListener("keypress",e=>{
-if(e.key==="Enter") send();
+sendBtn.onclick = send;
+
+chatInput.addEventListener("keypress",(e)=>{
+if(e.key === "Enter") send();
 });
 
 </script>
