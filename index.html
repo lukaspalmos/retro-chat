@@ -102,7 +102,12 @@ cursor:pointer;
 <div id="userListBox"></div>
 </div>
 </div>
-
+<div id="typingIndicator" style="
+padding:4px 10px;
+font-size:12px;
+color:#0ff;
+height:16px;
+"></div>
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
@@ -141,7 +146,8 @@ const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 // ================= STATE =================
 const users={};
 let replyTarget=null;
-
+const typingUsers = {};
+let typingTimeout;
 // ================= SOUND =================
 const msgSound = new Audio("aim-message.mp3");
 const replySound = new Audio("aim-notif.mp3");
@@ -177,11 +183,53 @@ id:userId,
 name:currentAlias
 }));
 });
+function renderTyping(){
 
+    const box=document.getElementById("typingIndicator");
+
+    const names=Object.values(typingUsers)
+        .filter(u=>Date.now()-u.time<3000)
+        .map(u=>u.name);
+
+    if(names.length===0){
+        box.textContent="";
+        return;
+    }
+
+    if(names.length===1){
+        box.textContent=names[0]+" is typing...";
+        return;
+    }
+
+    if(names.length===2){
+        box.textContent=names[0]+" and "+names[1]+" are typing...";
+        return;
+    }
+
+    box.textContent="Several users are typing...";
+}
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
 const d=JSON.parse(p.toString());
+if(d.type==="typing"){
 
+    if(d.id!==userId){
+        typingUsers[d.id]={
+            name:d.sender,
+            time:Date.now()
+        };
+        renderTyping();
+    }
+
+    return;
+}
+
+if(d.type==="stopTyping"){
+
+    delete typingUsers[d.id];
+    renderTyping();
+    return;
+}
 if(d.type==="join"){
 users[d.id]={name:d.name,lastSeen:Date.now()};
 renderUsers();
@@ -190,7 +238,8 @@ return;
 }
 
 if(!d.text) return;
-
+delete typingUsers[d.id];
+renderTyping();
 users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
@@ -361,10 +410,27 @@ minute:"2-digit"
 sendBtn.onclick=send;
 
 chatInput.addEventListener("keydown",e=>{
-if(e.key==="Enter"){
-e.preventDefault();
-send();
-}
+
+    client.publish(topic,JSON.stringify({
+        type:"typing",
+        id:userId,
+        sender:currentAlias
+    }));
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout=setTimeout(()=>{
+        client.publish(topic,JSON.stringify({
+            type:"stopTyping",
+            id:userId,
+            sender:currentAlias
+        }));
+    },1200);
+
+    if(e.key==="Enter"){
+        e.preventDefault();
+        send();
+    }
 });
 
 clearBtn.onclick=()=>{
