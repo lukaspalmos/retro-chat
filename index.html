@@ -246,11 +246,13 @@ delete typingUsers[d.id];
 renderTyping();
 
 if(d.id){
-users[d.id]={
-name:d.sender,
-lastSeen:Date.now()
-};
-}renderUsers();
+    users[d.id]={
+        name:d.sender,
+        lastSeen:Date.now()
+    };
+}
+
+renderUsers();
 
 const row=document.createElement("div");
 
@@ -376,10 +378,10 @@ sendBtn.onclick=send;
 chatInput.addEventListener("keydown", e => {
 
     if (
-    e.key.length === 1 ||
-    e.key === "Backspace" ||
-    e.key === "Delete"
-)
+        e.key.length === 1 ||
+        e.key === "Backspace" ||
+        e.key === "Delete"
+    ) {
 
         client.publish(topic, JSON.stringify({
             type: "typing",
