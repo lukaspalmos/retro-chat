@@ -442,6 +442,12 @@ chatInput.addEventListener("keydown",e=>{
         send();
     }
 });
+
+    if(e.key==="Enter"){
+        e.preventDefault();
+        send();
+    }
+});
 clearBtn.onclick=()=>{
 chatLog.innerHTML="";
 sys("chat cleared");
