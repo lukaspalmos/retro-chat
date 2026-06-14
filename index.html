@@ -151,7 +151,35 @@ const users={};
 let replyTarget=null;
 const typingUsers = {};
 let typingTimeout;
+// ================= BACKGROUND MUSIC =================
+const bgMusic = document.getElementById("bgMusic");
 
+const playlist = [
+    "music1.mp3",
+    "music2.mp3",
+    "music3.mp3",
+    "music4.mp3"
+];
+
+let musicEnabled = true;
+
+bgMusic.volume = 0.08;
+
+function pickRandomTrack() {
+    const index = Math.floor(Math.random() * playlist.length);
+    return playlist[index];
+}
+
+function playRandomTrack() {
+    if (!musicEnabled) return;
+
+    bgMusic.src = pickRandomTrack();
+    bgMusic.play().catch(() => {});
+}
+
+bgMusic.onended = () => {
+    playRandomTrack();
+};
 // ================= SYSTEM =================
 function sys(t){
 const d=document.createElement("div");
@@ -352,7 +380,21 @@ sys("you are now "+currentAlias);
 chatInput.value="";
 return;
 }
+if (text === "/mute") {
+    musicEnabled = false;
+    bgMusic.pause();
+    sys("music muted");
+    chatInput.value = "";
+    return;
+}
 
+if (text === "/unmute") {
+    musicEnabled = true;
+    playRandomTrack();
+    sys("music unmuted");
+    chatInput.value = "";
+    return;
+}
 const msgId=crypto.randomUUID();
 
 const payload={
@@ -377,6 +419,11 @@ chatInput.value="";
 }
 
 // ================= EVENTS =================
+document.addEventListener("click", () => {
+    if (musicEnabled && !bgMusic.src) {
+        playRandomTrack();
+    }
+}, { once: true });
 imgBtn.onclick = () => {
     imgUpload.click();
 };
@@ -467,6 +514,8 @@ chatInput.addEventListener("keydown", e => {
 
 chatLog.innerHTML="";
 sys("Connected you to the server. Welcome to CyberZone_95.");
+
+<audio id="bgMusic"></audio>
 
 </script>
 
