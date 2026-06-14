@@ -119,7 +119,9 @@ height:16px;
 
 <!-- FIX: audio element must be in DOM BEFORE JS uses it -->
 <audio id="bgMusic"></audio>
-
+<audio id="bgMusic"></audio>
+<audio id="messageSound" src="aim-message.mp3" preload="auto"></audio>
+<audio id="replySound" src="aim-notif.mp3" preload="auto"></audio>
 </div>
 
 <script>
@@ -323,12 +325,6 @@ if(d.reply && d.reply.senderId === userId){
     }
 }
 
-    if(d.id !== userId){
-        replySound.currentTime = 0;
-        replySound.play().catch(() => {});
-    }
-}
-
 if(d.reply){
 const r=document.createElement("div");
 r.className="replyBox";
@@ -420,10 +416,6 @@ sys("you are now "+currentAlias);
 chatInput.value="";
 return;
 }
-
-<audio id="bgMusic"></audio>
-<audio id="messageSound" src="aim-message.mp3" preload="auto"></audio>
-<audio id="replySound" src="aim-notif.mp3" preload="auto"></audio>
 
 if (text === "/mute") {
     musicEnabled = false;
