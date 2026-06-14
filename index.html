@@ -154,6 +154,9 @@ let typingTimeout;
 // ================= BACKGROUND MUSIC =================
 const bgMusic = document.getElementById("bgMusic");
 
+if (!bgMusic) {
+    console.error("bgMusic element missing");
+}
 const playlist = [
     "music1.mp3",
     "music2.mp3",
@@ -512,10 +515,10 @@ chatInput.addEventListener("keydown", e => {
     }
 });
 
+<audio id="bgMusic"></audio>
+    
 chatLog.innerHTML="";
 sys("Connected you to the server. Welcome to CyberZone_95.");
-
-<audio id="bgMusic"></audio>
 
 </script>
 
