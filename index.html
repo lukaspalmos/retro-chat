@@ -145,6 +145,8 @@ const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
 // ================= STATE =================
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dbrruuftv/upload";
+const CLOUDINARY_UPLOAD_PRESET = "chat_upload";
 const users={};
 let replyTarget=null;
 const typingUsers = {};
@@ -277,7 +279,7 @@ time.textContent=` [${d.timestamp}] `;
 
 const content=document.createElement("span");
 
-if(d.type==="image"){
+if(d.mediaType === "image"){
 const img=document.createElement("img");
 img.src=d.text;
 img.style.maxWidth="200px";
@@ -373,6 +375,52 @@ chatInput.value="";
 }
 
 // ================= EVENTS =================
+imgBtn.onclick = () => {
+    imgUpload.click();
+};
+imgUpload.onchange = async () => {
+    const file = imgUpload.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+        const res = await fetch(CLOUDINARY_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+        const imageUrl = data.secure_url;
+
+        const msgId = crypto.randomUUID();
+
+        const payload = {
+            type: "message",
+            msgId,
+            id: userId,
+            sender: currentAlias,
+            text: imageUrl,
+            timestamp: new Date().toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit"
+            }),
+            mediaType: "image"
+        };
+
+        client.publish(topic, JSON.stringify(payload));
+
+        sys("image sent");
+
+    } catch (err) {
+        console.error(err);
+        sys("image upload failed");
+    }
+
+    imgUpload.value = "";
+};
 sendBtn.onclick = send;
 
 clearBtn.onclick = () => {
