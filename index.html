@@ -83,17 +83,6 @@ font-size:11px;
 margin-left:6px;
 cursor:pointer;
 }
-
-.sys-sans{
-color:#00ffff;
-font-family:"Comic Sans MS", cursive;
-text-shadow: 0 0 6px #00ffff;
-animation: blink 1s infinite;
-}
-
-@keyframes blink {
-50% { opacity: 0.4; }
-}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
@@ -113,7 +102,12 @@ animation: blink 1s infinite;
 </div>
 </div>
 
-<div id="typingIndicator" style="padding:4px 10px;font-size:12px;color:#000;height:16px;"></div>
+<div id="typingIndicator" style="
+padding:4px 10px;
+font-size:12px;
+color:#000;
+height:16px;
+"></div>
 
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
@@ -129,6 +123,7 @@ animation: blink 1s infinite;
 </div>
 
 <script>
+// ================= SAFETY CHECK =================
 if (!window.mqtt) {
 alert("MQTT failed to load.");
 throw new Error("mqtt not loaded");
@@ -190,11 +185,20 @@ const names=Object.values(typingUsers)
 .filter(u=>Date.now()-u.time<3000)
 .map(u=>u.name);
 
-if(names.length===0) return box.textContent="";
+if(names.length===0){
+box.textContent="";
+return;
+}
 
-if(names.length===1) return box.textContent=`${names[0]} is typing...`;
+if(names.length===1){
+box.textContent=names[0]+" is typing...";
+return;
+}
 
-if(names.length===2) return box.textContent=`${names[0]} and ${names[1]} are typing...`;
+if(names.length===2){
+box.textContent=names[0]+" and "+names[1]+" are typing...";
+return;
+}
 
 box.textContent="Several users are typing...";
 }
@@ -237,9 +241,10 @@ return;
 
 if(!d.text) return;
 
-// sounds
+const isReplyToMe = d.reply && d.reply.senderId===userId;
+
 if(d.id!==userId){
-if(d.reply && d.reply.senderId===userId){
+if(isReplyToMe){
 replySound.currentTime=0;
 replySound.play().catch(()=>{});
 }else{
@@ -330,7 +335,6 @@ chatInput.value="";
 return;
 }
 
-// nickname
 if(text.startsWith("/nick ")){
 const newNick=text.slice(6).trim();
 if(!newNick) return sys("nickname cannot be empty");
@@ -348,7 +352,6 @@ chatInput.value="";
 return;
 }
 
-// message
 const msgId=crypto.randomUUID();
 
 const payload={
@@ -383,7 +386,7 @@ send();
 }
 });
 
-sys("Connected to CyberZone_95");
+sys("Connected you to the server. Welcome to CyberZone_95.");
 </script>
 
 </body>
