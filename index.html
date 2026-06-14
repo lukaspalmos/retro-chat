@@ -309,8 +309,10 @@ row.appendChild(content);
 row.appendChild(btn);
 
 chatLog.appendChild(row);
-chatLog.scrollTop=chatLog.scrollHeight;
-});
+chatLog.scrollTo({
+    top: chatLog.scrollHeight,
+    behavior: "smooth"
+});});
 
 // ================= SEND =================
 function send(){
@@ -393,6 +395,10 @@ imgUpload.onchange = async () => {
         });
 
         const data = await res.json();
+        if (data.error) {
+    sys(data.error.message);
+    return;
+}
         const imageUrl = data.secure_url;
 
         const msgId = crypto.randomUUID();
