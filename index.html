@@ -298,9 +298,21 @@ return;
 }
 
 if(!d.text) return;
+
+const isReplyToMe =
+    d.reply &&
+    d.reply.senderId === userId;
+
 if (d.id !== userId) {
-    messageSound.currentTime = 0;
-    messageSound.play().catch(() => {});
+
+    if (isReplyToMe) {
+        replySound.currentTime = 0;
+        replySound.play().catch(() => {});
+    } else {
+        messageSound.currentTime = 0;
+        messageSound.play().catch(() => {});
+    }
+
 }
 delete typingUsers[d.id];
 renderTyping();
@@ -318,13 +330,7 @@ const row=document.createElement("div");
 
 if(d.reply && d.reply.senderId === userId){
     row.classList.add("replyHighlight");
-
-    if(d.id !== userId){
-        replySound.currentTime = 0;
-        replySound.play().catch(() => {});
-    }
 }
-
 if(d.reply){
 const r=document.createElement("div");
 r.className="replyBox";
