@@ -82,6 +82,21 @@ font-size:11px;
 margin-left:6px;
 cursor:pointer;
 }
+
+.sys-sans{
+    color:#00ffff;
+    font-family:"Comic Sans MS", cursive;
+    text-shadow: 0 0 6px #00ffff;
+}
+
+@keyframes blink {
+    50% { opacity: 0.4; }
+}
+
+.sys-sans{
+    animation: blink 1s infinite;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
@@ -164,13 +179,34 @@ const playlist = [
     "sunday_theme.mp3",
     "friday_theme.mp3",
     "star_u.mp3",
-    "relaxing_scene.mp3"
+    "relaxing_scene.mp3",
+    "devils_never_cry.mp3",
+    "bury_the_light.mp3",
+    "sans.mp3",
+    "bonetrousle.mp3"
 ];
 
 let musicEnabled = true;
 let shuffleBag = [];
 let currentTrack = null;
-
+const secretThemes = {
+    dante: {
+        song: "devils_never_cry.mp3",
+        message: "NOW PLAYING ♫♪ DEVILS_NEVER_CRY.MP3"
+    },
+    vergil: {
+        song: "bury_the_light.mp3",
+        message: "NOW PLAYING ♫♪ BURY_THE_LIGHT.MP3"
+    },
+    sans: {
+        song: "sans.mp3",
+        message: "hehe sup kiddo check out my theme"
+    },
+    papyrus: {
+        song: "bonetrousle.mp3",
+        message: "NYEHEHE! SO YOU HAVE PICKED THE BEST NAME, HUMAN!!!"
+    }
+};
 bgMusic.volume = 0.04;
 
 // Fisher–Yates shuffle
@@ -207,11 +243,17 @@ bgMusic.onended = () => {
     playNextTrack();
 };
 // ================= SYSTEM =================
-function sys(t){
-const d=document.createElement("div");
-d.className="sys";
-d.textContent="*** "+t;
-chatLog.appendChild(d);
+function sys(t, type = "normal"){
+    const d = document.createElement("div");
+
+    if(type === "sans"){
+        d.className = "sys-sans";
+    } else {
+        d.className = "sys";
+    }
+
+    d.textContent = "*** " + t;
+    chatLog.appendChild(d);
 }
 
 // ================= USERS =================
@@ -413,23 +455,40 @@ if(!newNick){
 
 currentAlias = newNick;
 
-/* 🔥 SECRET NAME CHECK GOES HERE */
-if (currentAlias.toLowerCase() === "shadowfox") {
+/* 🔥 SECRET CHECK HERE */
+const key = currentAlias.toLowerCase();
+
+if (secretThemes[key]) {
+
+    const theme = secretThemes[key];
 
     bgMusic.pause();
     bgMusic.currentTime = 0;
 
-    bgMusic.src = "devils_never_cry.mp3";
+    bgMusic.src = theme.song;
     bgMusic.load();
     bgMusic.play().catch(() => {});
 
-    sys("NOW PLAYING ♫♪ DEVILS_NEVER_CRY.MP3");
+   if (key === "sans") {
+
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+
+    bgMusic.src = theme.song;
+    bgMusic.load();
+    bgMusic.play().catch(() => {});
+
+    sysSans(theme.message);
+
+} else {
+    sys(theme.message);
+}
+
 } else {
 
     bgMusic.pause();
     bgMusic.currentTime = 0;
 
-    // resume normal music system
     if (musicEnabled) {
         playNextTrack();
     }
@@ -586,6 +645,30 @@ chatInput.addEventListener("keydown", e => {
 chatLog.innerHTML="";
 sys("Connected you to the server. Welcome to CyberZone_95.");
 
+function typeSansText(element, text, speed = 40) {
+    let i = 0;
+
+    function type() {
+        if (i < text.length) {
+            element.textContent += text[i];
+            i++;
+            setTimeout(type, speed);
+        }
+    }
+
+    type();
+}
+
+function sysSans(text) {
+    const d = document.createElement("div");
+    d.className = "sys-sans";
+
+    d.textContent = ""; // start empty
+    chatLog.appendChild(d);
+
+    typeSansText(d, text, 45); // speed controls typing speed
+}
+    
 </script>
 
 </body>
