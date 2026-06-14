@@ -198,14 +198,13 @@ let isReplyToMe = false;
 
 if (
     d.reply &&
-    d.reply.user === currentAlias
+    d.reply.senderId === userId
 ){
     isReplyToMe = true;
 }
 
 // Don't play sounds for your own messages
-if(d.sender !== currentAlias){
-
+if(d.id !== userId){
     if(isReplyToMe){
         replySound.currentTime = 0;
         replySound.play().catch(()=>{});
@@ -217,9 +216,10 @@ if(d.sender !== currentAlias){
 }
 
 const row=document.createElement("div");
+
 if(
     d.reply &&
-    d.reply.user === currentAlias
+    d.reply.senderId === userId
 ){
     row.classList.add("replyHighlight");
 }
