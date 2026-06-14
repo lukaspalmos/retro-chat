@@ -94,7 +94,11 @@ cursor:pointer;
 }
 
 .sys-sans{
+    color:#00ffff;
+    font-family:"Comic Sans MS", cursive;
+    text-shadow: 0 0 6px #00ffff;
     animation: blink 1s infinite;
+}
 }
 
 </style>
@@ -133,7 +137,6 @@ height:16px;
 </div>
 
 <!-- FIX: audio element must be in DOM BEFORE JS uses it -->
-<audio id="bgMusic"></audio>
 <audio id="bgMusic"></audio>
 <audio id="messageSound" src="aim-message.mp3" preload="auto"></audio>
 <audio id="replySound" src="aim-notif.mp3" preload="auto"></audio>
@@ -462,27 +465,21 @@ if (secretThemes[key]) {
 
     const theme = secretThemes[key];
 
+    // stop current music
     bgMusic.pause();
     bgMusic.currentTime = 0;
 
+    // play secret track ONCE
     bgMusic.src = theme.song;
     bgMusic.load();
     bgMusic.play().catch(() => {});
 
-   if (key === "sans") {
-
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-
-    bgMusic.src = theme.song;
-    bgMusic.load();
-    bgMusic.play().catch(() => {});
-
-    sysSans(theme.message);
-
-} else {
-    sys(theme.message);
-}
+    // message style control
+    if (key === "sans") {
+        sysSans(theme.message);
+    } else {
+        sys(theme.message);
+    }
 
 } else {
 
