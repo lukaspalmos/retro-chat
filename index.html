@@ -416,31 +416,32 @@ sendBtn.onclick=send;
 
 chatInput.addEventListener("keydown",e=>{
 
-    // Only send typing when NOT pressing Enter
     if(e.key !== "Enter"){
 
-    client.publish(topic,JSON.stringify({
-        type:"typing",
-        id:userId,
-        sender:currentAlias
-    }));
-
-    clearTimeout(typingTimeout);
-
-    typingTimeout=setTimeout(()=>{
         client.publish(topic,JSON.stringify({
-            type:"stopTyping",
+            type:"typing",
             id:userId,
             sender:currentAlias
         }));
-    },1200);
+
+        clearTimeout(typingTimeout);
+
+        typingTimeout=setTimeout(()=>{
+
+            client.publish(topic,JSON.stringify({
+                type:"stopTyping",
+                id:userId,
+                sender:currentAlias
+            }));
+
+        },1200);
+    }
 
     if(e.key==="Enter"){
         e.preventDefault();
         send();
     }
 });
-
 clearBtn.onclick=()=>{
 chatLog.innerHTML="";
 sys("chat cleared");
