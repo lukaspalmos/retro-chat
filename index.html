@@ -71,6 +71,12 @@ font-size:11px;
 margin-bottom:4px;
 }
 
+.replyHighlight{
+background:#333300;
+border-left:4px solid yellow;
+padding:3px;
+}
+
 .msgBtn{
 font-size:11px;
 margin-left:6px;
@@ -137,8 +143,8 @@ const users={};
 let replyTarget=null;
 
 // ================= SOUND =================
-const notif=new Audio("aim-notif.mp3");
-
+const msgSound = new Audio("aim-message.mp3");
+const replySound = new Audio("aim-notif.mp3");
 // ================= USERS =================
 function renderUsers(){
 userListBox.innerHTML="";
@@ -188,13 +194,35 @@ if(!d.text) return;
 users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
-if(d.sender!==currentAlias){
-notif.currentTime=0;
-notif.play().catch(()=>{});
+let isReplyToMe = false;
+
+if (
+    d.reply &&
+    d.reply.user === currentAlias
+){
+    isReplyToMe = true;
+}
+
+// Don't play sounds for your own messages
+if(d.sender !== currentAlias){
+
+    if(isReplyToMe){
+        replySound.currentTime = 0;
+        replySound.play().catch(()=>{});
+    } else {
+        msgSound.currentTime = 0;
+        msgSound.play().catch(()=>{});
+    }
+
 }
 
 const row=document.createElement("div");
-
+if(
+    d.reply &&
+    d.reply.user === currentAlias
+){
+    row.classList.add("replyHighlight");
+}
 // REPLY BLOCK
 if(d.reply){
 const r=document.createElement("div");
@@ -232,9 +260,10 @@ btn.className="msgBtn";
 btn.textContent="Reply";
 btn.onclick=()=>{
 replyTarget={
-id:d.msgId,
-user:d.sender,
-text:d.text
+    id:d.msgId,
+    senderId:d.id,
+    user:d.sender,
+    text:d.text
 };
 sys("replying to "+d.sender);
 };
