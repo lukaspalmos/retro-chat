@@ -149,11 +149,65 @@ const replySound=document.getElementById("replySound");
 const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
+// ================= IMAGE UPLOAD =================
+const CLOUDINARY_URL="https://api.cloudinary.com/v1_1/dbrruuftv/image/upload";
+const CLOUDINARY_UPLOAD_PRESET="chat_upload";
+
 // ================= STATE =================
 const users={};
 let replyTarget=null;
 const typingUsers={};
 let typingTimeout;
+
+// ================= MUSIC =================
+const playlist=[
+"sunday_theme.mp3",
+"friday_theme.mp3",
+"star_u.mp3",
+"relaxing_scene.mp3",
+];
+
+let musicEnabled=true;
+let shuffleBag=[];
+let currentTrack=null;
+
+bgMusic.volume=0.04;
+
+// shuffle
+function shuffle(arr){
+const a=arr.slice();
+for(let i=a.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+return a;
+}
+
+function refillBag(){
+shuffleBag=shuffle(playlist);
+}
+
+function playNextTrack(){
+if(!musicEnabled) return;
+
+if(shuffleBag.length===0) refillBag();
+
+currentTrack=shuffleBag.shift();
+bgMusic.src="./"+currentTrack;
+
+sys("now playing ♫♪ "+currentTrack);
+
+bgMusic.play().catch(()=>{});
+}
+
+bgMusic.onended=playNextTrack;
+
+// start music on first click (browser safe)
+document.addEventListener("click",()=>{
+if(!bgMusic.src){
+playNextTrack();
+}
+},{once:true});
 
 // ================= SYSTEM =================
 function sys(t){
@@ -216,7 +270,7 @@ name:currentAlias
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
 let d;
-try{ d=JSON.parse(p.toString()); }catch{return;}
+try{d=JSON.parse(p.toString());}catch{return;}
 
 if(d.type==="typing"){
 if(d.id!==userId){
@@ -241,10 +295,9 @@ return;
 
 if(!d.text) return;
 
-const isReplyToMe = d.reply && d.reply.senderId===userId;
-
+// sounds
 if(d.id!==userId){
-if(isReplyToMe){
+if(d.reply && d.reply.senderId===userId){
 replySound.currentTime=0;
 replySound.play().catch(()=>{});
 }else{
@@ -261,6 +314,7 @@ users[d.id]={name:d.sender,lastSeen:Date.now()};
 }
 renderUsers();
 
+// message row
 const row=document.createElement("div");
 
 if(d.reply && d.reply.senderId===userId){
@@ -284,6 +338,7 @@ time.textContent=` [${d.timestamp}] `;
 
 const content=document.createElement("span");
 
+// IMAGE SUPPORT
 if(d.mediaType==="image"){
 const img=document.createElement("img");
 img.src=d.text;
@@ -375,18 +430,70 @@ client.publish(topic,JSON.stringify(payload));
 chatInput.value="";
 }
 
+// ================= IMAGE UPLOAD =================
+imgBtn.onclick=()=>imgUpload.click();
+
+imgUpload.onchange=async()=>{
+const file=imgUpload.files[0];
+if(!file) return;
+
+const formData=new FormData();
+formData.append("file",file);
+formData.append("upload_preset",CLOUDINARY_UPLOAD_PRESET);
+
+try{
+const res=await fetch(CLOUDINARY_URL,{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+if(!data.secure_url){
+sys("image upload failed");
+return;
+}
+
+const msgId=crypto.randomUUID();
+
+client.publish(topic,JSON.stringify({
+type:"message",
+msgId,
+id:userId,
+sender:currentAlias,
+text:data.secure_url,
+timestamp:new Date().toLocaleTimeString([],{
+hour:"numeric",
+minute:"2-digit"
+}),
+mediaType:"image"
+}));
+
+sys("image sent");
+
+}catch(err){
+console.error(err);
+sys("upload error");
+}
+
+imgUpload.value="";
+};
+
 // ================= EVENTS =================
 sendBtn.onclick=send;
-clearBtn.onclick=()=>{chatLog.innerHTML="";sys("chat cleared");};
 
-chatInput.addEventListener("keydown",(e)=>{
+clearBtn.onclick=()=>{
+chatLog.innerHTML="";
+sys("chat cleared");
+};
+
+chatInput.addEventListener("keydown",e=>{
 if(e.key==="Enter"){
 e.preventDefault();
 send();
 }
 });
 
-sys("Connected you to the server. Welcome to CyberZone_95.");
+sys("Connected you to CyberZone_95.");
 </script>
 
 </body>
