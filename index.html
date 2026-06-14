@@ -142,7 +142,7 @@ const clearBtn=document.getElementById("clearBtn");
 const imgBtn=document.getElementById("imgBtn");
 const imgUpload=document.getElementById("imgUpload");
 const userListBox=document.getElementById("userListBox");
-
+const bgMusic = document.getElementById("bgMusic");
 // ================= MQTT =================
 const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
@@ -419,7 +419,6 @@ if (text === "/unmute") {
     sys("music unmuted");
     chatInput.value = "";
     return;
-}
 }
 
 const msgId=crypto.randomUUID();
