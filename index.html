@@ -117,6 +117,9 @@ height:16px;
 <input type="file" id="imgUpload" hidden>
 </div>
 
+<!-- FIX: audio element must be in DOM BEFORE JS uses it -->
+<audio id="bgMusic"></audio>
+
 </div>
 
 <script>
@@ -151,12 +154,10 @@ const users={};
 let replyTarget=null;
 const typingUsers = {};
 let typingTimeout;
+
 // ================= BACKGROUND MUSIC =================
 const bgMusic = document.getElementById("bgMusic");
 
-if (!bgMusic) {
-    console.error("bgMusic element missing");
-}
 const playlist = [
     "music1.mp3",
     "music2.mp3",
@@ -166,7 +167,9 @@ const playlist = [
 
 let musicEnabled = true;
 
-bgMusic.volume = 0.08;
+if (bgMusic) {
+    bgMusic.volume = 0.08;
+}
 
 function pickRandomTrack() {
     const index = Math.floor(Math.random() * playlist.length);
@@ -174,7 +177,7 @@ function pickRandomTrack() {
 }
 
 function playRandomTrack() {
-    if (!musicEnabled) return;
+    if (!musicEnabled || !bgMusic) return;
 
     bgMusic.src = pickRandomTrack();
     bgMusic.play().catch(() => {});
@@ -183,6 +186,7 @@ function playRandomTrack() {
 bgMusic.onended = () => {
     playRandomTrack();
 };
+
 // ================= SYSTEM =================
 function sys(t){
 const d=document.createElement("div");
@@ -252,6 +256,7 @@ try{
     console.error("Invalid message", err);
     return;
 }
+
 if(d.type==="typing"){
 if(d.id!==userId){
 typingUsers[d.id]={name:d.sender,time:Date.now()};
@@ -343,7 +348,8 @@ chatLog.appendChild(row);
 chatLog.scrollTo({
     top: chatLog.scrollHeight,
     behavior: "smooth"
-});});
+});
+});
 
 // ================= SEND =================
 function send(){
@@ -383,6 +389,7 @@ sys("you are now "+currentAlias);
 chatInput.value="";
 return;
 }
+
 if (text === "/mute") {
     musicEnabled = false;
     bgMusic.pause();
@@ -398,6 +405,7 @@ if (text === "/unmute") {
     chatInput.value = "";
     return;
 }
+
 const msgId=crypto.randomUUID();
 
 const payload={
@@ -427,9 +435,11 @@ document.addEventListener("click", () => {
         playRandomTrack();
     }
 }, { once: true });
+
 imgBtn.onclick = () => {
     imgUpload.click();
 };
+
 imgUpload.onchange = async () => {
     const file = imgUpload.files[0];
     if (!file) return;
@@ -446,9 +456,10 @@ imgUpload.onchange = async () => {
 
         const data = await res.json();
         if (data.error) {
-    sys(data.error.message);
-    return;
-}
+            sys(data.error.message);
+            return;
+        }
+
         const imageUrl = data.secure_url;
 
         const msgId = crypto.randomUUID();
@@ -477,6 +488,7 @@ imgUpload.onchange = async () => {
 
     imgUpload.value = "";
 };
+
 sendBtn.onclick = send;
 
 clearBtn.onclick = () => {
@@ -514,13 +526,11 @@ chatInput.addEventListener("keydown", e => {
         send();
     }
 });
-    
+
 chatLog.innerHTML="";
 sys("Connected you to the server. Welcome to CyberZone_95.");
 
 </script>
-
-<audio id="bgMusic"></audio>
 
 </body>
 </html>
