@@ -84,7 +84,6 @@ cursor:pointer;
 }
 </style>
 
-<!-- ✅ FIX 1: safer CDN -->
 <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
 
 </head>
@@ -102,12 +101,14 @@ cursor:pointer;
 <div id="userListBox"></div>
 </div>
 </div>
+
 <div id="typingIndicator" style="
 padding:4px 10px;
 font-size:12px;
 color:#0ff;
 height:16px;
 "></div>
+
 <div class="input-bar">
 <input id="chatInput" placeholder="Type message...">
 <button id="sendBtn">Send</button>
@@ -122,7 +123,7 @@ height:16px;
 
 // ================= SAFETY CHECK =================
 if (!window.mqtt) {
-alert("MQTT failed to load. Check internet or CDN.");
+alert("MQTT failed to load.");
 throw new Error("mqtt not loaded");
 }
 
@@ -148,9 +149,15 @@ const users={};
 let replyTarget=null;
 const typingUsers = {};
 let typingTimeout;
-// ================= SOUND =================
-const msgSound = new Audio("aim-message.mp3");
-const replySound = new Audio("aim-notif.mp3");
+
+// ================= SYSTEM =================
+function sys(t){
+const d=document.createElement("div");
+d.className="sys";
+d.textContent="*** "+t;
+chatLog.appendChild(d);
+}
+
 // ================= USERS =================
 function renderUsers(){
 userListBox.innerHTML="";
@@ -165,12 +172,30 @@ userListBox.appendChild(d);
 });
 }
 
-// ================= SYSTEM =================
-function sys(t){
-const d=document.createElement("div");
-d.className="sys";
-d.textContent="*** "+t;
-chatLog.appendChild(d);
+// ================= TYPING =================
+function renderTyping(){
+const box=document.getElementById("typingIndicator");
+
+const names=Object.values(typingUsers)
+.filter(u=>Date.now()-u.time<3000)
+.map(u=>u.name);
+
+if(names.length===0){
+box.textContent="";
+return;
+}
+
+if(names.length===1){
+box.textContent=names[0]+" is typing...";
+return;
+}
+
+if(names.length===2){
+box.textContent=names[0]+" and "+names[1]+" are typing...";
+return;
+}
+
+box.textContent="Several users are typing...";
 }
 
 // ================= CONNECT =================
@@ -183,53 +208,25 @@ id:userId,
 name:currentAlias
 }));
 });
-function renderTyping(){
 
-    const box=document.getElementById("typingIndicator");
-
-    const names=Object.values(typingUsers)
-        .filter(u=>Date.now()-u.time<3000)
-        .map(u=>u.name);
-
-    if(names.length===0){
-        box.textContent="";
-        return;
-    }
-
-    if(names.length===1){
-        box.textContent=names[0]+" is typing...";
-        return;
-    }
-
-    if(names.length===2){
-        box.textContent=names[0]+" and "+names[1]+" are typing...";
-        return;
-    }
-
-    box.textContent="Several users are typing...";
-}
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
 const d=JSON.parse(p.toString());
+
 if(d.type==="typing"){
-
-    if(d.id!==userId){
-        typingUsers[d.id]={
-            name:d.sender,
-            time:Date.now()
-        };
-        renderTyping();
-    }
-
-    return;
+if(d.id!==userId){
+typingUsers[d.id]={name:d.sender,time:Date.now()};
+renderTyping();
+}
+return;
 }
 
 if(d.type==="stopTyping"){
-
-    delete typingUsers[d.id];
-    renderTyping();
-    return;
+delete typingUsers[d.id];
+renderTyping();
+return;
 }
+
 if(d.type==="join"){
 users[d.id]={name:d.name,lastSeen:Date.now()};
 renderUsers();
@@ -238,42 +235,19 @@ return;
 }
 
 if(!d.text) return;
+
 delete typingUsers[d.id];
 renderTyping();
+
 users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
 renderUsers();
 
-let isReplyToMe = false;
-
-if (
-    d.reply &&
-    d.reply.senderId === userId
-){
-    isReplyToMe = true;
-}
-
-// Don't play sounds for your own messages
-if(d.id !== userId){
-
-    if(isReplyToMe){
-        replySound.currentTime = 0;
-        replySound.play().catch(()=>{});
-    } else {
-        msgSound.currentTime = 0;
-        msgSound.play().catch(()=>{});
-    }
-
-}
-
 const row=document.createElement("div");
 
-if(
-    d.reply &&
-    d.reply.senderId === userId
-){
-    row.classList.add("replyHighlight");
+if(d.reply && d.reply.senderId === userId){
+row.classList.add("replyHighlight");
 }
-// REPLY BLOCK
+
 if(d.reply){
 const r=document.createElement("div");
 r.className="replyBox";
@@ -281,17 +255,14 @@ r.textContent=`↳ ${d.reply.user}: ${d.reply.text}`;
 row.appendChild(r);
 }
 
-// HEADER
 const header=document.createElement("span");
 header.style.color = d.sender===currentAlias ? "#0ff" : "#f0f";
 header.textContent = `<${d.sender}> `;
 
-// TIME
 const time=document.createElement("span");
 time.style.color="#0f0";
 time.textContent=` [${d.timestamp}] `;
 
-// CONTENT
 const content=document.createElement("span");
 
 if(d.type==="image"){
@@ -304,16 +275,16 @@ content.appendChild(img);
 content.textContent=" "+d.text;
 }
 
-// REPLY BUTTON
 const btn=document.createElement("button");
 btn.className="msgBtn";
 btn.textContent="Reply";
+
 btn.onclick=()=>{
 replyTarget={
-    id:d.msgId,
-    senderId:d.id,
-    user:d.sender,
-    text:d.text
+id:d.msgId,
+senderId:d.id,
+user:d.sender,
+text:d.text
 };
 sys("replying to "+d.sender);
 };
@@ -329,11 +300,13 @@ chatLog.scrollTop=chatLog.scrollHeight;
 
 // ================= SEND =================
 function send(){
+
 client.publish(topic,JSON.stringify({
-    type:"stopTyping",
-    id:userId,
-    sender:currentAlias
+type:"stopTyping",
+id:userId,
+sender:currentAlias
 }));
+
 let text=chatInput.value.trim();
 if(!text) return;
 
@@ -380,74 +353,36 @@ client.publish(topic,JSON.stringify(payload));
 chatInput.value="";
 }
 
-// ================= IMAGE UPLOAD =================
-imgBtn.onclick=()=>imgUpload.click();
-
-imgUpload.onchange=async e=>{
-const file=e.target.files[0];
-if(!file) return;
-
-const form=new FormData();
-form.append("file",file);
-form.append("upload_preset","chat_upload");
-
-const res=await fetch(
-"https://api.cloudinary.com/v1_1/dbrruuftv/image/upload",
-{method:"POST",body:form}
-);
-
-const data=await res.json();
-
-client.publish(topic,JSON.stringify({
-msgId:crypto.randomUUID(),
-id:userId,
-sender:currentAlias,
-type:"image",
-text:data.secure_url,
-timestamp:new Date().toLocaleTimeString([],{
-hour:"numeric",
-minute:"2-digit"
-})
-}));
-};
-
 // ================= EVENTS =================
 sendBtn.onclick=send;
 
 chatInput.addEventListener("keydown",e=>{
 
-    if(e.key !== "Enter"){
+if(e.key !== "Enter"){
 
-        client.publish(topic,JSON.stringify({
-            type:"typing",
-            id:userId,
-            sender:currentAlias
-        }));
+client.publish(topic,JSON.stringify({
+type:"typing",
+id:userId,
+sender:currentAlias
+}));
 
-        clearTimeout(typingTimeout);
+clearTimeout(typingTimeout);
 
-        typingTimeout=setTimeout(()=>{
+typingTimeout=setTimeout(()=>{
+client.publish(topic,JSON.stringify({
+type:"stopTyping",
+id:userId,
+sender:currentAlias
+}));
+},1200);
+}
 
-            client.publish(topic,JSON.stringify({
-                type:"stopTyping",
-                id:userId,
-                sender:currentAlias
-            }));
-
-        },1200);
-    }
-
-    if(e.key==="Enter"){
-        e.preventDefault();
-        send();
-    }
+if(e.key==="Enter"){
+e.preventDefault();
+send();
+}
 });
 
-    if(e.key==="Enter"){
-        e.preventDefault();
-        send();
-    }
-});
 clearBtn.onclick=()=>{
 chatLog.innerHTML="";
 sys("chat cleared");
