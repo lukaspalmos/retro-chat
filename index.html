@@ -211,8 +211,14 @@ name:currentAlias
 
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
-const d=JSON.parse(p.toString());
+let d;
 
+try{
+    d = JSON.parse(p.toString());
+}catch(err){
+    console.error("Invalid message", err);
+    return;
+}
 if(d.type==="typing"){
 if(d.id!==userId){
 typingUsers[d.id]={name:d.sender,time:Date.now()};
@@ -239,8 +245,12 @@ if(!d.text) return;
 delete typingUsers[d.id];
 renderTyping();
 
-users[d.id||d.sender]={name:d.sender,lastSeen:Date.now()};
-renderUsers();
+if(d.id){
+users[d.id]={
+name:d.sender,
+lastSeen:Date.now()
+};
+}renderUsers();
 
 const row=document.createElement("div");
 
@@ -318,8 +328,14 @@ return;
 }
 
 if(text.startsWith("/nick ")){
-currentAlias=text.replace("/nick ","");
+const newNick = text.slice(6).trim();
 
+if(!newNick){
+    sys("nickname cannot be empty");
+    return;
+}
+
+currentAlias = newNick;
 client.publish(topic,JSON.stringify({
 type:"join",
 id:userId,
@@ -334,6 +350,7 @@ return;
 const msgId=crypto.randomUUID();
 
 const payload={
+type:"message",
 msgId,
 id:userId,
 sender:currentAlias,
@@ -358,7 +375,11 @@ sendBtn.onclick=send;
 
 chatInput.addEventListener("keydown", e => {
 
-    if (e.key !== "Enter") {
+    if (
+    e.key.length === 1 ||
+    e.key === "Backspace" ||
+    e.key === "Delete"
+)
 
         client.publish(topic, JSON.stringify({
             type: "typing",
@@ -384,7 +405,6 @@ chatInput.addEventListener("keydown", e => {
 });
 chatLog.innerHTML="";
 sys("chat cleared");
-};
 
 </script>
 
