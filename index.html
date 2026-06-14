@@ -373,7 +373,12 @@ chatInput.value="";
 }
 
 // ================= EVENTS =================
-sendBtn.onclick=send;
+sendBtn.onclick = send;
+
+clearBtn.onclick = () => {
+    chatLog.innerHTML = "";
+    sys("chat cleared");
+};
 
 chatInput.addEventListener("keydown", e => {
 
