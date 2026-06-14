@@ -156,8 +156,6 @@ const typingUsers = {};
 let typingTimeout;
 
 // ================= BACKGROUND MUSIC =================
-const bgMusic = document.getElementById("bgMusic");
-
 const playlist = [
     "music1.mp3",
     "music2.mp3",
@@ -166,27 +164,44 @@ const playlist = [
 ];
 
 let musicEnabled = true;
+let shuffleBag = [];
+let currentTrack = null;
 
-if (bgMusic) {
-    bgMusic.volume = 0.08;
+bgMusic.volume = 0.08;
+
+// Fisher–Yates shuffle
+function shuffle(array) {
+    const arr = array.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
 }
 
-function pickRandomTrack() {
-    const index = Math.floor(Math.random() * playlist.length);
-    return playlist[index];
+function refillBag() {
+    shuffleBag = shuffle(playlist);
 }
 
-function playRandomTrack() {
+function playNextTrack() {
     if (!musicEnabled || !bgMusic) return;
 
-    bgMusic.src = pickRandomTrack();
+    if (shuffleBag.length === 0) {
+        refillBag();
+    }
+
+    currentTrack = shuffleBag.shift();
+    bgMusic.src = currentTrack;
+
+    // show in chat
+    sys("Now Playing 🎵 " + currentTrack);
+
     bgMusic.play().catch(() => {});
 }
 
 bgMusic.onended = () => {
-    playRandomTrack();
+    playNextTrack();
 };
-
 // ================= SYSTEM =================
 function sys(t){
 const d=document.createElement("div");
@@ -400,10 +415,11 @@ if (text === "/mute") {
 
 if (text === "/unmute") {
     musicEnabled = true;
-    playRandomTrack();
+    playNextTrack();
     sys("music unmuted");
     chatInput.value = "";
     return;
+}
 }
 
 const msgId=crypto.randomUUID();
@@ -432,7 +448,7 @@ chatInput.value="";
 // ================= EVENTS =================
 document.addEventListener("click", () => {
     if (musicEnabled && !bgMusic.src) {
-        playRandomTrack();
+        playNextTrack();
     }
 }, { once: true });
 
