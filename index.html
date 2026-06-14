@@ -143,6 +143,8 @@ const imgBtn=document.getElementById("imgBtn");
 const imgUpload=document.getElementById("imgUpload");
 const userListBox=document.getElementById("userListBox");
 const bgMusic = document.getElementById("bgMusic");
+const messageSound = document.getElementById("messageSound");
+const replySound = document.getElementById("replySound");
 // ================= MQTT =================
 const topic="luke_retro_global_open_lobby";
 const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
@@ -294,7 +296,10 @@ return;
 }
 
 if(!d.text) return;
-
+if (d.id !== userId) {
+    messageSound.currentTime = 0;
+    messageSound.play().catch(() => {});
+}
 delete typingUsers[d.id];
 renderTyping();
 
@@ -310,7 +315,18 @@ renderUsers();
 const row=document.createElement("div");
 
 if(d.reply && d.reply.senderId === userId){
-row.classList.add("replyHighlight");
+    row.classList.add("replyHighlight");
+
+    if(d.id !== userId){
+        replySound.currentTime = 0;
+        replySound.play().catch(() => {});
+    }
+}
+
+    if(d.id !== userId){
+        replySound.currentTime = 0;
+        replySound.play().catch(() => {});
+    }
 }
 
 if(d.reply){
@@ -404,6 +420,10 @@ sys("you are now "+currentAlias);
 chatInput.value="";
 return;
 }
+
+<audio id="bgMusic"></audio>
+<audio id="messageSound" src="aim-message.mp3" preload="auto"></audio>
+<audio id="replySound" src="aim-notif.mp3" preload="auto"></audio>
 
 if (text === "/mute") {
     musicEnabled = false;
