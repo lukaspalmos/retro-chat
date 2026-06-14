@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>CyberZone_95 Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="icon" type="image/png" href="czicon.png">
 <style>
 body{
 background:#000;
@@ -356,34 +356,32 @@ chatInput.value="";
 // ================= EVENTS =================
 sendBtn.onclick=send;
 
-chatInput.addEventListener("keydown",e=>{
+chatInput.addEventListener("keydown", e => {
 
-if(e.key !== "Enter"){
+    if (e.key !== "Enter") {
 
-client.publish(topic,JSON.stringify({
-type:"typing",
-id:userId,
-sender:currentAlias
-}));
+        client.publish(topic, JSON.stringify({
+            type: "typing",
+            id: userId,
+            sender: currentAlias
+        }));
 
-clearTimeout(typingTimeout);
+        clearTimeout(typingTimeout);
 
-typingTimeout=setTimeout(()=>{
-client.publish(topic,JSON.stringify({
-type:"stopTyping",
-id:userId,
-sender:currentAlias
-}));
-},1200);
-}
+        typingTimeout = setTimeout(() => {
+            client.publish(topic, JSON.stringify({
+                type: "stopTyping",
+                id: userId,
+                sender: currentAlias
+            }));
+        }, 1200);
+    }
 
-if(e.key==="Enter"){
-e.preventDefault();
-send();
-}
+    if (e.key === "Enter") {
+        e.preventDefault();
+        send();
+    }
 });
-
-clearBtn.onclick=()=>{
 chatLog.innerHTML="";
 sys("chat cleared");
 };
