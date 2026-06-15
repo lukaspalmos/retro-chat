@@ -170,7 +170,7 @@ const playlist=[
 let musicEnabled=true;
 let shuffleBag=[];
 let currentTrack=null;
-
+let musicStarted = false;
 bgMusic.volume=0.04;
 
 // shuffle
@@ -203,11 +203,14 @@ bgMusic.play().catch(()=>{});
 bgMusic.onended=playNextTrack;
 
 // start music on first click (browser safe)
-document.addEventListener("click",()=>{
-if(!bgMusic.src){
-playNextTrack();
-}
-},{once:true});
+
+document.addEventListener("click", () => {
+    if (musicStarted) return;
+    musicStarted = true;
+
+    refillBag();
+    playNextTrack();
+});
 
 // ================= SYSTEM =================
 function sys(t){
@@ -407,6 +410,28 @@ chatInput.value="";
 return;
 }
 
+if(text === "/mute"){
+    musicEnabled = false;
+    bgMusic.pause();
+    sys("music muted");
+    chatInput.value = "";
+    return;
+}
+
+if(text === "/unmute"){
+    musicEnabled = true;
+
+    if(bgMusic.src){
+        bgMusic.play().catch(()=>{});
+    } else {
+        playNextTrack();
+    }
+
+    sys("music unmuted");
+    chatInput.value = "";
+    return;
+}
+  
 const msgId=crypto.randomUUID();
 
 const payload={
