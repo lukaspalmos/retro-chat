@@ -162,6 +162,8 @@ const ORIGINAL_TITLE = "CyberZone_95 Chat";
 let unreadCount = 0;
 let flashInterval = null;
 let flashState = false;
+let currentTrack = null;
+let specialMusicLock = false;
 function updateTitle() {
 
     if (unreadCount <= 0) {
@@ -221,18 +223,19 @@ const specialProfiles = [
     {
         match: "dante",
         music: "devils_never_cry.mp3",
-        message: ""Jackpot.""
+        message: "'Jackpot.'"
     },
     {
         match: "vergil",
         music: "bury_the_light.mp3",
-        message: ""Where's your motivation?""
+        message: "'Where's your motivation?'"
     },
     {
         match: "sans",
         music: "sans.mp3",
         message: "hehe sup kiddo"
-    }{
+    },
+    {    
         match: "papyrus",
         music: "bonetrousle.mp3",
         message: "NYEHEHE! SO YOU HAVE PICKED THE BEST NAME!!!"
@@ -240,7 +243,7 @@ const specialProfiles = [
     {
         match: "cell",
         music: "perfect_cell_theme.mp3",
-        message: ""You're either perfect... or you're not me.""
+        message: "'You're either perfect... or you're not me.'"
     },
     {
         match: "piccolo",
@@ -248,6 +251,21 @@ const specialProfiles = [
         message: "alright we see the fit bro"
     }
 ];
+function applySpecialProfile(name) {
+    const profile = specialProfiles.find(p =>
+        name.toLowerCase().includes(p.match.toLowerCase())
+    );
+
+    if (!profile) return;
+
+    sys(profile.message);
+
+    if (profile.music) {
+        currentTrack = profile.music;
+        bgMusic.src = currentTrack;
+        bgMusic.play().catch(() => {});
+    }
+}
 // ================= MUSIC =================
 const playlist=[
 "sunday_theme.mp3",
@@ -277,20 +295,24 @@ shuffleBag=shuffle(playlist);
 }
 
 function playNextTrack(){
-if(!musicEnabled) return;
+    if(!musicEnabled || specialMusicLock) return;
 
-if(shuffleBag.length===0) refillBag();
+    if(shuffleBag.length===0) refillBag();
 
-currentTrack=shuffleBag.shift();
-bgMusic.src=currentTrack;
-    
-sys("now playing ♫♪ "+currentTrack);
+    currentTrack = shuffleBag.shift();
+    bgMusic.src = currentTrack;
 
-bgMusic.play().catch(()=>{});
+    sys("now playing ♫♪ " + currentTrack);
+
+    bgMusic.play().catch(()=>{});
 }
 
-bgMusic.onended = playNextTrack;
 
+bgMusic.onended = () => {
+    specialMusicLock = false;
+    playNextTrack();
+};
+    
 bgMusic.onerror = () => {
     sys("ERROR loading: " + currentTrack);
     console.error("Failed to load:", currentTrack);
@@ -378,8 +400,10 @@ if(d.type==="join"){
 users[d.id]={name:d.name,lastSeen:Date.now()};
 renderUsers();
 sys(d.name+" joined");
+applySpecialProfile(d.name);
 return;
 }
+
 
 if(!d.text) return;
 
@@ -525,6 +549,7 @@ const newNick=text.slice(6).trim();
 if(!newNick) return sys("nickname cannot be empty");
 
 currentAlias=newNick;
+applySpecialProfile(currentAlias);
 
 client.publish(topic,JSON.stringify({
 type:"join",
