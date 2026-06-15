@@ -169,6 +169,7 @@ let flashInterval = null;
 let flashState = false;
 let currentTrack = null;
 let specialMusicLock = false;
+let activeSpecialProfile = null;
 function publishJoin() {
     client.publish(topic, JSON.stringify({
         type: "join",
@@ -269,31 +270,38 @@ function applySpecialProfile(name) {
         name.toLowerCase().includes(p.match.toLowerCase())
     );
 
-   if (!profile) {
-    specialMusicLock = false;
+    if (!profile) {
+        activeSpecialProfile = null;
+        specialMusicLock = false;
 
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
 
-    if (musicEnabled) {
-        playNextTrack();
+        if (musicEnabled) {
+            playNextTrack();
+        }
+
+        return;
     }
 
-    return;
+    if (activeSpecialProfile === profile.match) {
+        return; // already active, don't replay
     }
+
+    activeSpecialProfile = profile.match;
 
     sys(profile.message);
 
     if (profile.music) {
-    bgMusic.pause();
+        bgMusic.pause();
 
-    specialMusicLock = true;
-    currentTrack = profile.music;
+        specialMusicLock = true;
+        currentTrack = profile.music;
 
-    bgMusic.src = currentTrack;
-    bgMusic.currentTime = 0;
+        bgMusic.src = currentTrack;
+        bgMusic.currentTime = 0;
 
-    bgMusic.play().catch(() => {});
+        bgMusic.play().catch(() => {});
     }
 }
 // ================= MUSIC =================
