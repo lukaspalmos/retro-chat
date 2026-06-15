@@ -157,14 +157,19 @@ const CLOUDINARY_UPLOAD_PRESET="chat_upload";
 const users={};
 let replyTarget=null;
 const typingUsers={};
-let typingTimeout;
 const ORIGINAL_TITLE = "CyberZone_95 Chat";
 let unreadCount = 0;
 let flashInterval = null;
 let flashState = false;
 let currentTrack = null;
 let specialMusicLock = false;
-function updateTitle() {
+function publishJoin() {
+    client.publish(topic, JSON.stringify({
+        type: "join",
+        id: userId,
+        name: currentAlias
+    }));
+}function updateTitle() {
 
     if (unreadCount <= 0) {
         document.title = ORIGINAL_TITLE;
@@ -368,20 +373,37 @@ box.textContent="Several users are typing...";
 }
 
 // ================= CONNECT =================
-client.on("connect",()=>{
-client.subscribe(topic);
-client.publish(topic,JSON.stringify({
-type:"join",
-id:userId,
-name:currentAlias
-}));
-});
+client.on("connect", () => {
+    console.log("MQTT connected");
+    sys("Connected to server");
 
+    client.subscribe(topic, (err) => {
+        if (err) console.error("Subscribe error", err);
+        else console.log("Subscribed to topic");
+    });
+
+    const joinPayload = {
+        type: "join",
+        id: userId,
+        name: currentAlias
+    };
+
+    client.publish(topic, JSON.stringify(joinPayload));
+
+    // 👇 local UI update so YOU see yourself immediately
+    users[userId] = {
+        name: currentAlias,
+        lastSeen: Date.now()
+    };
+
+    renderUsers();
+});
 // ================= MESSAGE =================
 client.on("message",(t,p)=>{
+    console.log("RAW MESSAGE:", p.toString()); // 👈 DEBUG
 let d;
 try{d=JSON.parse(p.toString());}catch{return;}
-
+console.log("MESSAGE RECEIVED:", d);
 if(d.type==="typing"){
 if(d.id!==userId){
 typingUsers[d.id]={name:d.sender,time:Date.now()};
@@ -399,6 +421,7 @@ return;
 if(d.type==="join"){
 users[d.id]={name:d.name,lastSeen:Date.now()};
 renderUsers();
+console.log("JOIN EVENT:", d);
 sys(d.name+" joined");
 applySpecialProfile(d.name);
 return;
@@ -518,12 +541,13 @@ chatLog.scrollTop=chatLog.scrollHeight;
 
 // ================= SEND =================
 function send(){
+    console.log("SEND TRIGGERED"); // 👈 DEBUG
 client.publish(topic,JSON.stringify({
 type:"stopTyping",
 id:userId,
 sender:currentAlias
 }));
-
+console.log("MQTT state:", client.connected);
 let text=chatInput.value.trim();
 if(!text) return;
 if(!musicStarted){
@@ -544,22 +568,18 @@ if(text === "/testmusic"){
     return;
 }
     
-if(text.startsWith("/nick ")){
-const newNick=text.slice(6).trim();
-if(!newNick) return sys("nickname cannot be empty");
+if(text.startsWith("/nick ")) {
+    const newNick = text.slice(6).trim();
+    if(!newNick) return sys("nickname cannot be empty");
 
-currentAlias=newNick;
-applySpecialProfile(currentAlias);
+    currentAlias = newNick;
+    applySpecialProfile(currentAlias);
 
-client.publish(topic,JSON.stringify({
-type:"join",
-id:userId,
-name:currentAlias
-}));
+    publishJoin(); // 👈 IMPORTANT FIX
 
-sys("you are now "+currentAlias);
-chatInput.value="";
-return;
+    sys("you are now " + currentAlias);
+    chatInput.value = "";
+    return;
 }
 
 if(text === "/mute"){
@@ -662,7 +682,24 @@ clearBtn.onclick=()=>{
 chatLog.innerHTML="";
 sys("chat cleared");
 };
+let typingTimer;
 
+chatInput.addEventListener("input", () => {
+    client.publish(topic, JSON.stringify({
+        type: "typing",
+        id: userId,
+        sender: currentAlias
+    }));
+
+    clearTimeout(typingTimer);
+
+    typingTimer = setTimeout(() => {
+        client.publish(topic, JSON.stringify({
+            type: "stopTyping",
+            id: userId
+        }));
+    }, 1000);
+});
 chatInput.addEventListener("keydown",e=>{
 if(e.key==="Enter"){
 e.preventDefault();
