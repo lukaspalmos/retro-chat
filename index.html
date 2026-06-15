@@ -272,7 +272,10 @@ function applySpecialProfile(name) {
    if (!profile) {
     specialMusicLock = false;
 
-    if (musicEnabled && bgMusic.paused) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+
+    if (musicEnabled) {
         playNextTrack();
     }
 
@@ -412,7 +415,6 @@ client.on("connect", () => {
     };
 
     renderUsers();
-    applySpecialProfile(currentAlias);
 });
 // ================= MESSAGE =================
 client.on("message", (t, p) => {
@@ -603,8 +605,6 @@ if(text.startsWith("/nick ")) {
     // UPDATE YOUR LOCAL USER LIST ENTRY
     users[userId].name = newNick;
     renderUsers();
-
-    applySpecialProfile(newNick);
 
     client.publish(topic, JSON.stringify({
         type: "nameChange",
