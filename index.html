@@ -193,8 +193,8 @@ if(!musicEnabled) return;
 if(shuffleBag.length===0) refillBag();
 
 currentTrack=shuffleBag.shift();
-bgMusic.src="./"+currentTrack;
-
+bgMusic.src=currentTrack;
+    
 sys("now playing ♫♪ "+currentTrack);
 
 bgMusic.play().catch(()=>{});
