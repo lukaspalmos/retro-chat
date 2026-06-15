@@ -200,14 +200,18 @@ sys("now playing ♫♪ "+currentTrack);
 bgMusic.play().catch(()=>{});
 }
 
-bgMusic.onended=playNextTrack;
+bgMusic.onended = playNextTrack;
 
+bgMusic.onerror = () => {
+    sys("ERROR loading: " + currentTrack);
+    console.error("Failed to load:", currentTrack);
+};
 // start music on first click (browser safe)
 
-document.addEventListener("click", () => {
+sendBtn.addEventListener("click", () => {
     if (musicStarted) return;
-    musicStarted = true;
 
+    musicStarted = true;
     refillBag();
     playNextTrack();
 });
@@ -393,6 +397,12 @@ chatInput.value="";
 return;
 }
 
+if(text === "/testmusic"){
+    playNextTrack();
+    chatInput.value = "";
+    return;
+}
+    
 if(text.startsWith("/nick ")){
 const newNick=text.slice(6).trim();
 if(!newNick) return sys("nickname cannot be empty");
@@ -421,11 +431,11 @@ if(text === "/mute"){
 if(text === "/unmute"){
     musicEnabled = true;
 
-    if(bgMusic.src){
-        bgMusic.play().catch(()=>{});
-    } else {
-        playNextTrack();
-    }
+    if(bgMusic.paused){
+    bgMusic.play().catch(()=>{});
+} else if(!bgMusic.src){
+    playNextTrack();
+}
 
     sys("music unmuted");
     chatInput.value = "";
@@ -518,6 +528,8 @@ send();
 }
 });
 
+
+    
 sys("Connected you to CyberZone_95.");
 </script>
 
