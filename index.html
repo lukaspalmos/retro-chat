@@ -269,14 +269,28 @@ function applySpecialProfile(name) {
         name.toLowerCase().includes(p.match.toLowerCase())
     );
 
-    if (!profile) return;
+   if (!profile) {
+    specialMusicLock = false;
+
+    if (musicEnabled && bgMusic.paused) {
+        playNextTrack();
+    }
+
+    return;
+    }
 
     sys(profile.message);
 
     if (profile.music) {
-        currentTrack = profile.music;
-        bgMusic.src = currentTrack;
-        bgMusic.play().catch(() => {});
+    bgMusic.pause();
+
+    specialMusicLock = true;
+    currentTrack = profile.music;
+
+    bgMusic.src = currentTrack;
+    bgMusic.currentTime = 0;
+
+    bgMusic.play().catch(() => {});
     }
 }
 // ================= MUSIC =================
@@ -398,6 +412,7 @@ client.on("connect", () => {
     };
 
     renderUsers();
+    applySpecialProfile(currentAlias);
 });
 // ================= MESSAGE =================
 client.on("message", (t, p) => {
@@ -409,16 +424,29 @@ if (d.type === "join") {
     users[d.id] = { name: d.name, lastSeen: Date.now() };
     renderUsers();
     sys(d.name + " joined");
-    applySpecialProfile(d.name);
+
+    if (d.id === userId) {
+        applySpecialProfile(d.name);
+    }
+
     return;
 }
 
 // ================= NAME CHANGE =================
 if (d.type === "nameChange") {
-    if (d.id === userId) return;
 
-    users[d.id] = { name: d.name, lastSeen: Date.now() };
+    users[d.id] = {
+        name: d.name,
+        lastSeen: Date.now()
+    };
+
     renderUsers();
+
+    if (d.id === userId) {
+        applySpecialProfile(d.name);
+        return;
+    }
+
     sys(`${d.oldName} is now ${d.name}`);
     return;
 }
@@ -553,6 +581,7 @@ if(!musicStarted){
 if(text==="/clear"){
 chatLog.innerHTML="";
 sys("chat cleared");
+chatLog.scrollTop = chatLog.scrollHeight;
 chatInput.value="";
 return;
 }
@@ -570,7 +599,9 @@ if(text.startsWith("/nick ")) {
     const oldNick = currentAlias;   // ✅ SAVE FIRST
 
     currentAlias = newNick;         // then update
-
+    applySpecialProfile(newNick);
+    users[userId].name = newNick;
+    renderUsers();
     client.publish(topic, JSON.stringify({
         type: "nameChange",
         id: userId,
