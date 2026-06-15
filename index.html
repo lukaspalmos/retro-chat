@@ -599,9 +599,13 @@ if(text.startsWith("/nick ")) {
     const oldNick = currentAlias;   // ✅ SAVE FIRST
 
     currentAlias = newNick;         // then update
-    applySpecialProfile(newNick);
+
+    // UPDATE YOUR LOCAL USER LIST ENTRY
     users[userId].name = newNick;
     renderUsers();
+
+    applySpecialProfile(newNick);
+
     client.publish(topic, JSON.stringify({
         type: "nameChange",
         id: userId,
@@ -612,7 +616,7 @@ if(text.startsWith("/nick ")) {
     sys("you are now " + currentAlias);
     chatInput.value = "";
     return;
-}
+    }
 
 if(text === "/mute"){
     musicEnabled = false;
