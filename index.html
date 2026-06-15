@@ -158,7 +158,64 @@ const users={};
 let replyTarget=null;
 const typingUsers={};
 let typingTimeout;
+const ORIGINAL_TITLE = "CyberZone_95 Chat";
+let unreadCount = 0;
+let flashInterval = null;
+let flashState = false;
+function updateTitle() {
 
+    if (unreadCount <= 0) {
+        document.title = ORIGINAL_TITLE;
+
+        if (flashInterval) {
+            clearInterval(flashInterval);
+            flashInterval = null;
+        }
+
+        return;
+    }
+
+    const label =
+        unreadCount === 1
+            ? "New Message!"
+            : "New Messages!";
+
+    const unreadTitle =
+        `(${unreadCount} ${label}) ${ORIGINAL_TITLE}`;
+
+    // If tab is visible, don't flash
+    if (!document.hidden) {
+        document.title = unreadTitle;
+        return;
+    }
+
+    // Start flashing once
+    if (!flashInterval) {
+        flashInterval = setInterval(() => {
+            flashState = !flashState;
+
+            document.title = flashState
+                ? unreadTitle
+                : ORIGINAL_TITLE;
+        }, 600);
+    }
+}
+document.addEventListener("visibilitychange", () => {
+
+    if (!document.hidden) {
+
+        unreadCount = 0;
+        flashState = false;
+
+        if (flashInterval) {
+            clearInterval(flashInterval);
+            flashInterval = null;
+        }
+
+        document.title = ORIGINAL_TITLE;
+    }
+
+});
 // ================= MUSIC =================
 const playlist=[
 "sunday_theme.mp3",
@@ -207,15 +264,7 @@ bgMusic.onerror = () => {
     console.error("Failed to load:", currentTrack);
 };
 // start music on first click (browser safe)
-
-sendBtn.addEventListener("click", () => {
-    if (musicStarted) return;
-
-    musicStarted = true;
-    refillBag();
-    playNextTrack();
-});
-
+    
 // ================= SYSTEM =================
 function sys(t){
 const d=document.createElement("div");
@@ -302,15 +351,30 @@ return;
 
 if(!d.text) return;
 
+const mentionMe =
+    d.text &&
+    d.text.toLowerCase().includes(
+        "@" + currentAlias.toLowerCase()
+    );
 // sounds
 if(d.id!==userId){
-if(d.reply && d.reply.senderId===userId){
-replySound.currentTime=0;
-replySound.play().catch(()=>{});
-}else{
-messageSound.currentTime=0;
-messageSound.play().catch(()=>{});
-}
+
+    if(document.hidden){
+        unreadCount++;
+        updateTitle();
+    }
+
+    if(
+        (d.reply && d.reply.senderId===userId)
+        || mentionMe
+    ){
+        replySound.currentTime=0;
+        replySound.play().catch(()=>{});
+    }else{
+        messageSound.currentTime=0;
+        messageSound.play().catch(()=>{});
+    }
+
 }
 
 delete typingUsers[d.id];
@@ -324,8 +388,18 @@ renderUsers();
 // message row
 const row=document.createElement("div");
 
+// Reply highlight
 if(d.reply && d.reply.senderId===userId){
-row.classList.add("replyHighlight");
+    row.classList.add("replyHighlight");
+}
+
+// Mention highlight
+if(
+    d.id !== userId &&
+    mentionMe
+){
+    row.style.background = "#333300";
+    row.style.borderLeft = "4px solid orange";
 }
 
 if(d.reply){
@@ -339,6 +413,13 @@ const header=document.createElement("span");
 header.style.color=d.sender===currentAlias?"#0ff":"#f0f";
 header.textContent=`<${d.sender}> `;
 
+header.style.cursor = "pointer";
+
+header.onclick = () => {
+    chatInput.value += " @" + d.sender;
+    chatInput.focus();
+};
+    
 const time=document.createElement("span");
 time.style.color="#0f0";
 time.textContent=` [${d.timestamp}] `;
@@ -389,7 +470,11 @@ sender:currentAlias
 
 let text=chatInput.value.trim();
 if(!text) return;
-
+if(!musicStarted){
+    musicStarted = true;
+    refillBag();
+    playNextTrack();
+}
 if(text==="/clear"){
 chatLog.innerHTML="";
 sys("chat cleared");
@@ -431,11 +516,11 @@ if(text === "/mute"){
 if(text === "/unmute"){
     musicEnabled = true;
 
-    if(bgMusic.paused){
-    bgMusic.play().catch(()=>{});
-} else if(!bgMusic.src){
-    playNextTrack();
-}
+    if(bgMusic.src){
+        bgMusic.play().catch(()=>{});
+    }else{
+        playNextTrack();
+    }
 
     sys("music unmuted");
     chatInput.value = "";
