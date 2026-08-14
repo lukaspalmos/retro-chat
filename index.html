@@ -6,12 +6,267 @@
 
     <!-- FAVICON -->
     <link rel="icon" type="image/png" href="aim-icon.png">
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #111;
+    color: #eee;
+    font-family: Arial, sans-serif;
+}
+
+#app {
+    max-width: 1100px;
+    margin: 20px auto;
+    border: 2px solid #555;
+    background: #1b1b1b;
+}
+
+header {
+    padding: 15px;
+    background: #222;
+    border-bottom: 1px solid #555;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    min-height: 600px;
+}
+
+aside {
+    padding: 10px;
+    background: #151515;
+    border-right: 1px solid #555;
+}
+
+#userListBox {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.user:hover {
+    background: #333;
+}
+
+.user-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #00ff66;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+}
+
+#chatLog {
+    flex: 1;
+    min-height: 500px;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.system-message {
+    color: #888;
+    margin: 5px 0;
+}
+
+.message-row {
+    padding: 6px;
+    margin-bottom: 4px;
+}
+
+.message-user {
+    color: #55aaff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.message-user.self {
+    color: #55ff88;
+}
+
+.message-time {
+    color: #777;
+    font-size: 12px;
+}
+
+.message-text {
+    margin-left: 5px;
+}
+
+.msg-btn {
+    margin-left: 10px;
+    font-size: 11px;
+}
+
+.reply-box {
+    color: #aaa;
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+.chat-image {
+    max-width: 400px;
+    max-height: 300px;
+    display: block;
+    margin-top: 5px;
+}
+
+.reply-highlight {
+    background: #332b00;
+}
+
+.mention-highlight {
+    background: #00332a;
+}
+
+#typingIndicator {
+    height: 25px;
+    padding: 5px 15px;
+    color: #888;
+    font-size: 12px;
+}
+
+#controls {
+    display: flex;
+    gap: 5px;
+    padding: 10px;
+    border-top: 1px solid #555;
+}
+
+#chatInput {
+    flex: 1;
+    padding: 10px;
+    background: #111;
+    color: white;
+    border: 1px solid #555;
+}
+
+button {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+</style>
 </head>
 
 <body>
-<script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+
+    <div id="app">
+
+        <header>
+            <h1>AIM - luke's chatroom</h1>
+
+            <div>
+                <span id="connectionStatus">Connecting...</span>
+                <span id="profileName"></span>
+            </div>
+        </header>
+
+
+        <main>
+
+            <!-- USER LIST -->
+            <aside>
+                <h3>Users</h3>
+                <div id="userListBox"></div>
+            </aside>
+
+
+            <!-- CHAT -->
+            <section>
+
+                <div id="chatLog"></div>
+
+                <div id="typingIndicator"></div>
+
+                <div id="controls">
+
+                    <input
+                        type="text"
+                        id="chatInput"
+                        placeholder="Type a message..."
+                        autocomplete="off"
+                    >
+
+                    <button id="sendBtn">
+                        Send
+                    </button>
+
+                    <button id="imgBtn">
+                        Image
+                    </button>
+
+                    <button id="nickBtn">
+                        Nickname
+                    </button>
+
+                    <button id="clearBtn">
+                        Clear
+                    </button>
+
+                    <button id="musicBtn">
+                        Music: On
+                    </button>
+
+                    <input
+                        type="file"
+                        id="imgUpload"
+                        accept="image/*"
+                        hidden
+                    >
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- AUDIO -->
+    <audio id="bgMusic"></audio>
+
+    <audio id="messageSound" preload="auto">
+        <source src="message.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="replySound" preload="auto">
+        <source src="reply.mp3" type="audio/mpeg">
+    </audio>
+
+
+    <!-- MQTT -->
+    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
 
 <script>
+
 /* =========================================================
    SAFETY CHECK
 ========================================================= */
@@ -857,6 +1112,7 @@ function publishJoin() {
     );
 }
 
+
 function publishPresence() {
 
     if (!client.connected) {
@@ -873,11 +1129,14 @@ function publishPresence() {
     );
 }
 
+
 setInterval(() => {
 
     publishPresence();
 
 }, 20000);
+
+
 /* =========================================================
    MQTT CONNECT
 ========================================================= */
@@ -918,8 +1177,8 @@ client.on(
                 publishPresence();
 
                 applySpecialProfile(
-                   currentAlias
-);
+                    currentAlias
+                );
             }
         );
     }
@@ -985,67 +1244,67 @@ client.on(
         }
 
 
-                 /* -----------------------------------------
-            JOIN
-         ----------------------------------------- */
-         
-         if (
-             d.type ===
-             "join"
-         ) {
-         
-             users[d.id] = {
-         
-                 name:
-                     d.name,
-         
-                 lastSeen:
-                     Date.now()
-             };
-         
-         
-             renderUsers();
-         
-         
-             if (
-                 d.id !== userId
-             ) {
-         
-                 sys(
-                     d.name +
-                     " signed on."
-                 );
-             }
-         
-         
-             return;
-         }
-         
-         
-         /* -----------------------------------------
-            PRESENCE
-         ----------------------------------------- */
-         
-         if (
-             d.type ===
-             "presence"
-         ) {
-         
-             users[d.id] = {
-         
-                 name:
-                     d.name,
-         
-                 lastSeen:
-                     Date.now()
-             };
-         
-             renderUsers();
-         
-             return;
-         }
-         
-         
+        /* -----------------------------------------
+           JOIN
+        ----------------------------------------- */
+
+        if (
+            d.type ===
+            "join"
+        ) {
+
+            users[d.id] = {
+
+                name:
+                    d.name,
+
+                lastSeen:
+                    Date.now()
+            };
+
+
+            renderUsers();
+
+
+            if (
+                d.id !== userId
+            ) {
+
+                sys(
+                    d.name +
+                    " signed on."
+                );
+            }
+
+
+            return;
+        }
+
+
+        /* -----------------------------------------
+           PRESENCE
+        ----------------------------------------- */
+
+        if (
+            d.type ===
+            "presence"
+        ) {
+
+            users[d.id] = {
+
+                name:
+                    d.name,
+
+                lastSeen:
+                    Date.now()
+            };
+
+
+            renderUsers();
+
+            return;
+        }
+
 
         /* -----------------------------------------
            NAME CHANGE
@@ -1517,6 +1776,7 @@ function send() {
         return;
     }
 
+
     /* -----------------------------------------
        STOP TYPING
     ----------------------------------------- */
@@ -1819,7 +2079,10 @@ function send() {
     chatInput.value =
         "";
 }
+
+
 sendBtn.onclick = send;
+
 
 /* =========================================================
    IMAGE UPLOAD
@@ -2251,6 +2514,8 @@ document.addEventListener(
         once: true
     }
 );
+
+</script>
 
 </body>
 </html>
