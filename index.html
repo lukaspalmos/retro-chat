@@ -9,17 +9,16 @@ if (!window.mqtt) {
     alert("MQTT failed to load.");
     throw new Error("MQTT library unavailable.");
 }
-<script>
+
+
 /* =========================================================
-   SAFETY CHECK
+   USER
 ========================================================= */
 
-if (!window.mqtt) {
-    alert("MQTT failed to load.");
-    throw new Error("MQTT library unavailable.");
-}
+const userId = crypto.randomUUID();
 
-
+let currentAlias =
+    "Guest_" + Math.floor(Math.random() * 9000);
 /* =========================================================
    USER
 ========================================================= */
