@@ -990,42 +990,6 @@ client.on(
          }
          
          
-         /* -----------------------------------------
-            NAME CHANGE
-         ----------------------------------------- */
-         
-         if (
-             d.type ===
-             "nameChange"
-         ) {
-
-            users[d.id] = {
-
-                name:
-                    d.name,
-
-                lastSeen:
-                    Date.now()
-            };
-
-
-            renderUsers();
-
-
-            if (
-                d.id !== userId
-            ) {
-
-                sys(
-                    d.name +
-                    " signed on."
-                );
-            }
-
-
-            return;
-        }
-
 
         /* -----------------------------------------
            NAME CHANGE
