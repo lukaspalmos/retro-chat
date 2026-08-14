@@ -17,8 +17,47 @@ if (!window.mqtt) {
 
 const userId = crypto.randomUUID();
 
+function askForUsername() {
+
+    let username = "";
+
+    while (!username) {
+
+        username = prompt(
+            "Welcome to luke's chatroom!\n\nEnter your username:"
+        );
+
+        // User pressed Cancel
+        if (username === null) {
+            username =
+                "Guest_" + Math.floor(Math.random() * 9000);
+            break;
+        }
+
+        username =
+            username.trim();
+
+        if (!username) {
+            alert("Please enter a username.");
+        }
+    }
+
+    // Limit username length
+    if (username.length > 30) {
+
+        username =
+            username.substring(0, 30);
+
+        alert(
+            "Username was shortened to 30 characters."
+        );
+    }
+
+    return username;
+}
+
 let currentAlias =
-    "Guest_" + Math.floor(Math.random() * 9000);
+    askForUsername();
 
 /* =========================================================
    UI
