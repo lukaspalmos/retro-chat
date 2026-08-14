@@ -19,15 +19,6 @@ const userId = crypto.randomUUID();
 
 let currentAlias =
     "Guest_" + Math.floor(Math.random() * 9000);
-/* =========================================================
-   USER
-========================================================= */
-
-const userId = crypto.randomUUID();
-
-let currentAlias =
-    "Guest_" + Math.floor(Math.random() * 9000);
-
 
 /* =========================================================
    UI
@@ -771,7 +762,27 @@ function publishJoin() {
     );
 }
 
+function publishPresence() {
 
+    if (!client.connected) {
+        return;
+    }
+
+    client.publish(
+        topic,
+        JSON.stringify({
+            type: "presence",
+            id: userId,
+            name: currentAlias
+        })
+    );
+}
+
+setInterval(() => {
+
+    publishPresence();
+
+}, 20000);
 /* =========================================================
    MQTT CONNECT
 ========================================================= */
@@ -809,9 +820,11 @@ client.on(
 
                 publishJoin();
 
+                publishPresence();
+
                 applySpecialProfile(
-                    currentAlias
-                );
+                   currentAlias
+);
             }
         );
     }
@@ -877,14 +890,75 @@ client.on(
         }
 
 
-        /* -----------------------------------------
-           JOIN
-        ----------------------------------------- */
-
-        if (
-            d.type ===
-            "join"
-        ) {
+                 /* -----------------------------------------
+            JOIN
+         ----------------------------------------- */
+         
+         if (
+             d.type ===
+             "join"
+         ) {
+         
+             users[d.id] = {
+         
+                 name:
+                     d.name,
+         
+                 lastSeen:
+                     Date.now()
+             };
+         
+         
+             renderUsers();
+         
+         
+             if (
+                 d.id !== userId
+             ) {
+         
+                 sys(
+                     d.name +
+                     " signed on."
+                 );
+             }
+         
+         
+             return;
+         }
+         
+         
+         /* -----------------------------------------
+            PRESENCE
+         ----------------------------------------- */
+         
+         if (
+             d.type ===
+             "presence"
+         ) {
+         
+             users[d.id] = {
+         
+                 name:
+                     d.name,
+         
+                 lastSeen:
+                     Date.now()
+             };
+         
+             renderUsers();
+         
+             return;
+         }
+         
+         
+         /* -----------------------------------------
+            NAME CHANGE
+         ----------------------------------------- */
+         
+         if (
+             d.type ===
+             "nameChange"
+         ) {
 
             users[d.id] = {
 
@@ -1384,7 +1458,6 @@ function send() {
         return;
     }
 
-
     /* -----------------------------------------
        STOP TYPING
     ----------------------------------------- */
@@ -1687,7 +1760,7 @@ function send() {
     chatInput.value =
         "";
 }
-
+sendBtn.onclick = send;
 
 /* =========================================================
    IMAGE UPLOAD
