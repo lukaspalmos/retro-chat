@@ -2,186 +2,945 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CyberZone_95 Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIM - CyberZone_95</title>
+
 <link rel="icon" type="image/png" href="czicon.png">
 
+<script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+
 <style>
-body{
-background:#000;
-color:#0f0;
-font-family:Courier New;
-margin:0;
-padding:15px;
+/* =========================================================
+   AIM / 90s WINDOWS STYLE
+========================================================= */
+
+* {
+    box-sizing: border-box;
 }
 
-.chat-window{
-max-width:900px;
-margin:auto;
-background:#c0c0c0;
-border:3px outset #888;
+html,
+body {
+    margin: 0;
+    min-height: 100%;
 }
 
-.title-bar{
-background:linear-gradient(90deg,#000080,#0080ff);
-color:#fff;
-padding:6px;
-font-weight:bold;
+body {
+    background:
+        linear-gradient(#d9d9d9 0 1px, transparent 1px),
+        linear-gradient(90deg, #d9d9d9 0 1px, transparent 1px),
+        #bdbdbd;
+    background-size: 4px 4px;
+
+    font-family:
+        "Tahoma",
+        "MS Sans Serif",
+        Arial,
+        sans-serif;
+
+    font-size: 11px;
+    color: #000;
+    padding: 18px;
 }
 
-.workspace{display:flex;gap:10px;padding:10px;}
+/* =========================================================
+   MAIN WINDOW
+========================================================= */
 
-.chat-log{
-flex:3;
-height:340px;
-background:#000;
-border:3px inset #888;
-overflow-y:auto;
-padding:8px;
+.aim-window {
+    width: min(980px, 100%);
+    margin: 0 auto;
+
+    background: #d4d0c8;
+
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+
+    box-shadow:
+        2px 2px 0 #000,
+        6px 6px 0 rgba(0,0,0,.25);
 }
 
-.user-list{
-flex:1;
-background:#000;
-border:3px inset #888;
-color:#0ff;
-padding:8px;
-font-size:13px;
+/* =========================================================
+   TITLE BAR
+========================================================= */
+
+.title-bar {
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 2px 4px;
+
+    color: white;
+    font-weight: bold;
+
+    background:
+        linear-gradient(
+            to right,
+            #173b92 0%,
+            #2858bd 65%,
+            #5277c8 100%
+        );
 }
 
-.input-bar{
-display:flex;
-gap:5px;
-padding:10px;
-background:#c0c0c0;
+.title-icon {
+    width: 18px;
+    height: 18px;
+
+    margin-right: 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffcc00;
+    color: #173b92;
+
+    border: 1px solid #fff;
+
+    font-size: 12px;
+    font-weight: bold;
 }
 
-.input-bar input{
-flex:1;
-padding:6px;
+.title-text {
+    flex: 1;
 }
 
-.sys{color:yellow;}
-
-.replyBox{
-background:#111;
-border-left:4px solid yellow;
-color:yellow;
-padding:4px;
-font-size:11px;
-margin-bottom:4px;
+.window-buttons {
+    display: flex;
+    gap: 2px;
 }
 
-.replyHighlight{
-background:#333300;
-border-left:4px solid yellow;
-padding:3px;
+.window-button {
+    width: 18px;
+    height: 17px;
+
+    background: #d4d0c8;
+
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #404040;
+    border-bottom: 1px solid #404040;
+
+    color: #000;
+    font-size: 10px;
+    line-height: 14px;
+    text-align: center;
+
+    font-weight: bold;
 }
 
-.msgBtn{
-font-size:11px;
-margin-left:6px;
-cursor:pointer;
+/* =========================================================
+   MENU
+========================================================= */
+
+.menu-bar {
+    height: 23px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 5px;
+
+    background: #d4d0c8;
+
+    border-bottom: 1px solid #808080;
+}
+
+.menu-item {
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #173b92;
+    color: #fff;
+}
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 5px;
+
+    border-bottom: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.toolbar-button {
+    min-width: 70px;
+
+    padding: 4px 8px;
+
+    background: #d4d0c8;
+
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.toolbar-button:active {
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.workspace {
+    display: flex;
+    gap: 7px;
+
+    padding: 7px;
+}
+
+/* =========================================================
+   CHAT PANEL
+========================================================= */
+
+.chat-panel {
+    flex: 1;
+
+    min-width: 0;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.panel-title {
+    height: 20px;
+
+    padding: 3px 5px;
+
+    color: #fff;
+    font-weight: bold;
+
+    background: #173b92;
+}
+
+.chat-log {
+    height: 380px;
+
+    overflow-y: auto;
+
+    padding: 7px;
+
+    background: #fff;
+
+    font-family:
+        "Tahoma",
+        "MS Sans Serif",
+        Arial,
+        sans-serif;
+
+    font-size: 12px;
+}
+
+/* =========================================================
+   MESSAGE ROWS
+========================================================= */
+
+.message-row {
+    margin-bottom: 5px;
+    padding: 2px 3px;
+
+    line-height: 16px;
+
+    border-left: 3px solid transparent;
+}
+
+.message-row:hover {
+    background: #eef3ff;
+}
+
+.message-user {
+    color: #000080;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.message-user.self {
+    color: #008000;
+}
+
+.message-time {
+    color: #777;
+    font-size: 10px;
+}
+
+.message-text {
+    color: #000;
+    word-wrap: break-word;
+}
+
+.reply-box {
+    margin: 3px 0;
+    padding: 3px 5px;
+
+    background: #f1f1f1;
+
+    border-left: 3px solid #808080;
+
+    color: #555;
+    font-size: 10px;
+}
+
+.reply-highlight {
+    background: #fff9c4;
+    border-left: 3px solid #ff9900;
+}
+
+.mention-highlight {
+    background: #fff4b0;
+    border-left: 3px solid #ff9900;
+}
+
+.system-message {
+    color: #555;
+    font-style: italic;
+    margin: 3px 0;
+}
+
+.system-message strong {
+    color: #173b92;
+}
+
+.msg-btn {
+    margin-left: 7px;
+
+    padding: 1px 5px;
+
+    background: #d4d0c8;
+
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #404040;
+    border-bottom: 1px solid #404040;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.chat-image {
+    display: block;
+
+    max-width: 250px;
+    max-height: 250px;
+
+    margin-top: 4px;
+
+    border: 1px solid #000;
+}
+
+/* =========================================================
+   USER LIST
+========================================================= */
+
+.user-panel {
+    width: 190px;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.user-header {
+    height: 20px;
+
+    padding: 3px 5px;
+
+    background: #173b92;
+    color: #fff;
+
+    font-weight: bold;
+}
+
+.user-list {
+    height: 380px;
+
+    overflow-y: auto;
+
+    padding: 5px;
+
+    background: #fff;
+}
+
+.user-section {
+    margin-bottom: 7px;
+
+    color: #173b92;
+
+    font-weight: bold;
+}
+
+.user {
+    padding: 3px 2px;
+
+    cursor: pointer;
+}
+
+.user:hover {
+    background: #dce7ff;
+}
+
+.user-dot {
+    display: inline-block;
+
+    width: 8px;
+    height: 8px;
+
+    margin-right: 4px;
+
+    background: #00aa00;
+
+    border: 1px solid #006000;
+}
+
+/* =========================================================
+   TYPING INDICATOR
+========================================================= */
+
+.typing {
+    min-height: 20px;
+
+    padding: 3px 8px;
+
+    color: #555;
+
+    background: #e8e8e8;
+
+    border-top: 1px solid #808080;
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.input-area {
+    padding: 6px;
+
+    border-top: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.input-row {
+    display: flex;
+    gap: 5px;
+}
+
+.chat-input {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 25px;
+
+    padding: 4px 6px;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+
+    outline: none;
+
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
+}
+
+.chat-input:focus {
+    outline: 1px dotted #000;
+}
+
+.send-button {
+    width: 65px;
+}
+
+/* =========================================================
+   STATUS BAR
+========================================================= */
+
+.status-bar {
+    display: flex;
+
+    padding: 3px;
+
+    gap: 3px;
+
+    border-top: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.status-cell {
+    padding: 2px 5px;
+
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+
+    color: #444;
+}
+
+.status-cell:first-child {
+    flex: 1;
+}
+
+/* =========================================================
+   AIM ICON
+========================================================= */
+
+.aim-logo {
+    width: 45px;
+    height: 45px;
+
+    margin-right: 8px;
+
+    background: #ffcc00;
+
+    border: 2px solid #173b92;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #173b92;
+
+    font-weight: bold;
+    font-size: 16px;
+
+    box-shadow:
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #996600;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+
+    padding: 7px;
+
+    background: #eeeeee;
+
+    border-bottom: 1px solid #808080;
+}
+
+.profile-name {
+    color: #173b92;
+    font-weight: bold;
+}
+
+.profile-status {
+    color: #666;
+    margin-top: 2px;
+}
+
+/* =========================================================
+   HIDDEN FILE
+========================================================= */
+
+#imgUpload {
+    display: none;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    body {
+        padding: 5px;
+    }
+
+    .workspace {
+        flex-direction: column;
+    }
+
+    .user-panel {
+        width: 100%;
+    }
+
+    .user-list {
+        height: 130px;
+    }
+
+    .chat-log {
+        height: 330px;
+    }
+
+    .toolbar-button {
+        min-width: auto;
+    }
+
+    .menu-item {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
 }
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
 </head>
 
 <body>
 
-<div class="chat-window">
-<div class="title-bar">CyberZone_95 Chat</div>
+<div class="aim-window">
 
-<div class="workspace">
-<div class="chat-log" id="chatLog"></div>
+    <!-- TITLE -->
+    <div class="title-bar">
 
-<div class="user-list">
-<div style="color:yellow;">ONLINE USERS</div>
-<div id="userListBox"></div>
+        <div class="title-icon">
+            ▲
+        </div>
+
+        <div class="title-text">
+            CyberZone_95 - Instant Messenger
+        </div>
+
+        <div class="window-buttons">
+            <div class="window-button">_</div>
+            <div class="window-button">□</div>
+            <div class="window-button">×</div>
+        </div>
+
+    </div>
+
+    <!-- MENU -->
+    <div class="menu-bar">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">People</div>
+        <div class="menu-item">Help</div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+        <button class="toolbar-button" id="nickBtn">
+            Buddy Info
+        </button>
+
+        <button class="toolbar-button" id="imgBtn">
+            Send Image
+        </button>
+
+        <button class="toolbar-button" id="clearBtn">
+            Clear
+        </button>
+
+        <button class="toolbar-button" id="musicBtn">
+            Music
+        </button>
+
+    </div>
+
+    <!-- PROFILE -->
+    <div class="profile">
+
+        <div class="aim-logo">
+            AIM
+        </div>
+
+        <div>
+            <div class="profile-name" id="profileName">
+                Guest
+            </div>
+
+            <div class="profile-status">
+                Online
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN -->
+    <div class="workspace">
+
+        <!-- CHAT -->
+        <div class="chat-panel">
+
+            <div class="panel-title">
+                Instant Message
+            </div>
+
+            <div
+                class="chat-log"
+                id="chatLog"
+            ></div>
+
+        </div>
+
+        <!-- USERS -->
+        <div class="user-panel">
+
+            <div class="user-header">
+                Buddy List
+            </div>
+
+            <div class="user-list">
+
+                <div class="user-section">
+                    ONLINE
+                </div>
+
+                <div id="userListBox"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TYPING -->
+    <div
+        class="typing"
+        id="typingIndicator"
+    ></div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+
+        <div class="input-row">
+
+            <input
+                id="chatInput"
+                class="chat-input"
+                autocomplete="off"
+                placeholder="Type a message..."
+            >
+
+            <button
+                id="sendBtn"
+                class="toolbar-button send-button"
+            >
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-bar">
+
+        <div
+            class="status-cell"
+            id="connectionStatus"
+        >
+            Connecting...
+        </div>
+
+        <div class="status-cell">
+            CyberZone_95
+        </div>
+
+    </div>
+
 </div>
-</div>
 
-<div id="typingIndicator" style="
-padding:4px 10px;
-font-size:12px;
-color:#000;
-height:16px;
-"></div>
+<input
+    type="file"
+    id="imgUpload"
+    accept="image/*"
+>
 
-<div class="input-bar">
-<input id="chatInput" placeholder="Type message...">
-<button id="sendBtn">Send</button>
-<button id="imgBtn">Image</button>
-<button id="clearBtn">Clear</button>
-<input type="file" id="imgUpload" hidden>
-</div>
+<audio
+    id="bgMusic"
+    preload="auto"
+></audio>
 
-<audio id="bgMusic"></audio>
-<audio id="messageSound" src="aim-message.mp3" preload="auto"></audio>
-<audio id="replySound" src="aim-notif.mp3" preload="auto"></audio>
-</div>
+<audio
+    id="messageSound"
+    src="aim-message.mp3"
+    preload="auto"
+></audio>
+
+<audio
+    id="replySound"
+    src="aim-notif.mp3"
+    preload="auto"
+></audio>
+
 
 <script>
-// ================= SAFETY CHECK =================
+/* =========================================================
+   SAFETY CHECK
+========================================================= */
+
 if (!window.mqtt) {
-alert("MQTT failed to load.");
-throw new Error("mqtt not loaded");
+    alert("MQTT failed to load.");
+    throw new Error("MQTT library unavailable.");
 }
 
-// ================= USER =================
+
+/* =========================================================
+   USER
+========================================================= */
+
 const userId = crypto.randomUUID();
-let currentAlias = "Guest_" + Math.floor(Math.random()*9000);
 
-// ================= UI =================
-const chatLog=document.getElementById("chatLog");
-const chatInput=document.getElementById("chatInput");
-const sendBtn=document.getElementById("sendBtn");
-const clearBtn=document.getElementById("clearBtn");
-const imgBtn=document.getElementById("imgBtn");
-const imgUpload=document.getElementById("imgUpload");
-const userListBox=document.getElementById("userListBox");
-const bgMusic=document.getElementById("bgMusic");
-const messageSound=document.getElementById("messageSound");
-const replySound=document.getElementById("replySound");
+let currentAlias =
+    "Guest_" +
+    Math.floor(Math.random() * 9000);
 
-// ================= MQTT =================
-const topic="luke_retro_global_open_lobby";
-const client=mqtt.connect("wss://broker.emqx.io:8084/mqtt");
 
-// ================= IMAGE UPLOAD =================
-const CLOUDINARY_URL="https://api.cloudinary.com/v1_1/dbrruuftv/image/upload";
-const CLOUDINARY_UPLOAD_PRESET="chat_upload";
+/* =========================================================
+   UI
+========================================================= */
 
-// ================= STATE =================
-const users={};
-let replyTarget=null;
-const typingUsers={};
-function sys(t){
-const d=document.createElement("div");
-d.className="sys";
-d.textContent="*** "+t;
-chatLog.appendChild(d);
-}
-const ORIGINAL_TITLE = "CyberZone_95 Chat";
+const chatLog =
+    document.getElementById("chatLog");
+
+const chatInput =
+    document.getElementById("chatInput");
+
+const sendBtn =
+    document.getElementById("sendBtn");
+
+const clearBtn =
+    document.getElementById("clearBtn");
+
+const imgBtn =
+    document.getElementById("imgBtn");
+
+const imgUpload =
+    document.getElementById("imgUpload");
+
+const userListBox =
+    document.getElementById("userListBox");
+
+const typingIndicator =
+    document.getElementById("typingIndicator");
+
+const profileName =
+    document.getElementById("profileName");
+
+const connectionStatus =
+    document.getElementById("connectionStatus");
+
+const bgMusic =
+    document.getElementById("bgMusic");
+
+const messageSound =
+    document.getElementById("messageSound");
+
+const replySound =
+    document.getElementById("replySound");
+
+const musicBtn =
+    document.getElementById("musicBtn");
+
+const nickBtn =
+    document.getElementById("nickBtn");
+
+
+profileName.textContent = currentAlias;
+
+
+/* =========================================================
+   MQTT
+========================================================= */
+
+const topic =
+    "luke_retro_global_open_lobby";
+
+const client =
+    mqtt.connect(
+        "wss://broker.emqx.io:8084/mqtt"
+    );
+
+
+/* =========================================================
+   CLOUDINARY
+========================================================= */
+
+const CLOUDINARY_URL =
+    "https://api.cloudinary.com/v1_1/dbrruuftv/image/upload";
+
+const CLOUDINARY_UPLOAD_PRESET =
+    "chat_upload";
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+const users = {};
+
+const typingUsers = {};
+
+let replyTarget = null;
+
 let unreadCount = 0;
+
 let flashInterval = null;
+
 let flashState = false;
+
+let musicEnabled = true;
+
+let musicStarted = false;
+
+let shuffleBag = [];
+
 let currentTrack = null;
+
 let specialMusicLock = false;
+
 let activeSpecialProfile = null;
-function publishJoin() {
-    client.publish(topic, JSON.stringify({
-        type: "join",
-        id: userId,
-        name: currentAlias
-    }));
-}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+const ORIGINAL_TITLE =
+    "AIM - CyberZone_95";
+
 
 function updateTitle() {
 
     if (unreadCount <= 0) {
-        document.title = ORIGINAL_TITLE;
+
+        document.title =
+            ORIGINAL_TITLE;
 
         if (flashInterval) {
             clearInterval(flashInterval);
@@ -197,84 +956,167 @@ function updateTitle() {
             : "New Messages!";
 
     const unreadTitle =
-        `(${unreadCount} ${label}) ${ORIGINAL_TITLE}`;
+        `(${unreadCount}) ${label} - ${ORIGINAL_TITLE}`;
 
-    // If tab is visible, don't flash
     if (!document.hidden) {
-        document.title = unreadTitle;
+
+        document.title =
+            unreadTitle;
+
         return;
     }
 
-    // Start flashing once
     if (!flashInterval) {
-        flashInterval = setInterval(() => {
-            flashState = !flashState;
 
-            document.title = flashState
-                ? unreadTitle
-                : ORIGINAL_TITLE;
-        }, 600);
+        flashInterval =
+            setInterval(() => {
+
+                flashState =
+                    !flashState;
+
+                document.title =
+                    flashState
+                        ? unreadTitle
+                        : ORIGINAL_TITLE;
+
+            }, 600);
+
     }
 }
-document.addEventListener("visibilitychange", () => {
 
-    if (!document.hidden) {
 
-        unreadCount = 0;
-        flashState = false;
+document.addEventListener(
+    "visibilitychange",
+    () => {
 
-        if (flashInterval) {
-            clearInterval(flashInterval);
-            flashInterval = null;
+        if (!document.hidden) {
+
+            unreadCount = 0;
+
+            flashState = false;
+
+            if (flashInterval) {
+
+                clearInterval(
+                    flashInterval
+                );
+
+                flashInterval = null;
+            }
+
+            document.title =
+                ORIGINAL_TITLE;
         }
 
-        document.title = ORIGINAL_TITLE;
     }
+);
 
-});
+
+/* =========================================================
+   SYSTEM MESSAGE
+========================================================= */
+
+function sys(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.className =
+        "system-message";
+
+    div.innerHTML =
+        `<strong>[AIM]</strong> ${escapeHtml(text)}`;
+
+    chatLog.appendChild(div);
+
+    chatLog.scrollTop =
+        chatLog.scrollHeight;
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* =========================================================
+   SPECIAL PROFILES
+========================================================= */
 
 const specialProfiles = [
+
     {
         match: "dante",
         music: "devils_never_cry.mp3",
         message: "'Jackpot.'"
     },
+
     {
         match: "vergil",
         music: "bury_the_light.mp3",
         message: "'Where's your motivation?'"
     },
+
     {
         match: "sans",
         music: "sans.mp3",
         message: "hehe sup kiddo"
     },
-    {    
+
+    {
         match: "papyrus",
         music: "bonetrousle.mp3",
-        message: "NYEHEHE! SO YOU HAVE PICKED THE BEST NAME!!!"
+        message:
+            "NYEHEHE! SO YOU HAVE PICKED THE BEST NAME!!!"
     },
+
     {
         match: "cell",
         music: "perfect_cell_theme.mp3",
-        message: "'You're either perfect... or you're not me.'"
+        message:
+            "'You're either perfect... or you're not me.'"
     },
+
     {
         match: "piccolo",
         music: "piccolo_aura.mp3",
-        message: "alright we see the fit bro"
+        message:
+            "alright we see the fit bro"
     }
+
 ];
+
+
 function applySpecialProfile(name) {
-    const profile = specialProfiles.find(p =>
-        name.toLowerCase().includes(p.match.toLowerCase())
-    );
+
+    const profile =
+        specialProfiles.find(
+            p =>
+                name
+                    .toLowerCase()
+                    .includes(
+                        p.match.toLowerCase()
+                    )
+        );
 
     if (!profile) {
+
         activeSpecialProfile = null;
+
         specialMusicLock = false;
 
         bgMusic.pause();
+
         bgMusic.currentTime = 0;
 
         if (musicEnabled) {
@@ -284,476 +1126,1336 @@ function applySpecialProfile(name) {
         return;
     }
 
-    if (activeSpecialProfile === profile.match) {
-        return; // already active, don't replay
+    if (
+        activeSpecialProfile ===
+        profile.match
+    ) {
+        return;
     }
 
-    activeSpecialProfile = profile.match;
+    activeSpecialProfile =
+        profile.match;
 
     sys(profile.message);
 
     if (profile.music) {
+
         bgMusic.pause();
 
         specialMusicLock = true;
-        currentTrack = profile.music;
 
-        bgMusic.src = currentTrack;
-        bgMusic.currentTime = 0;
+        currentTrack =
+            profile.music;
 
-        bgMusic.play().catch(() => {});
+        bgMusic.src =
+            currentTrack;
+
+        bgMusic.currentTime =
+            0;
+
+        bgMusic.play()
+            .catch(() => {});
+
     }
 }
-// ================= MUSIC =================
-const playlist=[
-"sunday_theme.mp3",
-"friday_theme.mp3",
-"star_u.mp3",
-"relaxed_scene.mp3",
+
+
+/* =========================================================
+   MUSIC
+========================================================= */
+
+const playlist = [
+
+    "sunday_theme.mp3",
+    "friday_theme.mp3",
+    "star_u.mp3",
+    "relaxed_scene.mp3"
+
 ];
 
-let musicEnabled=true;
-let shuffleBag=[];
-let musicStarted = false;
-bgMusic.volume=0.04;
-
-// shuffle
-function shuffle(arr){
-const a=arr.slice();
-for(let i=a.length-1;i>0;i--){
-const j=Math.floor(Math.random()*(i+1));
-[a[i],a[j]]=[a[j],a[i]];
-}
-return a;
-}
-
-function refillBag(){
-shuffleBag=shuffle(playlist);
-}
-
-function playNextTrack(){
-    if(!musicEnabled || specialMusicLock) return;
-
-    if(shuffleBag.length===0) refillBag();
-
-    currentTrack = shuffleBag.shift();
-    bgMusic.src = currentTrack;
-
-    sys("now playing ♫♪ " + currentTrack);
-
-    bgMusic.play().catch(()=>{});
-}
+bgMusic.volume = 0.04;
 
 
-bgMusic.onended = () => {
-    specialMusicLock = false;
-    playNextTrack();
-};
-    
-bgMusic.onerror = () => {
-    sys("ERROR loading: " + currentTrack);
-    console.error("Failed to load:", currentTrack);
-};
-// start music on first click (browser safe)
-    
-// ================= SYSTEM =================
+function shuffle(array) {
 
-// ================= USERS =================
-function renderUsers(){
-userListBox.innerHTML="";
-const now=Date.now();
+    const result =
+        array.slice();
 
-Object.values(users).forEach(u=>{
-if(now-u.lastSeen<60000){
-const d=document.createElement("div");
-d.textContent="• "+u.name;
-userListBox.appendChild(d);
-}
-});
-}
+    for (
+        let i = result.length - 1;
+        i > 0;
+        i--
+    ) {
 
-// ================= TYPING =================
-function renderTyping(){
-const box=document.getElementById("typingIndicator");
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
 
-const names=Object.values(typingUsers)
-.filter(u=>Date.now()-u.time<3000)
-.map(u=>u.name);
-
-if(names.length===0){
-box.textContent="";
-return;
-}
-
-if(names.length===1){
-box.textContent=names[0]+" is typing...";
-return;
-}
-
-if(names.length===2){
-box.textContent=names[0]+" and "+names[1]+" are typing...";
-return;
-}
-
-box.textContent="Several users are typing...";
-}
-
-// ================= CONNECT =================
-client.on("connect", () => {
-    console.log("MQTT connected");
-    sys("Connected to server");
-
-    client.subscribe(topic, (err) => {
-        if (err) console.error("Subscribe error", err);
-        else console.log("Subscribed to topic");
-    });
-
-    const joinPayload = {
-        type: "join",
-        id: userId,
-        name: currentAlias
-    };
-
-    client.publish(topic, JSON.stringify(joinPayload));
-
-    // 👇 local UI update so YOU see yourself immediately
-    users[userId] = {
-        name: currentAlias,
-        lastSeen: Date.now()
-    };
-
-    renderUsers();
-});
-// ================= MESSAGE =================
-client.on("message", (t, p) => {
-let d;
-try { d = JSON.parse(p.toString()); } catch { return; }
-
-// ================= JOIN =================
-if (d.type === "join") {
-    users[d.id] = { name: d.name, lastSeen: Date.now() };
-    renderUsers();
-    sys(d.name + " joined");
-
-    if (d.id === userId) {
-        applySpecialProfile(d.name);
+        [
+            result[i],
+            result[j]
+        ] =
+        [
+            result[j],
+            result[i]
+        ];
     }
 
-    return;
+    return result;
 }
 
-// ================= NAME CHANGE =================
-if (d.type === "nameChange") {
 
-    users[d.id] = {
-        name: d.name,
-        lastSeen: Date.now()
-    };
+function refillBag() {
 
-    renderUsers();
+    shuffleBag =
+        shuffle(playlist);
+}
 
-    if (d.id === userId) {
-        applySpecialProfile(d.name);
+
+function playNextTrack() {
+
+    if (
+        !musicEnabled ||
+        specialMusicLock
+    ) {
         return;
     }
 
-    sys(`${d.oldName} is now ${d.name}`);
-    return;
-}
-
-// ================= TYPING =================
-if (d.type === "typing") {
-    if (d.id !== userId) {
-        typingUsers[d.id] = { name: d.sender, time: Date.now() };
-        renderTyping();
-    }
-    return;
-}
-
-if (d.type === "stopTyping") {
-    delete typingUsers[d.id];
-    renderTyping();
-    return;
-}
-
-// ================= MESSAGE =================
-if (!d.text) return;
-
-const mentionMe =
-    d.text.toLowerCase().includes("@" + currentAlias.toLowerCase());
-
-// sounds
-if (d.id !== userId) {
-    if (document.hidden) {
-        unreadCount++;
-        updateTitle();
+    if (
+        shuffleBag.length === 0
+    ) {
+        refillBag();
     }
 
-    if ((d.reply && d.reply.senderId === userId) || mentionMe) {
-        replySound.currentTime = 0;
-        replySound.play().catch(() => {});
-    } else {
-        messageSound.currentTime = 0;
-        messageSound.play().catch(() => {});
-    }
+    currentTrack =
+        shuffleBag.shift();
+
+    bgMusic.src =
+        currentTrack;
+
+    sys(
+        "now playing ♫ " +
+        currentTrack
+    );
+
+    bgMusic.play()
+        .catch(() => {});
 }
 
-// clean typing
-delete typingUsers[d.id];
-renderTyping();
 
-// update user list
-users[d.id] = { name: d.sender, lastSeen: Date.now() };
-renderUsers();
+bgMusic.onended =
+    () => {
 
-// ================= RENDER =================
-const row = document.createElement("div");
+        specialMusicLock = false;
 
-if (d.reply && d.reply.senderId === userId) {
-    row.classList.add("replyHighlight");
-}
-
-if (d.id !== userId && mentionMe) {
-    row.style.background = "#333300";
-    row.style.borderLeft = "4px solid orange";
-}
-
-if (d.reply) {
-    const r = document.createElement("div");
-    r.className = "replyBox";
-    r.textContent = `↳ ${d.reply.user}: ${d.reply.text}`;
-    row.appendChild(r);
-}
-
-const header = document.createElement("span");
-header.style.color = d.sender === currentAlias ? "#0ff" : "#f0f";
-header.textContent = `<${d.sender}> `;
-header.onclick = () => {
-    chatInput.value += " @" + d.sender;
-    chatInput.focus();
-};
-
-const time = document.createElement("span");
-time.style.color = "#0f0";
-time.textContent = ` [${d.timestamp}] `;
-
-const content = document.createElement("span");
-
-if (d.mediaType === "image") {
-    const img = document.createElement("img");
-    img.src = d.text;
-    img.style.maxWidth = "200px";
-    img.style.border = "2px solid #0f0";
-    content.appendChild(img);
-} else {
-    content.textContent = " " + d.text;
-}
-
-const btn = document.createElement("button");
-btn.className = "msgBtn";
-btn.textContent = "Reply";
-
-btn.onclick = () => {
-    replyTarget = {
-        id: d.msgId,
-        senderId: d.id,
-        user: d.sender,
-        text: d.text
-    };
-    sys("replying to " + d.sender);
-};
-
-row.appendChild(header);
-row.appendChild(time);
-row.appendChild(content);
-row.appendChild(btn);
-
-chatLog.appendChild(row);
-chatLog.scrollTop = chatLog.scrollHeight;
-
-});
-// ================= SEND =================
-function send(){
-    console.log("SEND TRIGGERED"); // 👈 DEBUG
-client.publish(topic,JSON.stringify({
-type:"stopTyping",
-id:userId,
-sender:currentAlias
-}));
-console.log("MQTT state:", client.connected);
-let text=chatInput.value.trim();
-if(!text) return;
-if(!musicStarted){
-    musicStarted = true;
-    refillBag();
-    playNextTrack();
-}
-if(text==="/clear"){
-chatLog.innerHTML="";
-sys("chat cleared");
-chatLog.scrollTop = chatLog.scrollHeight;
-chatInput.value="";
-return;
-}
-
-if(text === "/testmusic"){
-    playNextTrack();
-    chatInput.value = "";
-    return;
-}
-    
-if(text.startsWith("/nick ")) {
-    const newNick = text.slice(6).trim();
-    if(!newNick) return sys("nickname cannot be empty");
-
-    const oldNick = currentAlias;   // ✅ SAVE FIRST
-
-    currentAlias = newNick;         // then update
-
-    // UPDATE YOUR LOCAL USER LIST ENTRY
-    users[userId].name = newNick;
-    renderUsers();
-
-    client.publish(topic, JSON.stringify({
-        type: "nameChange",
-        id: userId,
-        oldName: oldNick,
-        name: newNick
-    }));
-
-    sys("you are now " + currentAlias);
-    chatInput.value = "";
-    return;
-    }
-
-if(text === "/mute"){
-    musicEnabled = false;
-    bgMusic.pause();
-    sys("music muted");
-    chatInput.value = "";
-    return;
-}
-
-if(text === "/unmute"){
-    musicEnabled = true;
-
-    if(bgMusic.src){
-        bgMusic.play().catch(()=>{});
-    }else{
         playNextTrack();
+    };
+
+
+bgMusic.onerror =
+    () => {
+
+        sys(
+            "ERROR loading: " +
+            currentTrack
+        );
+
+        console.error(
+            "Failed to load:",
+            currentTrack
+        );
+    };
+
+
+musicBtn.onclick =
+    () => {
+
+        musicEnabled =
+            !musicEnabled;
+
+        if (!musicEnabled) {
+
+            bgMusic.pause();
+
+            musicBtn.textContent =
+                "Music: Off";
+
+            sys("music muted");
+
+        } else {
+
+            musicBtn.textContent =
+                "Music: On";
+
+            if (bgMusic.src) {
+
+                bgMusic.play()
+                    .catch(() => {});
+
+            } else {
+
+                playNextTrack();
+
+            }
+
+        }
+
+    };
+
+
+/* =========================================================
+   USERS
+========================================================= */
+
+function renderUsers() {
+
+    userListBox.innerHTML = "";
+
+    const now =
+        Date.now();
+
+    Object.values(users)
+        .forEach(user => {
+
+            if (
+                now - user.lastSeen <
+                60000
+            ) {
+
+                const div =
+                    document.createElement("div");
+
+                div.className =
+                    "user";
+
+                div.innerHTML = `
+                    <span class="user-dot"></span>
+                    ${escapeHtml(user.name)}
+                `;
+
+                div.onclick =
+                    () => {
+
+                        chatInput.value +=
+                            " @" + user.name;
+
+                        chatInput.focus();
+
+                    };
+
+                userListBox.appendChild(div);
+            }
+
+        });
+}
+
+
+/* =========================================================
+   TYPING
+========================================================= */
+
+function renderTyping() {
+
+    const names =
+        Object.values(typingUsers)
+            .filter(
+                user =>
+                    Date.now() -
+                    user.time <
+                    3000
+            )
+            .map(
+                user =>
+                    user.name
+            );
+
+    if (names.length === 0) {
+
+        typingIndicator.textContent =
+            "";
+
+        return;
     }
 
-    sys("music unmuted");
-    chatInput.value = "";
-    return;
-}
-  
-const msgId=crypto.randomUUID();
+    if (names.length === 1) {
 
-const payload={
-type:"message",
-msgId,
-id:userId,
-sender:currentAlias,
-text,
-timestamp:new Date().toLocaleTimeString([],{
-hour:"numeric",
-minute:"2-digit"
-})
-};
+        typingIndicator.textContent =
+            names[0] +
+            " is typing...";
 
-if(replyTarget){
-payload.reply=replyTarget;
-replyTarget=null;
-}
+        return;
+    }
 
-client.publish(topic,JSON.stringify(payload));
-chatInput.value="";
+    if (names.length === 2) {
+
+        typingIndicator.textContent =
+            names[0] +
+            " and " +
+            names[1] +
+            " are typing...";
+
+        return;
+    }
+
+    typingIndicator.textContent =
+        "Several users are typing...";
 }
 
-// ================= IMAGE UPLOAD =================
-imgBtn.onclick=()=>imgUpload.click();
 
-imgUpload.onchange=async()=>{
-const file=imgUpload.files[0];
-if(!file) return;
+/* =========================================================
+   CONNECT
+========================================================= */
 
-const formData=new FormData();
-formData.append("file",file);
-formData.append("upload_preset",CLOUDINARY_UPLOAD_PRESET);
+client.on(
+    "connect",
+    () => {
 
-try{
-const res=await fetch(CLOUDINARY_URL,{
-method:"POST",
-body:formData
-});
+        connectionStatus.textContent =
+            "Connected";
 
-const data=await res.json();
-if(!data.secure_url){
-sys("image upload failed");
-return;
+        sys(
+            "Connected to CyberZone_95."
+        );
+
+        client.subscribe(
+            topic,
+            err => {
+
+                if (err) {
+
+                    console.error(
+                        "Subscribe error",
+                        err
+                    );
+
+                    connectionStatus.textContent =
+                        "Connection Error";
+
+                    return;
+                }
+
+                client.publish(
+                    topic,
+                    JSON.stringify({
+                        type: "join",
+                        id: userId,
+                        name: currentAlias
+                    })
+                );
+
+                users[userId] = {
+
+                    name:
+                        currentAlias,
+
+                    lastSeen:
+                        Date.now()
+
+                };
+
+                renderUsers();
+
+            }
+        );
+
+    }
+);
+
+
+client.on(
+    "offline",
+    () => {
+
+        connectionStatus.textContent =
+            "Offline";
+
+    }
+);
+
+
+client.on(
+    "reconnect",
+    () => {
+
+        connectionStatus.textContent =
+            "Reconnecting...";
+
+    }
+);
+
+
+/* =========================================================
+   INCOMING MQTT
+========================================================= */
+
+client.on(
+    "message",
+    (topicName, packet) => {
+
+        let d;
+
+        try {
+
+            d =
+                JSON.parse(
+                    packet.toString()
+                );
+
+        } catch {
+
+            return;
+        }
+
+
+        /* ---------------- JOIN ---------------- */
+
+        if (d.type === "join") {
+
+            users[d.id] = {
+
+                name:
+                    d.name,
+
+                lastSeen:
+                    Date.now()
+
+            };
+
+            renderUsers();
+
+            if (d.id !== userId) {
+
+                sys(
+                    d.name +
+                    " signed on."
+                );
+
+            } else {
+
+                applySpecialProfile(
+                    d.name
+                );
+
+            }
+
+            return;
+        }
+
+
+        /* ---------------- NAME CHANGE ---------------- */
+
+        if (
+            d.type === "nameChange"
+        ) {
+
+            users[d.id] = {
+
+                name:
+                    d.name,
+
+                lastSeen:
+                    Date.now()
+
+            };
+
+            renderUsers();
+
+            if (d.id === userId) {
+
+                profileName.textContent =
+                    d.name;
+
+                applySpecialProfile(
+                    d.name
+                );
+
+                return;
+            }
+
+            sys(
+                `${d.oldName} is now ${d.name}`
+            );
+
+            return;
+        }
+
+
+        /* ---------------- TYPING ---------------- */
+
+        if (d.type === "typing") {
+
+            if (d.id !== userId) {
+
+                typingUsers[d.id] = {
+
+                    name:
+                        d.sender,
+
+                    time:
+                        Date.now()
+
+                };
+
+                renderTyping();
+
+            }
+
+            return;
+        }
+
+
+        /* ---------------- STOP TYPING ---------------- */
+
+        if (
+            d.type === "stopTyping"
+        ) {
+
+            delete typingUsers[d.id];
+
+            renderTyping();
+
+            return;
+        }
+
+
+        /* ---------------- MESSAGE ---------------- */
+
+        if (!d.text) {
+            return;
+        }
+
+
+        const mentionMe =
+            d.text
+                .toLowerCase()
+                .includes(
+                    "@" +
+                    currentAlias
+                        .toLowerCase()
+                );
+
+
+        if (d.id !== userId) {
+
+            if (document.hidden) {
+
+                unreadCount++;
+
+                updateTitle();
+
+            }
+
+
+            if (
+                (
+                    d.reply &&
+                    d.reply.senderId ===
+                    userId
+                ) ||
+                mentionMe
+            ) {
+
+                replySound.currentTime =
+                    0;
+
+                replySound.play()
+                    .catch(() => {});
+
+            } else {
+
+                messageSound.currentTime =
+                    0;
+
+                messageSound.play()
+                    .catch(() => {});
+
+            }
+
+        }
+
+
+        delete typingUsers[d.id];
+
+        renderTyping();
+
+
+        users[d.id] = {
+
+            name:
+                d.sender,
+
+            lastSeen:
+                Date.now()
+
+        };
+
+        renderUsers();
+
+
+        /* ---------------- MESSAGE ROW ---------------- */
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "message-row";
+
+
+        if (
+            d.reply &&
+            d.reply.senderId ===
+            userId
+        ) {
+
+            row.classList.add(
+                "reply-highlight"
+            );
+        }
+
+
+        if (
+            d.id !== userId &&
+            mentionMe
+        ) {
+
+            row.classList.add(
+                "mention-highlight"
+            );
+
+        }
+
+
+        /* ---------------- REPLY ---------------- */
+
+        if (d.reply) {
+
+            const reply =
+                document.createElement("div");
+
+            reply.className =
+                "reply-box";
+
+            reply.textContent =
+                `↳ ${d.reply.user}: ${d.reply.text}`;
+
+            row.appendChild(reply);
+
+        }
+
+
+        /* ---------------- USER ---------------- */
+
+        const header =
+            document.createElement("span");
+
+        header.className =
+            "message-user";
+
+        if (
+            d.sender ===
+            currentAlias
+        ) {
+
+            header.classList.add(
+                "self"
+            );
+
+        }
+
+        header.textContent =
+            `<${d.sender}>`;
+
+        header.onclick =
+            () => {
+
+                chatInput.value +=
+                    " @" +
+                    d.sender;
+
+                chatInput.focus();
+
+            };
+
+
+        /* ---------------- TIME ---------------- */
+
+        const time =
+            document.createElement("span");
+
+        time.className =
+            "message-time";
+
+        time.textContent =
+            ` [${d.timestamp}] `;
+
+
+        /* ---------------- CONTENT ---------------- */
+
+        const content =
+            document.createElement("span");
+
+        content.className =
+            "message-text";
+
+
+        if (
+            d.mediaType ===
+            "image"
+        ) {
+
+            const image =
+                document.createElement("img");
+
+            image.className =
+                "chat-image";
+
+            image.src =
+                d.text;
+
+            image.alt =
+                "Shared image";
+
+            content.appendChild(
+                image
+            );
+
+        } else {
+
+            content.textContent =
+                " " + d.text;
+
+        }
+
+
+        /* ---------------- REPLY BUTTON ---------------- */
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "msg-btn";
+
+        button.textContent =
+            "Reply";
+
+        button.onclick =
+            () => {
+
+                replyTarget = {
+
+                    id:
+                        d.msgId,
+
+                    senderId:
+                        d.id,
+
+                    user:
+                        d.sender,
+
+                    text:
+                        d.text
+
+                };
+
+                sys(
+                    "Replying to " +
+                    d.sender
+                );
+
+                chatInput.focus();
+
+            };
+
+
+        row.appendChild(
+            header
+        );
+
+        row.appendChild(
+            time
+        );
+
+        row.appendChild(
+            content
+        );
+
+        row.appendChild(
+            button
+        );
+
+
+        chatLog.appendChild(
+            row
+        );
+
+        chatLog.scrollTop =
+            chatLog.scrollHeight;
+
+    }
+);
+
+
+/* =========================================================
+   SEND MESSAGE
+========================================================= */
+
+function send() {
+
+    const text =
+        chatInput.value.trim();
+
+    if (!text) {
+        return;
+    }
+
+
+    /* STOP TYPING */
+
+    client.publish(
+        topic,
+        JSON.stringify({
+            type:
+                "stopTyping",
+
+            id:
+                userId,
+
+            sender:
+                currentAlias
+        })
+    );
+
+
+    /* START MUSIC */
+
+    if (!musicStarted) {
+
+        musicStarted =
+            true;
+
+        refillBag();
+
+        playNextTrack();
+
+    }
+
+
+    /* CLEAR COMMAND */
+
+    if (text === "/clear") {
+
+        chatLog.innerHTML =
+            "";
+
+        sys(
+            "chat cleared"
+        );
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
+    /* TEST MUSIC */
+
+    if (
+        text ===
+        "/testmusic"
+    ) {
+
+        playNextTrack();
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
+    /* NICKNAME */
+
+    if (
+        text.startsWith(
+            "/nick "
+        )
+    ) {
+
+        const newNick =
+            text
+                .slice(6)
+                .trim();
+
+        if (!newNick) {
+
+            sys(
+                "nickname cannot be empty"
+            );
+
+            return;
+        }
+
+
+        const oldNick =
+            currentAlias;
+
+        currentAlias =
+            newNick;
+
+        profileName.textContent =
+            currentAlias;
+
+
+        users[userId].name =
+            currentAlias;
+
+        renderUsers();
+
+
+        client.publish(
+            topic,
+            JSON.stringify({
+
+                type:
+                    "nameChange",
+
+                id:
+                    userId,
+
+                oldName:
+                    oldNick,
+
+                name:
+                    currentAlias
+
+            })
+        );
+
+
+        sys(
+            "you are now " +
+            currentAlias
+        );
+
+
+        applySpecialProfile(
+            currentAlias
+        );
+
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
+    /* MUTE */
+
+    if (
+        text ===
+        "/mute"
+    ) {
+
+        musicEnabled =
+            false;
+
+        bgMusic.pause();
+
+        musicBtn.textContent =
+            "Music: Off";
+
+        sys(
+            "music muted"
+        );
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
+    /* UNMUTE */
+
+    if (
+        text ===
+        "/unmute"
+    ) {
+
+        musicEnabled =
+            true;
+
+        musicBtn.textContent =
+            "Music: On";
+
+        if (bgMusic.src) {
+
+            bgMusic.play()
+                .catch(() => {});
+
+        } else {
+
+            playNextTrack();
+
+        }
+
+        sys(
+            "music unmuted"
+        );
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
+    /* MESSAGE */
+
+    const msgId =
+        crypto.randomUUID();
+
+
+    const payload = {
+
+        type:
+            "message",
+
+        msgId:
+            msgId,
+
+        id:
+            userId,
+
+        sender:
+            currentAlias,
+
+        text:
+            text,
+
+        timestamp:
+            new Date()
+                .toLocaleTimeString(
+                    [],
+                    {
+                        hour:
+                            "numeric",
+
+                        minute:
+                            "2-digit"
+                    }
+                )
+
+    };
+
+
+    if (replyTarget) {
+
+        payload.reply =
+            replyTarget;
+
+        replyTarget =
+            null;
+
+    }
+
+
+    client.publish(
+        topic,
+        JSON.stringify(payload)
+    );
+
+
+    chatInput.value =
+        "";
+
 }
 
-const msgId=crypto.randomUUID();
 
-client.publish(topic,JSON.stringify({
-type:"message",
-msgId,
-id:userId,
-sender:currentAlias,
-text:data.secure_url,
-timestamp:new Date().toLocaleTimeString([],{
-hour:"numeric",
-minute:"2-digit"
-}),
-mediaType:"image"
-}));
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
 
-sys("image sent");
+imgBtn.onclick =
+    () => {
 
-}catch(err){
-console.error(err);
-sys("upload error");
-}
+        imgUpload.click();
 
-imgUpload.value="";
-};
+    };
 
-// ================= EVENTS =================
-sendBtn.onclick=send;
 
-clearBtn.onclick=()=>{
-chatLog.innerHTML="";
-sys("chat cleared");
-};
+imgUpload.onchange =
+    async () => {
+
+        const file =
+            imgUpload.files[0];
+
+        if (!file) {
+            return;
+        }
+
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "file",
+            file
+        );
+
+        formData.append(
+            "upload_preset",
+            CLOUDINARY_UPLOAD_PRESET
+        );
+
+
+        try {
+
+            sys(
+                "Uploading image..."
+            );
+
+
+            const response =
+                await fetch(
+                    CLOUDINARY_URL,
+                    {
+                        method:
+                            "POST",
+
+                        body:
+                            formData
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!data.secure_url) {
+
+                sys(
+                    "image upload failed"
+                );
+
+                return;
+            }
+
+
+            const msgId =
+                crypto.randomUUID();
+
+
+            client.publish(
+                topic,
+                JSON.stringify({
+
+                    type:
+                        "message",
+
+                    msgId:
+                        msgId,
+
+                    id:
+                        userId,
+
+                    sender:
+                        currentAlias,
+
+                    text:
+                        data.secure_url,
+
+                    timestamp:
+                        new Date()
+                            .toLocaleTimeString(
+                                [],
+                                {
+                                    hour:
+                                        "numeric",
+
+                                    minute:
+                                        "2-digit"
+                                }
+                            ),
+
+                    mediaType:
+                        "image"
+
+                })
+            );
+
+
+            sys(
+                "image sent"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+            sys(
+                "upload error"
+            );
+
+        }
+
+
+        imgUpload.value =
+            "";
+
+    };
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+sendBtn.onclick =
+    send;
+
+
+clearBtn.onclick =
+    () => {
+
+        chatLog.innerHTML =
+            "";
+
+        sys(
+            "chat cleared"
+        );
+
+    };
+
+
+nickBtn.onclick =
+    () => {
+
+        const newNick =
+            prompt(
+                "Enter your new screen name:",
+                currentAlias
+            );
+
+        if (
+            newNick &&
+            newNick.trim()
+        ) {
+
+            chatInput.value =
+                "/nick " +
+                newNick.trim();
+
+            send();
+
+        }
+
+    };
+
+
+/* =========================================================
+   TYPING EVENTS
+========================================================= */
+
 let typingTimer;
 
-chatInput.addEventListener("input", () => {
-    client.publish(topic, JSON.stringify({
-        type: "typing",
-        id: userId,
-        sender: currentAlias
-    }));
 
-    clearTimeout(typingTimer);
+chatInput.addEventListener(
+    "input",
+    () => {
 
-    typingTimer = setTimeout(() => {
-        client.publish(topic, JSON.stringify({
-            type: "stopTyping",
-            id: userId
-        }));
-    }, 1000);
-});
-chatInput.addEventListener("keydown",e=>{
-if(e.key==="Enter"){
-e.preventDefault();
-send();
-}
-});
+        client.publish(
+            topic,
+            JSON.stringify({
+
+                type:
+                    "typing",
+
+                id:
+                    userId,
+
+                sender:
+                    currentAlias
+
+            })
+        );
 
 
-    
-sys("Connected you to CyberZone_95.");
+        clearTimeout(
+            typingTimer
+        );
+
+
+        typingTimer =
+            setTimeout(
+                () => {
+
+                    client.publish(
+                        topic,
+                        JSON.stringify({
+
+                            type:
+                                "stopTyping",
+
+                            id:
+                                userId
+
+                        })
+                    );
+
+                },
+                1000
+            );
+
+    }
+);
+
+
+/* =========================================================
+   ENTER TO SEND
+========================================================= */
+
+chatInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            event.preventDefault();
+
+            send();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIAL MESSAGE
+========================================================= */
+
+sys(
+    "Welcome to CyberZone_95."
+);
+
+sys(
+    "Instant messaging service initialized."
+);
+
+sys(
+    "Type /nick NAME to change your screen name."
+);
+
 </script>
 
 </body>
