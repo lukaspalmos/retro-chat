@@ -262,10 +262,11 @@ button {
     </audio>
 
 
-    <!-- MQTT -->
-    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.js"></script>
+    <!-- MQTT - LOAD ONCE -->
+    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
 
-<script>
+
+    <script>
 
 /* =========================================================
    SAFETY CHECK
@@ -350,11 +351,6 @@ function askForUsername() {
                 "Welcome to luke's chatroom!\n\nEnter your username:"
             );
 
-
-        /* -----------------------------------------
-           CANCEL
-        ----------------------------------------- */
-
         if (username === null) {
 
             username =
@@ -366,14 +362,8 @@ function askForUsername() {
             break;
         }
 
-
         username =
             username.trim();
-
-
-        /* -----------------------------------------
-           EMPTY USERNAME
-        ----------------------------------------- */
 
         if (!username) {
 
@@ -382,11 +372,6 @@ function askForUsername() {
             );
         }
     }
-
-
-    /* -----------------------------------------
-       LIMIT LENGTH
-    ----------------------------------------- */
 
     if (
         username.length > 30
@@ -402,7 +387,6 @@ function askForUsername() {
             "Username was shortened to 30 characters."
         );
     }
-
 
     return username;
 }
@@ -519,16 +503,13 @@ function updateTitle() {
         return;
     }
 
-
     const label =
         unreadCount === 1
             ? "New Message!"
             : "New Messages!";
 
-
     const unreadTitle =
         `(${unreadCount}) ${label} - ${ORIGINAL_TITLE}`;
-
 
     if (!document.hidden) {
 
@@ -537,7 +518,6 @@ function updateTitle() {
 
         return;
     }
-
 
     if (!flashInterval) {
 
@@ -679,7 +659,6 @@ function applySpecialProfile(name) {
                     )
         );
 
-
     if (!profile) {
 
         activeSpecialProfile = null;
@@ -695,7 +674,6 @@ function applySpecialProfile(name) {
         return;
     }
 
-
     if (
         activeSpecialProfile ===
         profile.match
@@ -703,15 +681,12 @@ function applySpecialProfile(name) {
         return;
     }
 
-
     activeSpecialProfile =
         profile.match;
-
 
     sys(
         profile.message
     );
-
 
     if (profile.music) {
 
@@ -732,14 +707,7 @@ function applySpecialProfile(name) {
         if (musicEnabled) {
 
             bgMusic.play()
-                .catch(() => {
-
-                    /*
-                     Browser autoplay
-                     restrictions are normal.
-                    */
-
-                });
+                .catch(() => {});
         }
     }
 }
@@ -768,7 +736,6 @@ function shuffle(array) {
     const result =
         array.slice();
 
-
     for (
         let i = result.length - 1;
         i > 0;
@@ -781,7 +748,6 @@ function shuffle(array) {
                 (i + 1)
             );
 
-
         [
             result[i],
             result[j]
@@ -791,7 +757,6 @@ function shuffle(array) {
             result[i]
         ];
     }
-
 
     return result;
 }
@@ -815,7 +780,6 @@ function playNextTrack() {
         return;
     }
 
-
     if (
         shuffleBag.length === 0
     ) {
@@ -823,24 +787,19 @@ function playNextTrack() {
         refillBag();
     }
 
-
     currentTrack =
         shuffleBag.shift();
 
-
     bgMusic.src =
         currentTrack;
-
 
     sys(
         "Now playing ♫ " +
         currentTrack
     );
 
-
     musicStarted =
         true;
-
 
     bgMusic.play()
         .catch(() => {});
@@ -862,7 +821,6 @@ bgMusic.onended =
             return;
         }
 
-
         playNextTrack();
     };
 
@@ -879,7 +837,6 @@ bgMusic.onerror =
             "Failed to load:",
             currentTrack
         );
-
     };
 
 
@@ -888,7 +845,6 @@ musicBtn.onclick =
 
         musicEnabled =
             !musicEnabled;
-
 
         if (!musicEnabled) {
 
@@ -904,10 +860,8 @@ musicBtn.onclick =
             return;
         }
 
-
         musicBtn.textContent =
             "Music: On";
-
 
         if (
             bgMusic.src &&
@@ -943,7 +897,6 @@ function renderUsers() {
     const now =
         Date.now();
 
-
     Object.values(users)
         .sort(
             (a, b) =>
@@ -966,7 +919,6 @@ function renderUsers() {
                 div.className =
                     "user";
 
-
                 const dot =
                     document.createElement(
                         "span"
@@ -975,18 +927,15 @@ function renderUsers() {
                 dot.className =
                     "user-dot";
 
-
                 div.appendChild(
                     dot
                 );
-
 
                 div.appendChild(
                     document.createTextNode(
                         user.name
                     )
                 );
-
 
                 div.onclick =
                     () => {
@@ -997,7 +946,6 @@ function renderUsers() {
 
                         chatInput.focus();
                     };
-
 
                 userListBox.appendChild(
                     div
@@ -1035,7 +983,6 @@ function renderTyping() {
                 user.name
         );
 
-
     if (
         names.length === 0
     ) {
@@ -1045,7 +992,6 @@ function renderTyping() {
 
         return;
     }
-
 
     if (
         names.length === 1
@@ -1057,7 +1003,6 @@ function renderTyping() {
 
         return;
     }
-
 
     if (
         names.length === 2
@@ -1071,7 +1016,6 @@ function renderTyping() {
 
         return;
     }
-
 
     typingIndicator.textContent =
         "Several users are typing...";
@@ -1093,7 +1037,6 @@ function publishJoin() {
     if (!client.connected) {
         return;
     }
-
 
     client.publish(
         topic,
@@ -1122,19 +1065,29 @@ function publishPresence() {
     client.publish(
         topic,
         JSON.stringify({
-            type: "presence",
-            id: userId,
-            name: currentAlias
+
+            type:
+                "presence",
+
+            id:
+                userId,
+
+            name:
+                currentAlias
+
         })
     );
 }
 
 
-setInterval(() => {
+setInterval(
+    () => {
 
-    publishPresence();
+        publishPresence();
 
-}, 20000);
+    },
+    20000
+);
 
 
 /* =========================================================
@@ -1148,11 +1101,9 @@ client.on(
         connectionStatus.textContent =
             "Connected";
 
-
         sys(
             "Connected to luke's chatroom."
         );
-
 
         client.subscribe(
             topic,
@@ -1170,7 +1121,6 @@ client.on(
 
                     return;
                 }
-
 
                 publishJoin();
 
@@ -1230,7 +1180,6 @@ client.on(
 
         let d;
 
-
         try {
 
             d =
@@ -1262,9 +1211,7 @@ client.on(
                     Date.now()
             };
 
-
             renderUsers();
-
 
             if (
                 d.id !== userId
@@ -1275,7 +1222,6 @@ client.on(
                     " signed on."
                 );
             }
-
 
             return;
         }
@@ -1298,7 +1244,6 @@ client.on(
                 lastSeen:
                     Date.now()
             };
-
 
             renderUsers();
 
@@ -1324,9 +1269,7 @@ client.on(
                     Date.now()
             };
 
-
             renderUsers();
-
 
             if (
                 d.id === userId
@@ -1342,11 +1285,9 @@ client.on(
                 return;
             }
 
-
             sys(
                 `${d.oldName} is now ${d.name}`
             );
-
 
             return;
         }
@@ -1374,10 +1315,8 @@ client.on(
                         Date.now()
                 };
 
-
                 renderTyping();
             }
-
 
             return;
         }
@@ -1413,7 +1352,6 @@ client.on(
             return;
         }
 
-
         if (!d.text) {
             return;
         }
@@ -1445,7 +1383,6 @@ client.on(
 
                 updateTitle();
             }
-
 
             if (
                 (
@@ -1493,7 +1430,6 @@ client.on(
                 Date.now()
         };
 
-
         renderUsers();
 
 
@@ -1505,7 +1441,6 @@ client.on(
             document.createElement(
                 "div"
             );
-
 
         row.className =
             "message-row";
@@ -1547,14 +1482,11 @@ client.on(
                     "div"
                 );
 
-
             reply.className =
                 "reply-box";
 
-
             reply.textContent =
                 `↳ ${d.reply.user}: ${d.reply.text}`;
-
 
             row.appendChild(
                 reply
@@ -1571,7 +1503,6 @@ client.on(
                 "span"
             );
 
-
         header.className =
             "message-user";
 
@@ -1585,7 +1516,6 @@ client.on(
                 "self"
             );
         }
-
 
         header.textContent =
             d.sender;
@@ -1611,10 +1541,8 @@ client.on(
                 "span"
             );
 
-
         time.className =
             "message-time";
-
 
         time.textContent =
             ` [${d.timestamp || getChatTime()}] `;
@@ -1628,7 +1556,6 @@ client.on(
             document.createElement(
                 "span"
             );
-
 
         content.className =
             "message-text";
@@ -1644,22 +1571,17 @@ client.on(
                     "img"
                 );
 
-
             image.className =
                 "chat-image";
-
 
             image.src =
                 d.text;
 
-
             image.alt =
                 "Shared image";
 
-
             image.loading =
                 "lazy";
-
 
             image.onerror =
                 () => {
@@ -1670,7 +1592,6 @@ client.on(
                     image.title =
                         "Image failed to load";
                 };
-
 
             content.appendChild(
                 image
@@ -1692,10 +1613,8 @@ client.on(
                 "button"
             );
 
-
         button.className =
             "msg-btn";
-
 
         button.textContent =
             "Reply";
@@ -1719,12 +1638,10 @@ client.on(
                         d.text
                 };
 
-
                 sys(
                     "Replying to " +
                     d.sender
                 );
-
 
                 chatInput.focus();
             };
@@ -1750,11 +1667,9 @@ client.on(
             button
         );
 
-
         chatLog.appendChild(
             row
         );
-
 
         chatLog.scrollTop =
             chatLog.scrollHeight;
@@ -1770,7 +1685,6 @@ function send() {
 
     const text =
         chatInput.value.trim();
-
 
     if (!text) {
         return;
@@ -1825,7 +1739,6 @@ function send() {
 
             playNextTrack();
         }
-
 
         chatInput.value =
             "";
@@ -2081,7 +1994,8 @@ function send() {
 }
 
 
-sendBtn.onclick = send;
+sendBtn.onclick =
+    send;
 
 
 /* =========================================================
@@ -2515,7 +2429,7 @@ document.addEventListener(
     }
 );
 
-</script>
+    </script>
 
 </body>
 </html>
