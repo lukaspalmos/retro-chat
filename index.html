@@ -15,49 +15,9 @@ if (!window.mqtt) {
    USER
 ========================================================= */
 
-const userId = crypto.randomUUID();
+const userId =
+    crypto.randomUUID();
 
-function askForUsername() {
-
-    let username = "";
-
-    while (!username) {
-
-        username = prompt(
-            "Welcome to luke's chatroom!\n\nEnter your username:"
-        );
-
-        // User pressed Cancel
-        if (username === null) {
-            username =
-                "Guest_" + Math.floor(Math.random() * 9000);
-            break;
-        }
-
-        username =
-            username.trim();
-
-        if (!username) {
-            alert("Please enter a username.");
-        }
-    }
-
-    // Limit username length
-    if (username.length > 30) {
-
-        username =
-            username.substring(0, 30);
-
-        alert(
-            "Username was shortened to 30 characters."
-        );
-    }
-
-    return username;
-}
-
-let currentAlias =
-    askForUsername();
 
 /* =========================================================
    UI
@@ -109,8 +69,93 @@ const nickBtn =
     document.getElementById("nickBtn");
 
 
-profileName.textContent =
-    currentAlias;
+/* =========================================================
+   USERNAME LOGIN
+========================================================= */
+
+function askForUsername() {
+
+    let username = "";
+
+    while (!username) {
+
+        username =
+            prompt(
+                "Welcome to luke's chatroom!\n\nEnter your username:"
+            );
+
+
+        /* -----------------------------------------
+           CANCEL
+        ----------------------------------------- */
+
+        if (username === null) {
+
+            username =
+                "Guest_" +
+                Math.floor(
+                    Math.random() * 9000
+                );
+
+            break;
+        }
+
+
+        username =
+            username.trim();
+
+
+        /* -----------------------------------------
+           EMPTY USERNAME
+        ----------------------------------------- */
+
+        if (!username) {
+
+            alert(
+                "Please enter a username."
+            );
+        }
+    }
+
+
+    /* -----------------------------------------
+       LIMIT LENGTH
+    ----------------------------------------- */
+
+    if (
+        username.length > 30
+    ) {
+
+        username =
+            username.substring(
+                0,
+                30
+            );
+
+        alert(
+            "Username was shortened to 30 characters."
+        );
+    }
+
+
+    return username;
+}
+
+
+/* =========================================================
+   GET USERNAME
+========================================================= */
+
+let currentAlias = askForUsername();
+
+
+/* =========================================================
+   DISPLAY USERNAME
+========================================================= */
+
+if (profileName) {
+    profileName.textContent = currentAlias;
+}
 
 
 /* =========================================================
