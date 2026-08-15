@@ -1,175 +1,624 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AIM - luke's chatroom</title>
 
-    <!-- FAVICON -->
-    <link rel="icon" type="image/png" href="aim-icon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>luke's chatroom</title>
+
+<link rel="icon" type="image/png" href="aim-icon.png">
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
 
 <style>
+
+/* =========================================================
+   AIM / 90s WINDOWS STYLE
+========================================================= */
 
 * {
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
-    background: #111;
-    color: #eee;
-    font-family: Arial, sans-serif;
+    min-height: 100%;
 }
 
-#app {
-    max-width: 1100px;
-    margin: 20px auto;
-    border: 2px solid #555;
-    background: #1b1b1b;
+body {
+    background:
+        linear-gradient(#d9d9d9 0 1px, transparent 1px),
+        linear-gradient(90deg, #d9d9d9 0 1px, transparent 1px),
+        #bdbdbd;
+
+    background-size: 4px 4px;
+
+    font-family:
+        "Tahoma",
+        "MS Sans Serif",
+        Arial,
+        sans-serif;
+
+    font-size: 11px;
+    color: #000;
+    padding: 18px;
 }
 
-header {
-    padding: 15px;
-    background: #222;
-    border-bottom: 1px solid #555;
+/* =========================================================
+   MAIN WINDOW
+========================================================= */
+
+.aim-window {
+    width: min(980px, 100%);
+    margin: 0 auto;
+
+    background: #d4d0c8;
+
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+
+    box-shadow:
+        2px 2px 0 #000,
+        6px 6px 0 rgba(0,0,0,.25);
+}
+
+/* =========================================================
+   TITLE BAR
+========================================================= */
+
+.title-bar {
+    height: 25px;
 
     display: flex;
-    justify-content: space-between;
     align-items: center;
+
+    padding: 2px 4px;
+
+    color: white;
+    font-weight: bold;
+
+    background:
+        linear-gradient(
+            to right,
+            #173b92 0%,
+            #2858bd 65%,
+            #5277c8 100%
+        );
 }
 
-header h1 {
-    margin: 0;
-    font-size: 20px;
-}
+.title-icon {
+    width: 18px;
+    height: 18px;
 
-main {
-    display: grid;
-    grid-template-columns: 180px 1fr;
-    min-height: 600px;
-}
+    margin-right: 5px;
 
-aside {
-    padding: 10px;
-    background: #151515;
-    border-right: 1px solid #555;
-}
-
-#userListBox {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffcc00;
+    color: #173b92;
+
+    border: 1px solid #fff;
+
+    font-size: 12px;
+    font-weight: bold;
 }
 
-.user {
-    cursor: pointer;
-    padding: 5px;
-}
-
-.user:hover {
-    background: #333;
-}
-
-.user-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #00ff66;
-    border-radius: 50%;
-    margin-right: 6px;
-}
-
-section {
-    display: flex;
-    flex-direction: column;
-}
-
-#chatLog {
+.title-text {
     flex: 1;
-    min-height: 500px;
-    padding: 15px;
-    overflow-y: auto;
 }
 
-.system-message {
-    color: #888;
-    margin: 5px 0;
+.window-buttons {
+    display: flex;
+    gap: 2px;
 }
+
+.window-button {
+    width: 18px;
+    height: 17px;
+
+    background: #d4d0c8;
+
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #404040;
+    border-bottom: 1px solid #404040;
+
+    color: #000;
+    font-size: 10px;
+    line-height: 14px;
+    text-align: center;
+
+    font-weight: bold;
+}
+
+/* =========================================================
+   MENU
+========================================================= */
+
+.menu-bar {
+    height: 23px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 5px;
+
+    background: #d4d0c8;
+
+    border-bottom: 1px solid #808080;
+}
+
+.menu-item {
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #173b92;
+    color: #fff;
+}
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 5px;
+
+    border-bottom: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.toolbar-button {
+    min-width: 70px;
+
+    padding: 4px 8px;
+
+    background: #d4d0c8;
+
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.toolbar-button:active {
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.workspace {
+    display: flex;
+    gap: 7px;
+
+    padding: 7px;
+}
+
+/* =========================================================
+   CHAT PANEL
+========================================================= */
+
+.chat-panel {
+    flex: 1;
+
+    min-width: 0;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.panel-title {
+    height: 20px;
+
+    padding: 3px 5px;
+
+    color: #fff;
+    font-weight: bold;
+
+    background: #173b92;
+}
+
+.chat-log {
+    height: 380px;
+
+    overflow-y: auto;
+
+    padding: 7px;
+
+    background: #fff;
+
+    font-family:
+        "Tahoma",
+        "MS Sans Serif",
+        Arial,
+        sans-serif;
+
+    font-size: 12px;
+}
+
+/* =========================================================
+   MESSAGE ROWS
+========================================================= */
 
 .message-row {
-    padding: 6px;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    padding: 2px 3px;
+
+    line-height: 16px;
+
+    border-left: 3px solid transparent;
+}
+
+.message-row:hover {
+    background: #eef3ff;
 }
 
 .message-user {
-    color: #55aaff;
+    color: #000080;
     font-weight: bold;
     cursor: pointer;
 }
 
 .message-user.self {
-    color: #55ff88;
+    color: #008000;
 }
 
 .message-time {
     color: #777;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .message-text {
-    margin-left: 5px;
-}
-
-.msg-btn {
-    margin-left: 10px;
-    font-size: 11px;
+    color: #000;
+    word-wrap: break-word;
 }
 
 .reply-box {
-    color: #aaa;
-    font-size: 12px;
-    margin-bottom: 3px;
-}
+    margin: 3px 0;
+    padding: 3px 5px;
 
-.chat-image {
-    max-width: 400px;
-    max-height: 300px;
-    display: block;
-    margin-top: 5px;
+    background: #f1f1f1;
+
+    border-left: 3px solid #808080;
+
+    color: #555;
+    font-size: 10px;
 }
 
 .reply-highlight {
-    background: #332b00;
+    background: #fff9c4;
+    border-left: 3px solid #ff9900;
 }
 
 .mention-highlight {
-    background: #00332a;
+    background: #fff4b0;
+    border-left: 3px solid #ff9900;
 }
 
-#typingIndicator {
-    height: 25px;
-    padding: 5px 15px;
-    color: #888;
-    font-size: 12px;
+.system-message {
+    color: #555;
+    font-style: italic;
+    margin: 3px 0;
 }
 
-#controls {
+.system-message strong {
+    color: #173b92;
+}
+
+.msg-btn {
+    margin-left: 7px;
+
+    padding: 1px 5px;
+
+    background: #d4d0c8;
+
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #404040;
+    border-bottom: 1px solid #404040;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.chat-image {
+    display: block;
+
+    max-width: 250px;
+    max-height: 250px;
+
+    margin-top: 4px;
+
+    border: 1px solid #000;
+}
+
+/* =========================================================
+   USER LIST
+========================================================= */
+
+.user-panel {
+    width: 190px;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.user-header {
+    height: 20px;
+
+    padding: 3px 5px;
+
+    background: #173b92;
+    color: #fff;
+
+    font-weight: bold;
+}
+
+.user-list {
+    height: 380px;
+
+    overflow-y: auto;
+
+    padding: 5px;
+
+    background: #fff;
+}
+
+.user-section {
+    margin-bottom: 7px;
+
+    color: #173b92;
+
+    font-weight: bold;
+}
+
+.user {
+    padding: 3px 2px;
+
+    cursor: pointer;
+}
+
+.user:hover {
+    background: #dce7ff;
+}
+
+.user-dot {
+    display: inline-block;
+
+    width: 8px;
+    height: 8px;
+
+    margin-right: 4px;
+
+    background: #00aa00;
+
+    border: 1px solid #006000;
+}
+
+/* =========================================================
+   TYPING INDICATOR
+========================================================= */
+
+.typing {
+    min-height: 20px;
+
+    padding: 3px 8px;
+
+    color: #555;
+
+    background: #e8e8e8;
+
+    border-top: 1px solid #808080;
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.input-area {
+    padding: 6px;
+
+    border-top: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.input-row {
     display: flex;
     gap: 5px;
-    padding: 10px;
-    border-top: 1px solid #555;
 }
 
-#chatInput {
+.chat-input {
     flex: 1;
-    padding: 10px;
-    background: #111;
-    color: white;
-    border: 1px solid #555;
+
+    min-width: 0;
+
+    height: 25px;
+
+    padding: 4px 6px;
+
+    background: #fff;
+
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+
+    outline: none;
+
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
 }
 
-button {
-    padding: 8px 12px;
-    cursor: pointer;
+.chat-input:focus {
+    outline: 1px dotted #000;
+}
+
+.send-button {
+    width: 65px;
+}
+
+/* =========================================================
+   STATUS BAR
+========================================================= */
+
+.status-bar {
+    display: flex;
+
+    padding: 3px;
+
+    gap: 3px;
+
+    border-top: 1px solid #808080;
+
+    background: #d4d0c8;
+}
+
+.status-cell {
+    padding: 2px 5px;
+
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+
+    color: #444;
+}
+
+.status-cell:first-child {
+    flex: 1;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.aim-logo {
+    width: 45px;
+    height: 45px;
+
+    margin-right: 8px;
+
+    background: #ffcc00;
+
+    border: 2px solid #173b92;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #173b92;
+
+    font-weight: bold;
+    font-size: 16px;
+
+    box-shadow:
+        inset 2px 2px 0 #fff,
+        inset -2px -2px 0 #996600;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+
+    padding: 7px;
+
+    background: #eeeeee;
+
+    border-bottom: 1px solid #808080;
+}
+
+.profile-name {
+    color: #173b92;
+    font-weight: bold;
+}
+
+.profile-status {
+    color: #666;
+    margin-top: 2px;
+}
+
+/* =========================================================
+   HIDDEN FILE
+========================================================= */
+
+#imgUpload {
+    display: none;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    body {
+        padding: 5px;
+    }
+
+    .workspace {
+        flex-direction: column;
+    }
+
+    .user-panel {
+        width: 100%;
+    }
+
+    .user-list {
+        height: 130px;
+    }
+
+    .chat-log {
+        height: 330px;
+    }
+
+    .toolbar-button {
+        min-width: auto;
+    }
+
+    .menu-item {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
 }
 
 </style>
@@ -177,104 +626,251 @@ button {
 
 <body>
 
-    <div id="app">
+<div class="aim-window">
 
-        <header>
-            <h1>AIM - luke's chatroom</h1>
+    <!-- TITLE -->
 
-            <div>
-                <span id="connectionStatus">Connecting...</span>
-                <span id="profileName"></span>
-            </div>
-        </header>
+    <div class="title-bar">
 
+        <div class="title-icon">
+            ▲
+        </div>
 
-        <main>
+        <div class="title-text">
+            luke's chatroom - Instant Messenger
+        </div>
 
-            <!-- USER LIST -->
-            <aside>
-                <h3>Users</h3>
-                <div id="userListBox"></div>
-            </aside>
+        <div class="window-buttons">
 
+            <div class="window-button">_</div>
+            <div class="window-button">□</div>
+            <div class="window-button">×</div>
 
-            <!-- CHAT -->
-            <section>
-
-                <div id="chatLog"></div>
-
-                <div id="typingIndicator"></div>
-
-                <div id="controls">
-
-                    <input
-                        type="text"
-                        id="chatInput"
-                        placeholder="Type a message..."
-                        autocomplete="off"
-                    >
-
-                    <button id="sendBtn">
-                        Send
-                    </button>
-
-                    <button id="imgBtn">
-                        Image
-                    </button>
-
-                    <button id="nickBtn">
-                        Nickname
-                    </button>
-
-                    <button id="clearBtn">
-                        Clear
-                    </button>
-
-                    <button id="musicBtn">
-                        Music: On
-                    </button>
-
-                    <input
-                        type="file"
-                        id="imgUpload"
-                        accept="image/*"
-                        hidden
-                    >
-
-                </div>
-
-            </section>
-
-        </main>
+        </div>
 
     </div>
 
 
-    <!-- AUDIO -->
-    <audio id="bgMusic"></audio>
+    <!-- MENU -->
 
-    <audio id="messageSound" preload="auto">
-        <source src="message.mp3" type="audio/mpeg">
-    </audio>
+    <div class="menu-bar">
 
-    <audio id="replySound" preload="auto">
-        <source src="reply.mp3" type="audio/mpeg">
-    </audio>
+        <div class="menu-item">
+            File
+        </div>
+
+        <div class="menu-item">
+            Edit
+        </div>
+
+        <div class="menu-item">
+            People
+        </div>
+
+        <div class="menu-item">
+            Help
+        </div>
+
+    </div>
 
 
-    <!-- MQTT - LOAD ONCE -->
-    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+    <!-- TOOLBAR -->
+
+    <div class="toolbar">
+
+        <button
+            class="toolbar-button"
+            id="nickBtn"
+        >
+            Nickname
+        </button>
+
+        <button
+            class="toolbar-button"
+            id="imgBtn"
+        >
+            Send Image
+        </button>
+
+        <button
+            class="toolbar-button"
+            id="clearBtn"
+        >
+            Clear
+        </button>
+
+        <button
+            class="toolbar-button"
+            id="musicBtn"
+        >
+            Music
+        </button>
+
+    </div>
 
 
-    <script>
+    <!-- PROFILE -->
+
+    <div class="profile">
+
+        <div class="aim-logo">
+            AIM
+        </div>
+
+        <div>
+
+            <div
+                class="profile-name"
+                id="profileName"
+            >
+                Guest
+            </div>
+
+            <div class="profile-status">
+                Online
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAIN -->
+
+    <div class="workspace">
+
+        <!-- CHAT -->
+
+        <div class="chat-panel">
+
+            <div class="panel-title">
+                Instant Message
+            </div>
+
+            <div
+                class="chat-log"
+                id="chatLog"
+            ></div>
+
+        </div>
+
+
+        <!-- USERS -->
+
+        <div class="user-panel">
+
+            <div class="user-header">
+                Buddy List
+            </div>
+
+            <div class="user-list">
+
+                <div class="user-section">
+                    ONLINE
+                </div>
+
+                <div id="userListBox"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TYPING -->
+
+    <div
+        class="typing"
+        id="typingIndicator"
+    ></div>
+
+
+    <!-- INPUT -->
+
+    <div class="input-area">
+
+        <div class="input-row">
+
+            <input
+                id="chatInput"
+                class="chat-input"
+                autocomplete="off"
+                placeholder="Type a message..."
+            >
+
+            <button
+                id="sendBtn"
+                class="toolbar-button send-button"
+            >
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div class="status-bar">
+
+        <div
+            class="status-cell"
+            id="connectionStatus"
+        >
+            Connecting...
+        </div>
+
+        <div class="status-cell">
+            luke's chatroom
+        </div>
+
+    </div>
+
+</div>
+
+
+<input
+    type="file"
+    id="imgUpload"
+    accept="image/*"
+>
+
+
+<audio
+    id="bgMusic"
+    preload="auto"
+></audio>
+
+
+<audio
+    id="messageSound"
+    src="aim-message.mp3"
+    preload="auto"
+></audio>
+
+
+<audio
+    id="replySound"
+    src="aim-notif.mp3"
+    preload="auto"
+></audio>
+
+
+<script>
 
 /* =========================================================
    SAFETY CHECK
 ========================================================= */
 
 if (!window.mqtt) {
+
     alert("MQTT failed to load.");
-    throw new Error("MQTT library unavailable.");
+
+    throw new Error(
+        "MQTT library unavailable."
+    );
 }
 
 
@@ -284,6 +880,12 @@ if (!window.mqtt) {
 
 const userId =
     crypto.randomUUID();
+
+let currentAlias =
+    "Guest_" +
+    Math.floor(
+        Math.random() * 9000
+    );
 
 
 /* =========================================================
@@ -336,93 +938,8 @@ const nickBtn =
     document.getElementById("nickBtn");
 
 
-/* =========================================================
-   USERNAME LOGIN
-========================================================= */
-
-function askForUsername() {
-
-    let username = "";
-
-    while (!username) {
-
-        username =
-            prompt(
-                "Welcome to luke's chatroom!\n\nEnter your username:"
-            );
-
-        if (username === null) {
-
-            username =
-                "Guest_" +
-                Math.floor(
-                    Math.random() * 9000
-                );
-
-            break;
-        }
-
-        username =
-            username.trim();
-
-        if (!username) {
-
-            alert(
-                "Please enter a username."
-            );
-        }
-    }
-
-    if (
-        username.length > 30
-    ) {
-
-        username =
-            username.substring(
-                0,
-                30
-            );
-
-        alert(
-            "Username was shortened to 30 characters."
-        );
-    }
-
-    return username;
-}
-
-
-/* =========================================================
-   GET USERNAME
-========================================================= */
-
-let currentAlias = askForUsername();
-
-
-/* =========================================================
-   DISPLAY USERNAME
-========================================================= */
-
-if (profileName) {
-    profileName.textContent = currentAlias;
-}
-
-
-/* =========================================================
-   TIME
-========================================================= */
-
-function getChatTime() {
-
-    return new Date().toLocaleTimeString(
-        "en-GB",
-        {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        }
-    );
-}
+profileName.textContent =
+    currentAlias;
 
 
 /* =========================================================
@@ -503,13 +1020,16 @@ function updateTitle() {
         return;
     }
 
+
     const label =
         unreadCount === 1
             ? "New Message!"
             : "New Messages!";
 
+
     const unreadTitle =
         `(${unreadCount}) ${label} - ${ORIGINAL_TITLE}`;
+
 
     if (!document.hidden) {
 
@@ -518,6 +1038,7 @@ function updateTitle() {
 
         return;
     }
+
 
     if (!flashInterval) {
 
@@ -558,6 +1079,7 @@ document.addEventListener(
             document.title =
                 ORIGINAL_TITLE;
         }
+
     }
 );
 
@@ -569,20 +1091,27 @@ document.addEventListener(
 function sys(text) {
 
     const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     div.className =
         "system-message";
 
+
     const strong =
-        document.createElement("strong");
+        document.createElement(
+            "strong"
+        );
 
     strong.textContent =
         "[AIM]";
 
+
     div.appendChild(
         strong
     );
+
 
     div.appendChild(
         document.createTextNode(
@@ -590,9 +1119,11 @@ function sys(text) {
         )
     );
 
+
     chatLog.appendChild(
         div
     );
+
 
     chatLog.scrollTop =
         chatLog.scrollHeight;
@@ -659,13 +1190,19 @@ function applySpecialProfile(name) {
                     )
         );
 
+
     if (!profile) {
 
-        activeSpecialProfile = null;
-        specialMusicLock = false;
+        activeSpecialProfile =
+            null;
+
+        specialMusicLock =
+            false;
 
         bgMusic.pause();
-        bgMusic.currentTime = 0;
+
+        bgMusic.currentTime =
+            0;
 
         if (musicEnabled) {
             playNextTrack();
@@ -674,6 +1211,7 @@ function applySpecialProfile(name) {
         return;
     }
 
+
     if (
         activeSpecialProfile ===
         profile.match
@@ -681,12 +1219,15 @@ function applySpecialProfile(name) {
         return;
     }
 
+
     activeSpecialProfile =
         profile.match;
+
 
     sys(
         profile.message
     );
+
 
     if (profile.music) {
 
@@ -703,6 +1244,7 @@ function applySpecialProfile(name) {
 
         bgMusic.currentTime =
             0;
+
 
         if (musicEnabled) {
 
@@ -736,6 +1278,7 @@ function shuffle(array) {
     const result =
         array.slice();
 
+
     for (
         let i = result.length - 1;
         i > 0;
@@ -748,6 +1291,7 @@ function shuffle(array) {
                 (i + 1)
             );
 
+
         [
             result[i],
             result[j]
@@ -757,6 +1301,7 @@ function shuffle(array) {
             result[i]
         ];
     }
+
 
     return result;
 }
@@ -780,6 +1325,7 @@ function playNextTrack() {
         return;
     }
 
+
     if (
         shuffleBag.length === 0
     ) {
@@ -787,19 +1333,20 @@ function playNextTrack() {
         refillBag();
     }
 
+
     currentTrack =
         shuffleBag.shift();
 
+
     bgMusic.src =
         currentTrack;
+
 
     sys(
         "Now playing ♫ " +
         currentTrack
     );
 
-    musicStarted =
-        true;
 
     bgMusic.play()
         .catch(() => {});
@@ -809,16 +1356,10 @@ function playNextTrack() {
 bgMusic.onended =
     () => {
 
-        if (
-            specialMusicLock
-        ) {
+        if (specialMusicLock) {
 
             specialMusicLock =
                 false;
-
-            playNextTrack();
-
-            return;
         }
 
         playNextTrack();
@@ -846,6 +1387,7 @@ musicBtn.onclick =
         musicEnabled =
             !musicEnabled;
 
+
         if (!musicEnabled) {
 
             bgMusic.pause();
@@ -860,27 +1402,19 @@ musicBtn.onclick =
             return;
         }
 
+
         musicBtn.textContent =
             "Music: On";
 
-        if (
-            bgMusic.src &&
-            !specialMusicLock
-        ) {
+
+        if (bgMusic.src) {
 
             bgMusic.play()
                 .catch(() => {});
-
-        } else if (
-            !bgMusic.src
-        ) {
-
-            playNextTrack();
 
         } else {
 
-            bgMusic.play()
-                .catch(() => {});
+            playNextTrack();
         }
     };
 
@@ -897,6 +1431,7 @@ function renderUsers() {
     const now =
         Date.now();
 
+
     Object.values(users)
         .sort(
             (a, b) =>
@@ -904,55 +1439,63 @@ function renderUsers() {
                     b.name
                 )
         )
-        .forEach(user => {
+        .forEach(
+            user => {
 
-            if (
-                now - user.lastSeen <
-                60000
-            ) {
+                if (
+                    now -
+                    user.lastSeen <
+                    60000
+                ) {
 
-                const div =
-                    document.createElement(
-                        "div"
+                    const div =
+                        document.createElement(
+                            "div"
+                        );
+
+                    div.className =
+                        "user";
+
+
+                    const dot =
+                        document.createElement(
+                            "span"
+                        );
+
+                    dot.className =
+                        "user-dot";
+
+
+                    div.appendChild(
+                        dot
                     );
 
-                div.className =
-                    "user";
 
-                const dot =
-                    document.createElement(
-                        "span"
+                    div.appendChild(
+                        document.createTextNode(
+                            user.name
+                        )
                     );
 
-                dot.className =
-                    "user-dot";
 
-                div.appendChild(
-                    dot
-                );
+                    div.onclick =
+                        () => {
 
-                div.appendChild(
-                    document.createTextNode(
-                        user.name
-                    )
-                );
+                            chatInput.value +=
+                                " @" +
+                                user.name;
 
-                div.onclick =
-                    () => {
+                            chatInput.focus();
+                        };
 
-                        chatInput.value +=
-                            " @" +
-                            user.name;
 
-                        chatInput.focus();
-                    };
+                    userListBox.appendChild(
+                        div
+                    );
+                }
 
-                userListBox.appendChild(
-                    div
-                );
             }
-
-        });
+        );
 }
 
 
@@ -983,6 +1526,7 @@ function renderTyping() {
                 user.name
         );
 
+
     if (
         names.length === 0
     ) {
@@ -992,6 +1536,7 @@ function renderTyping() {
 
         return;
     }
+
 
     if (
         names.length === 1
@@ -1003,6 +1548,7 @@ function renderTyping() {
 
         return;
     }
+
 
     if (
         names.length === 2
@@ -1017,6 +1563,7 @@ function renderTyping() {
         return;
     }
 
+
     typingIndicator.textContent =
         "Several users are typing...";
 }
@@ -1029,69 +1576,7 @@ setInterval(
 
 
 /* =========================================================
-   SEND JOIN / PRESENCE
-========================================================= */
-
-function publishJoin() {
-
-    if (!client.connected) {
-        return;
-    }
-
-    client.publish(
-        topic,
-        JSON.stringify({
-
-            type:
-                "join",
-
-            id:
-                userId,
-
-            name:
-                currentAlias
-
-        })
-    );
-}
-
-
-function publishPresence() {
-
-    if (!client.connected) {
-        return;
-    }
-
-    client.publish(
-        topic,
-        JSON.stringify({
-
-            type:
-                "presence",
-
-            id:
-                userId,
-
-            name:
-                currentAlias
-
-        })
-    );
-}
-
-
-setInterval(
-    () => {
-
-        publishPresence();
-
-    },
-    20000
-);
-
-
-/* =========================================================
-   MQTT CONNECT
+   CONNECT
 ========================================================= */
 
 client.on(
@@ -1101,9 +1586,11 @@ client.on(
         connectionStatus.textContent =
             "Connected";
 
+
         sys(
             "Connected to luke's chatroom."
         );
+
 
         client.subscribe(
             topic,
@@ -1122,15 +1609,44 @@ client.on(
                     return;
                 }
 
-                publishJoin();
 
-                publishPresence();
+                client.publish(
+                    topic,
+                    JSON.stringify({
+
+                        type:
+                            "join",
+
+                        id:
+                            userId,
+
+                        name:
+                            currentAlias
+
+                    })
+                );
+
+
+                users[userId] = {
+
+                    name:
+                        currentAlias,
+
+                    lastSeen:
+                        Date.now()
+                };
+
+
+                renderUsers();
+
 
                 applySpecialProfile(
                     currentAlias
                 );
+
             }
         );
+
     }
 );
 
@@ -1180,6 +1696,7 @@ client.on(
 
         let d;
 
+
         try {
 
             d =
@@ -1187,15 +1704,20 @@ client.on(
                     packet.toString()
                 );
 
-        } catch {
+        } catch (error) {
+
+            console.error(
+                "Invalid MQTT message:",
+                error
+            );
 
             return;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            JOIN
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type ===
@@ -1211,25 +1733,35 @@ client.on(
                     Date.now()
             };
 
+
             renderUsers();
 
+
             if (
-                d.id !== userId
+                d.id !==
+                userId
             ) {
 
                 sys(
                     d.name +
                     " signed on."
                 );
+
+            } else {
+
+                applySpecialProfile(
+                    d.name
+                );
             }
+
 
             return;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            PRESENCE
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type ===
@@ -1245,15 +1777,16 @@ client.on(
                     Date.now()
             };
 
+
             renderUsers();
 
             return;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            NAME CHANGE
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type ===
@@ -1269,10 +1802,13 @@ client.on(
                     Date.now()
             };
 
+
             renderUsers();
 
+
             if (
-                d.id === userId
+                d.id ===
+                userId
             ) {
 
                 profileName.textContent =
@@ -1285,17 +1821,21 @@ client.on(
                 return;
             }
 
+
             sys(
-                `${d.oldName} is now ${d.name}`
+                d.oldName +
+                " is now " +
+                d.name
             );
+
 
             return;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            TYPING
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type ===
@@ -1303,7 +1843,8 @@ client.on(
         ) {
 
             if (
-                d.id !== userId
+                d.id !==
+                userId
             ) {
 
                 typingUsers[d.id] = {
@@ -1315,16 +1856,18 @@ client.on(
                         Date.now()
                 };
 
+
                 renderTyping();
             }
+
 
             return;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            STOP TYPING
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type ===
@@ -1341,9 +1884,9 @@ client.on(
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            MESSAGE
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.type !==
@@ -1352,7 +1895,10 @@ client.on(
             return;
         }
 
-        if (!d.text) {
+
+        if (
+            !d.text
+        ) {
             return;
         }
 
@@ -1362,17 +1908,17 @@ client.on(
                 .toLowerCase()
                 .includes(
                     "@" +
-                    currentAlias
-                        .toLowerCase()
+                    currentAlias.toLowerCase()
                 );
 
 
-        /* -----------------------------------------
+        /* =================================================
            NOTIFICATIONS
-        ----------------------------------------- */
+        ================================================= */
 
         if (
-            d.id !== userId
+            d.id !==
+            userId
         ) {
 
             if (
@@ -1383,6 +1929,7 @@ client.on(
 
                 updateTitle();
             }
+
 
             if (
                 (
@@ -1417,9 +1964,9 @@ client.on(
         renderTyping();
 
 
-        /* -----------------------------------------
+        /* =================================================
            UPDATE USER
-        ----------------------------------------- */
+        ================================================= */
 
         users[d.id] = {
 
@@ -1430,17 +1977,19 @@ client.on(
                 Date.now()
         };
 
+
         renderUsers();
 
 
-        /* -----------------------------------------
+        /* =================================================
            MESSAGE ROW
-        ----------------------------------------- */
+        ================================================= */
 
         const row =
             document.createElement(
                 "div"
             );
+
 
         row.className =
             "message-row";
@@ -1459,7 +2008,8 @@ client.on(
 
 
         if (
-            d.id !== userId &&
+            d.id !==
+            userId &&
             mentionMe
         ) {
 
@@ -1469,9 +2019,9 @@ client.on(
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            REPLY PREVIEW
-        ----------------------------------------- */
+        ================================================= */
 
         if (
             d.reply
@@ -1482,11 +2032,17 @@ client.on(
                     "div"
                 );
 
+
             reply.className =
                 "reply-box";
 
+
             reply.textContent =
-                `↳ ${d.reply.user}: ${d.reply.text}`;
+                "↳ " +
+                d.reply.user +
+                ": " +
+                d.reply.text;
+
 
             row.appendChild(
                 reply
@@ -1494,14 +2050,15 @@ client.on(
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            USER
-        ----------------------------------------- */
+        ================================================= */
 
         const header =
             document.createElement(
                 "span"
             );
+
 
         header.className =
             "message-user";
@@ -1517,8 +2074,11 @@ client.on(
             );
         }
 
+
         header.textContent =
-            d.sender;
+            "<" +
+            d.sender +
+            ">";
 
 
         header.onclick =
@@ -1532,30 +2092,35 @@ client.on(
             };
 
 
-        /* -----------------------------------------
+        /* =================================================
            TIME
-        ----------------------------------------- */
+        ================================================= */
 
         const time =
             document.createElement(
                 "span"
             );
 
+
         time.className =
             "message-time";
 
+
         time.textContent =
-            ` [${d.timestamp || getChatTime()}] `;
+            " [" +
+            (d.timestamp || "") +
+            "] ";
 
 
-        /* -----------------------------------------
+        /* =================================================
            CONTENT
-        ----------------------------------------- */
+        ================================================= */
 
         const content =
             document.createElement(
                 "span"
             );
+
 
         content.className =
             "message-text";
@@ -1571,27 +2136,30 @@ client.on(
                     "img"
                 );
 
+
             image.className =
                 "chat-image";
+
 
             image.src =
                 d.text;
 
+
             image.alt =
                 "Shared image";
 
+
             image.loading =
                 "lazy";
+
 
             image.onerror =
                 () => {
 
                     image.alt =
                         "Image failed to load";
-
-                    image.title =
-                        "Image failed to load";
                 };
+
 
             content.appendChild(
                 image
@@ -1600,21 +2168,24 @@ client.on(
         } else {
 
             content.textContent =
-                " " + d.text;
+                " " +
+                d.text;
         }
 
 
-        /* -----------------------------------------
+        /* =================================================
            REPLY BUTTON
-        ----------------------------------------- */
+        ================================================= */
 
         const button =
             document.createElement(
                 "button"
             );
 
+
         button.className =
             "msg-btn";
+
 
         button.textContent =
             "Reply";
@@ -1638,18 +2209,20 @@ client.on(
                         d.text
                 };
 
+
                 sys(
                     "Replying to " +
                     d.sender
                 );
 
+
                 chatInput.focus();
             };
 
 
-        /* -----------------------------------------
+        /* =================================================
            APPEND
-        ----------------------------------------- */
+        ================================================= */
 
         row.appendChild(
             header
@@ -1667,9 +2240,11 @@ client.on(
             button
         );
 
+
         chatLog.appendChild(
             row
         );
+
 
         chatLog.scrollTop =
             chatLog.scrollHeight;
@@ -1686,21 +2261,40 @@ function send() {
     const text =
         chatInput.value.trim();
 
+
     if (!text) {
         return;
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        STOP TYPING
-    ----------------------------------------- */
+    ===================================================== */
 
     stopTyping();
 
 
-    /* -----------------------------------------
-       CLEAR COMMAND
-    ----------------------------------------- */
+    /* =====================================================
+       START MUSIC
+    ===================================================== */
+
+    if (
+        !musicStarted &&
+        musicEnabled
+    ) {
+
+        musicStarted =
+            true;
+
+        refillBag();
+
+        playNextTrack();
+    }
+
+
+    /* =====================================================
+       CLEAR
+    ===================================================== */
 
     if (
         text ===
@@ -1721,24 +2315,23 @@ function send() {
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        TEST MUSIC
-    ----------------------------------------- */
+    ===================================================== */
 
     if (
         text ===
         "/testmusic"
     ) {
 
-        if (
-            musicEnabled
-        ) {
+        if (musicEnabled) {
 
             specialMusicLock =
                 false;
 
             playNextTrack();
         }
+
 
         chatInput.value =
             "";
@@ -1747,9 +2340,9 @@ function send() {
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        NICKNAME
-    ----------------------------------------- */
+    ===================================================== */
 
     if (
         text.startsWith(
@@ -1854,9 +2447,9 @@ function send() {
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        MUTE
-    ----------------------------------------- */
+    ===================================================== */
 
     if (
         text ===
@@ -1882,9 +2475,9 @@ function send() {
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        UNMUTE
-    ----------------------------------------- */
+    ===================================================== */
 
     if (
         text ===
@@ -1923,9 +2516,9 @@ function send() {
     }
 
 
-    /* -----------------------------------------
-       MQTT CONNECTION CHECK
-    ----------------------------------------- */
+    /* =====================================================
+       MQTT CHECK
+    ===================================================== */
 
     if (
         !client.connected
@@ -1939,9 +2532,9 @@ function send() {
     }
 
 
-    /* -----------------------------------------
+    /* =====================================================
        MESSAGE
-    ----------------------------------------- */
+    ===================================================== */
 
     const msgId =
         crypto.randomUUID();
@@ -1965,7 +2558,13 @@ function send() {
             text,
 
         timestamp:
-            getChatTime()
+            new Date().toLocaleTimeString(
+                [],
+                {
+                    hour: "numeric",
+                    minute: "2-digit"
+                }
+            )
     };
 
 
@@ -1992,10 +2591,6 @@ function send() {
     chatInput.value =
         "";
 }
-
-
-sendBtn.onclick =
-    send;
 
 
 /* =========================================================
@@ -2157,7 +2752,13 @@ imgUpload.onchange =
                     "image",
 
                 timestamp:
-                    getChatTime()
+                    new Date().toLocaleTimeString(
+                        [],
+                        {
+                            hour: "numeric",
+                            minute: "2-digit"
+                        }
+                    )
             };
 
 
@@ -2185,7 +2786,6 @@ imgUpload.onchange =
                 "image sent"
             );
 
-
         } catch (error) {
 
             console.error(
@@ -2205,8 +2805,12 @@ imgUpload.onchange =
 
 
 /* =========================================================
-   CLEAR BUTTON
+   BUTTONS
 ========================================================= */
+
+sendBtn.onclick =
+    send;
+
 
 clearBtn.onclick =
     () => {
@@ -2219,10 +2823,6 @@ clearBtn.onclick =
         );
     };
 
-
-/* =========================================================
-   NICKNAME BUTTON
-========================================================= */
 
 nickBtn.onclick =
     () => {
@@ -2266,7 +2866,8 @@ function sendTyping() {
 
 
     if (
-        now - lastTypingSent <
+        now -
+        lastTypingSent <
         1000
     ) {
         return;
@@ -2395,41 +2996,7 @@ sys(
     "Instant messaging service initialized."
 );
 
-
-/* =========================================================
-   START MUSIC AFTER FIRST USER INTERACTION
-========================================================= */
-
-document.addEventListener(
-    "click",
-    () => {
-
-        if (
-            musicStarted ||
-            !musicEnabled
-        ) {
-            return;
-        }
-
-
-        musicStarted =
-            true;
-
-
-        if (
-            !specialMusicLock
-        ) {
-
-            playNextTrack();
-        }
-
-    },
-    {
-        once: true
-    }
-);
-
-    </script>
+</script>
 
 </body>
 </html>
