@@ -1191,25 +1191,21 @@ function applySpecialProfile(name) {
         );
 
 
-    if (!profile) {
+if (!profile) {
 
-        activeSpecialProfile =
-            null;
+    activeSpecialProfile =
+        null;
 
-        specialMusicLock =
-            false;
+    specialMusicLock =
+        false;
 
-        bgMusic.pause();
+    bgMusic.pause();
 
-        bgMusic.currentTime =
-            0;
+    bgMusic.currentTime =
+        0;
 
-        if (musicEnabled) {
-            playNextTrack();
-        }
-
-        return;
-    }
+    return;
+}
 
 
     if (
@@ -1325,33 +1321,28 @@ function playNextTrack() {
         return;
     }
 
-
     if (
         shuffleBag.length === 0
     ) {
-
         refillBag();
     }
-
 
     currentTrack =
         shuffleBag.shift();
 
+    musicStarted = true;
 
     bgMusic.src =
         currentTrack;
-
 
     sys(
         "Now playing ♫ " +
         currentTrack
     );
 
-
     bgMusic.play()
         .catch(() => {});
 }
-
 
 bgMusic.onended =
     () => {
@@ -2273,6 +2264,31 @@ function send() {
 
     stopTyping();
 
+    /* =====================================================
+       TEST MUSIC
+    ===================================================== */
+
+    if (
+        text ===
+        "/testmusic"
+    ) {
+
+        if (musicEnabled) {
+
+            specialMusicLock =
+                false;
+
+            playNextTrack();
+        }
+
+
+        chatInput.value =
+            "";
+
+        return;
+    }
+
+
 
     /* =====================================================
        START MUSIC
@@ -2282,9 +2298,6 @@ function send() {
         !musicStarted &&
         musicEnabled
     ) {
-
-        musicStarted =
-            true;
 
         refillBag();
 
@@ -2313,32 +2326,6 @@ function send() {
 
         return;
     }
-
-
-    /* =====================================================
-       TEST MUSIC
-    ===================================================== */
-
-    if (
-        text ===
-        "/testmusic"
-    ) {
-
-        if (musicEnabled) {
-
-            specialMusicLock =
-                false;
-
-            playNextTrack();
-        }
-
-
-        chatInput.value =
-            "";
-
-        return;
-    }
-
 
     /* =====================================================
        NICKNAME
