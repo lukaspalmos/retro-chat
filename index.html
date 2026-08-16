@@ -2015,11 +2015,16 @@ client.on(
                 "reply-box";
 
 
-            reply.textContent =
-                "↳ " +
-                d.reply.user +
-                ": " +
-                d.reply.text;
+const replyText =
+    d.reply.mediaType === "image"
+        ? "[Image]"
+        : d.reply.text;
+
+reply.textContent =
+    "↳ " +
+    d.reply.user +
+    ": " +
+    replyText;
 
 
             row.appendChild(
@@ -2169,35 +2174,38 @@ client.on(
             "Reply";
 
 
-        button.onclick =
-            () => {
+button.onclick =
+    () => {
 
-                replyTarget = {
+        replyTarget = {
 
-                    id:
-                        d.msgId,
+            id:
+                d.msgId,
 
-                    senderId:
-                        d.id,
+            senderId:
+                d.id,
 
-                    user:
-                        d.sender,
+            user:
+                d.sender,
 
-                    text:
-                        d.text
-                };
+            text:
+                d.mediaType === "image"
+                    ? "[Image]"
+                    : d.text,
 
-
-                sys(
-                    "Replying to " +
-                    d.sender
-                );
-
-
-                chatInput.focus();
-            };
+            mediaType:
+                d.mediaType || null
+        };
 
 
+        sys(
+            "Replying to " +
+            d.sender
+        );
+
+
+        chatInput.focus();
+    };
         /* =================================================
            APPEND
         ================================================= */
